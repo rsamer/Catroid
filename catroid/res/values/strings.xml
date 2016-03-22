@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<!--
+<?xml version="1.0" encoding="utf-8" standalone="no"?><!--
   ~ Catroid: An on-device visual programming system for Android devices
   ~ Copyright (C) 2010-2016 The Catrobat Team
   ~ (<http://developer.catrobat.org/credits>)
@@ -101,6 +100,8 @@
     <string name="preference_description_quadcopter_bricks">Allow to control ARDrone 2.0 quadcopters</string>
     <string name="preference_title_enable_mindstorms_nxt_bricks">Lego Mindstorms NXT bricks</string>
     <string name="preference_description_mindstorms_nxt_bricks">Allow to control Lego Mindstorms NXT robots</string>
+    <string name="preference_title_scratch_converter">Scratch Converter (Beta)</string>
+    <string name="preference_description_scratch_converter">Convert your Scratch desktop projects into mobile Pocket Code programs</string>
     <string name="preference_title_mindstorms_nxt_sensors">Lego NXT sensors</string>
     <string name="preference_title_drone_config_properties">Drone configuration properties</string>
     <string name="preference_title_enable_phiro_bricks">Phiro bricks</string>
@@ -118,6 +119,9 @@
     <string name="preference_raspi_host">Raspberry Pi IP-/Host-Address</string>
     <string name="preference_raspi_port">Raspberry Pi Port</string>
     <!--  -->
+
+    <!-- Scratch Converter activity -->
+    <string name="title_activity_scratch_converter">Scratch Converter</string>
 
 
     <!-- New Object Dialog -->
@@ -746,10 +750,10 @@
     <!-- Raspi Bricks -->
     <string name="brick_raspi_select_digital_value">Set Raspberry Pi pin</string>
     <string name="brick_raspi_set_pin_value_to">to</string>
-    <string name="brick_raspi_if_begin" >If Raspberry Pi pin</string >
-    <string name="brick_raspi_if_begin_second_part" >is true then</string >
-    <string name="brick_raspi_when_begin" >When Raspberry Pi pin</string >
-    <string name="brick_raspi_when_equals" >changes to</string >
+    <string name="brick_raspi_if_begin">If Raspberry Pi pin</string>
+    <string name="brick_raspi_if_begin_second_part">is true then</string>
+    <string name="brick_raspi_when_begin">When Raspberry Pi pin</string>
+    <string name="brick_raspi_when_equals">changes to</string>
     <string name="brick_raspi_pressed_text">High</string>
     <string name="brick_raspi_released_text">Low</string>
     <string name="brick_raspi_set_pwm">Set Raspberry Pi PWM pin</string>
@@ -1096,6 +1100,5 @@
     <string name="choose_camera_back">back</string>
     <string name="error_flash_front_camera">"The flash can be used with the back camera only. Please add a \"Use
         camera\" brick and change to your device\'s back camera. "</string>
-    <!-- -->
 
 </resources>
