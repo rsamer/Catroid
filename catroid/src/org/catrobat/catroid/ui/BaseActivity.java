@@ -99,6 +99,10 @@ public class BaseActivity extends Activity {
 				Intent settingsIntent = new Intent(this, SettingsActivity.class);
 				startActivity(settingsIntent);
 				break;
+			case R.id.menu_scratch_converter:
+				Intent scratchConverterIntent = new Intent(this, ScratchConverterActivity.class);
+				startActivity(scratchConverterIntent);
+				break;
 			case R.id.menu_rate_app:
 				launchMarket();
 				return true;
