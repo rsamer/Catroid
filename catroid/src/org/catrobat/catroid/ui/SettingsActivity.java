@@ -89,6 +89,12 @@ public class SettingsActivity extends PreferenceActivity {
 			screen.removePreference(legoNxtPreference);
 		}
 
+		if (!BuildConfig.FEATURE_SCRATCH_CONVERTER_ENABLED) {
+			PreferenceScreen dronePreference = (PreferenceScreen) findPreference(SETTINGS_SHOW_PARROT_AR_DRONE_BRICKS);
+			dronePreference.setEnabled(false);
+			screen.removePreference(dronePreference);
+		}
+
 		if (!BuildConfig.FEATURE_PARROT_AR_DRONE_ENABLED) {
 			PreferenceScreen dronePreference = (PreferenceScreen) findPreference(SETTINGS_SHOW_PARROT_AR_DRONE_BRICKS);
 			dronePreference.setEnabled(false);
