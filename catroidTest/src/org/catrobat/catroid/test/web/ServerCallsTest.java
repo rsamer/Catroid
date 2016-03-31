@@ -44,6 +44,7 @@ import org.catrobat.catroid.web.WebconnectionException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /*
@@ -86,7 +87,76 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 		super.tearDown();
 	}
 
-	public void testRegistrationOk() {
+    public ServerCalls.ScratchSearchResult performAndTestScratchSearchWithQuery(String query,
+                                                                                ServerCalls.ScratchSearchSortType sortType,
+                                                                                int numberOfItems, int page) {
+        try {
+            ServerCalls.ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch(query, sortType, numberOfItems, page);
+            ArrayList<ServerCalls.ScratchProject> projectList = searchResult.getProjectList();
+            assertNotNull("Invalid search result", projectList);
+            for (ServerCalls.ScratchProject project : projectList) {
+                assertNotNull(project.getTitle());
+                assertNotNull(project.getContent());
+                assertNotNull(project.getProjectUrl());
+
+                assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
+                        TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
+            }
+            return searchResult;
+        } catch (WebconnectionException e) {
+            Log.i(TAG, "Webconnection error", e);
+            fail("WebconnectionException:\nstatus code:" + e.getStatusCode()
+                    + "\nmessage: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public void testScratchSearchWithEmptyQueryParam() {
+        ServerCalls.ScratchSearchResult searchResult = performAndTestScratchSearchWithQuery("",
+                ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 0);
+        assertNotNull("No search result returned", searchResult);
+        assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+        assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
+        assertTrue("Invalid number of projects", searchResult.getProjectList().size() == 20);
+    }
+
+    public void testScratchSearchWithQueryParam() {
+        ServerCalls.ScratchSearchResult searchResult = performAndTestScratchSearchWithQuery("test",
+                ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 0);
+        assertNotNull("No search result returned", searchResult);
+        assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+        assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
+        assertTrue("Invalid number of projects", searchResult.getProjectList().size() == 20);
+    }
+
+    public void testScratchSearchNumberOfItemsParam() {
+        ServerCalls.ScratchSearchResult searchResult = performAndTestScratchSearchWithQuery("test",
+                ServerCalls.ScratchSearchSortType.RELEVANCE, 10, 0);
+        assertNotNull("No search result returned", searchResult);
+        assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+        assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
+        assertTrue("Invalid number of projects", searchResult.getProjectList().size() == 10);
+    }
+
+    public void testScratchSearchNextPage() {
+        ServerCalls.ScratchSearchResult searchResult = performAndTestScratchSearchWithQuery("test",
+                ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 1);
+        assertNotNull("No search result returned", searchResult);
+        assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 1);
+        assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
+        assertTrue("Invalid number of projects", searchResult.getProjectList().size() == 20);
+    }
+
+    public void testScratchSearchAndSortByDate() {
+        ServerCalls.ScratchSearchResult searchResult = performAndTestScratchSearchWithQuery("test",
+                ServerCalls.ScratchSearchSortType.DATE, 20, 1);
+        assertNotNull("No search result returned", searchResult);
+        assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 1);
+        assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
+        assertTrue("Invalid number of projects", searchResult.getProjectList().size() == 20);
+    }
+
+    public void testRegistrationOk() {
 		try {
 			String testUser = "testUser" + System.currentTimeMillis();
 			String testPassword = "pwspws";
