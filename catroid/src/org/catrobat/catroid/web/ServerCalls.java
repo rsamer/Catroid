@@ -46,11 +46,13 @@ import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.transfers.ProjectUploadService;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
 import org.catrobat.catroid.utils.Utils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -165,6 +167,164 @@ public final class ServerCalls {
 
 	public static ServerCalls getInstance() {
 		return INSTANCE;
+	}
+
+    public class HttpImage {
+
+        private String url;
+        private int width;
+        private int height;
+
+        public HttpImage(String url, int width, int height) {
+            this.url = url;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    public class ScratchProject {
+
+        private String title;
+        private String content;
+        private String projectUrl;
+        private HttpImage projectImage;
+        private HttpImage projectThumbnail;
+
+        public ScratchProject(String title, String content, String projectUrl) {
+            this.title = title;
+            this.content = content;
+            this.projectUrl = projectUrl;
+            this.projectImage = null;
+            this.projectThumbnail = null;
+        }
+
+        public String getProjectUrl() { return projectUrl; }
+
+        public String getTitle() { return title; }
+
+        public String getContent() { return content; }
+
+        public HttpImage getProjectThumbnail() { return projectThumbnail; }
+
+        public void setProjectThumbnail(HttpImage projectThumbnail) { this.projectThumbnail = projectThumbnail; }
+
+        public HttpImage getProjectImage() { return projectImage; }
+
+        public void setProjectImage(HttpImage projectImage) { this.projectImage = projectImage; }
+
+    }
+
+    public enum ScratchSearchSortType { RELEVANCE, DATE }
+
+    public class ScratchSearchResult {
+        private ArrayList<ScratchProject> projectList;
+        private int currentPageIndex;
+        private int totalNumberOfResults;
+
+        public ScratchSearchResult(ArrayList<ScratchProject> projectList, int currentPageIndex, int totalNumberOfResults) {
+            this.projectList = projectList;
+            this.currentPageIndex = currentPageIndex;
+            this.totalNumberOfResults = totalNumberOfResults;
+        }
+
+        public ArrayList<ScratchProject> getProjectList() { return projectList; }
+
+        public int getCurrentPageIndex() { return currentPageIndex; }
+
+        public int getTotalNumberOfResults() { return totalNumberOfResults; }
+
+    }
+
+	public ScratchSearchResult scratchSearch(final String query, final ScratchSearchSortType sortType,
+                                             final int numberOfItems, final int page) throws WebconnectionException
+    {
+		Preconditions.checkNotNull(query, "Parameter query cannot be null!");
+        Preconditions.checkArgument(numberOfItems > 0, "Parameter numberOfItems must be greater than 0");
+        Preconditions.checkArgument(page >= 0, "Parameter page must be greater or equal than 0");
+
+        final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
+            put("key", "AIzaSyCVAXiUzRYsML1Pv6RwSG1gunmMikTzQqY");
+            put("rsz", "filtered_cse");
+            put("num", Integer.toString(numberOfItems));
+            put("hl", "en");
+            put("prettyPrint", "false");
+            put("source", "gcsc");
+            put("gss", ".com");
+            put("sig", "432dd570d1a386253361f581254f9ca1");
+            put("cx", "006344185922250120026:y4rdkv9uhp4");
+            put("q", query + "%20more%3Aprojects");
+            if (sortType == ScratchSearchSortType.RELEVANCE) {
+                put("sort", "");
+            } else {
+                put("sort", "date");
+            }
+            if (page > 0) {
+                put("start", Integer.toString(page * numberOfItems));
+            }
+            put("googlehost", "www.google.com");
+        }};
+
+        StringBuilder urlStringBuilder = new StringBuilder(Constants.SCRATCH_SEARCH_URL);
+        urlStringBuilder.append("?");
+        for (Map.Entry<String, String> entry : httpGetParams.entrySet()) {
+            urlStringBuilder.append(entry.getKey());
+            urlStringBuilder.append("=");
+            urlStringBuilder.append(entry.getValue());
+            urlStringBuilder.append("&");
+        }
+        urlStringBuilder.setLength(urlStringBuilder.length() - 1); // removes trailing "&" character
+
+        ArrayList<ScratchProject> projectList = new ArrayList<>();
+        int currentPageIndex = 0;
+        int totalNumberOfResults = 0;
+        try {
+            final String url = urlStringBuilder.toString();
+			Log.v(TAG, "URL to use: " + url);
+			resultString = getRequest(url);
+			Log.v(TAG, "Result string: " + resultString);
+            System.out.print("URL:" + url);
+
+			JSONObject jsonObject = new JSONObject(resultString);
+			JSONObject cursor = jsonObject.getJSONObject("cursor");
+            currentPageIndex = cursor.getInt("currentPageIndex");
+            JSONArray results = jsonObject.getJSONArray("results");
+            JSONObject context = jsonObject.getJSONObject("context");
+            totalNumberOfResults = Integer.parseInt(context.getString("total_results"));
+
+            for (int i = 0; i < results.length(); ++i) {
+                JSONObject projectJson = results.getJSONObject(i);
+                String title = projectJson.getString("titleNoFormatting").replace(" on Scratch", "");
+                String content= projectJson.getString("contentNoFormatting");
+                String projectUrl = projectJson.getString("url");
+                if (! projectUrl.startsWith("https://scratch.mit.edu/projects/")) {
+                    continue; // ignore results that are no real projects (e.g. studios or remix-collections)
+                }
+
+                JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
+                JSONObject metatags = richSnippet.getJSONObject("metatags");
+
+                ScratchProject project = new ScratchProject(title, content, projectUrl);
+                if (metatags.has("ogImage")) {
+                    String projectImageUrl = metatags.getString("ogImage");
+                    int projectImageWidth = 200;
+                    int projectImageHeight = 200;
+                    project.setProjectImage(new HttpImage(projectImageUrl, projectImageWidth, projectImageHeight));
+                }
+
+                if (metatags.has("cseThumbnail")) {
+                    JSONObject cseThumbnail = richSnippet.getJSONObject("cseThumbnail");
+                    String projectThumbnailUrl = cseThumbnail.getString("src");
+                    int projectThumbnailWidth = Integer.parseInt(cseThumbnail.getString("width"));
+                    int projectThumbnailHeight = Integer.parseInt(cseThumbnail.getString("height"));
+                    project.setProjectThumbnail(new HttpImage(projectThumbnailUrl, projectThumbnailWidth, projectThumbnailHeight));
+                }
+                projectList.add(project);
+            }
+		} catch (Exception exception) {
+            Log.e(TAG, Log.getStackTraceString(exception));
+            throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
+        }
+        return new ScratchSearchResult(projectList, currentPageIndex, totalNumberOfResults);
 	}
 
 	public void uploadProject(String projectName, String projectDescription, String zipFileString, String userEmail,
