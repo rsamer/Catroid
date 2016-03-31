@@ -22,20 +22,56 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+<View
+    android:id="@+id/search_bar_view_scratch"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="45dp"
+    android:layout_alignParentTop="true"
+    android:background="#FFFFFF"
+    android:layout_marginTop="5dp"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp" />
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<SearchView
+    android:id="@+id/search_view_scratch"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentTop="true"
+    android:layout_toLeftOf="@+id/mic_button_image_scratch"
+    android:layout_marginTop="5dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="5dp"
+    android:queryHint="@string/search_hint"
+    android:foregroundTint="@color/black"
+    android:foreground="@color/black"
+    android:iconifiedByDefault="false"
+    android:focusable="true" />
 
-    <SearchView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/searchView" />
+<ImageButton
+    android:id="@+id/mic_button_image_scratch"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentRight="true"
+    android:layout_alignParentTop="true"
+    android:layout_marginRight="11dp"
+    android:layout_marginTop="11dp"
+    android:background="@color/white"
+    android:src="@android:drawable/ic_btn_speak_now" />
 
-</LinearLayout>
+<ListView
+    android:id="@+id/list_view_search_scratch"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
+    android:layout_below="@+id/mic_button_image_scratch"
+    android:layout_marginTop="25dp"
+    android:dividerHeight="1dp"
+    android:divider="#E6E6E6"/>
 
 </RelativeLayout>
