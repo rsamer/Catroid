@@ -36,6 +36,7 @@ import com.facebook.HttpMethod;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
+import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.test.utils.TestUtils;
 import org.catrobat.catroid.transfers.DeleteTestUserTask;
 import org.catrobat.catroid.uitest.util.UiTestUtils;
@@ -92,9 +93,9 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
                                                                                 int numberOfItems, int page) {
         try {
             ServerCalls.ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch(query, sortType, numberOfItems, page);
-            ArrayList<ServerCalls.ScratchProject> projectList = searchResult.getProjectList();
+            ArrayList<ScratchProjectData> projectList = searchResult.getProjectList();
             assertNotNull("Invalid search result", projectList);
-            for (ServerCalls.ScratchProject project : projectList) {
+            for (ScratchProjectData project : projectList) {
                 assertNotNull(project.getTitle());
                 assertNotNull(project.getContent());
                 assertNotNull(project.getProjectUrl());
