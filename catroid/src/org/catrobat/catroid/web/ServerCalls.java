@@ -237,8 +237,11 @@ public final class ServerCalls {
                 String title = projectJson.getString("titleNoFormatting").replace(" on Scratch", "");
                 String content= projectJson.getString("contentNoFormatting");
                 String projectUrl = projectJson.getString("url");
-                if (! projectUrl.startsWith("https://scratch.mit.edu/projects/")) {
-                    continue; // ignore results that are no real projects (e.g. studios or remix-collections)
+                if (! projectUrl.startsWith("https://scratch.mit.edu/projects/")
+					|| projectUrl.contains("/studios") || projectUrl.contains("/remixtree")
+				) {
+					// ignore results that are no real projects (e.g. studios or remix-collections)
+                    continue;
                 }
 
                 JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
