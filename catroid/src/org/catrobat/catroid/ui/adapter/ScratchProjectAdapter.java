@@ -29,7 +29,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -37,15 +40,23 @@ import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.R;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
+    private boolean showDetails;
+    private int selectMode;
+    private Set<Integer> checkedProjects = new TreeSet<Integer>();
+    private OnScratchProjectEditListener onScratchProjectEditListener;
+    private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
 
     private static class ViewHolder {
         private RelativeLayout background;
+        private CheckBox checkbox;
         private TextView projectName;
         private ImageView image;
-        private TextView size;
-        private TextView dateChanged;
+        private TextView detailsText;
+        private View projectDetails;
     }
 
     private static LayoutInflater inflater;
@@ -53,6 +64,44 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
     public ScratchProjectAdapter(Context context, int resource, int textViewResourceId, List<ScratchProjectData> objects) {
         super(context, resource, textViewResourceId, objects);
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        showDetails = true;
+        selectMode = ListView.CHOICE_MODE_NONE;
+    }
+
+    public void setOnScratchProjectEditListener(OnScratchProjectEditListener listener) {
+        onScratchProjectEditListener = listener;
+    }
+
+    public void setShowDetails(boolean showDetails) {
+        this.showDetails = showDetails;
+    }
+
+    public boolean getShowDetails() {
+        return showDetails;
+    }
+
+    public void setSelectMode(int selectMode) {
+        this.selectMode = selectMode;
+    }
+
+    public int getSelectMode() {
+        return selectMode;
+    }
+
+    public Set<Integer> getCheckedProjects() {
+        return checkedProjects;
+    }
+
+    public int getAmountOfCheckedProjects() {
+        return checkedProjects.size();
+    }
+
+    public void addCheckedProject(int position) {
+        checkedProjects.add(position);
+    }
+
+    public void clearCheckedProjects() {
+        checkedProjects.clear();
     }
 
     @Override
@@ -63,10 +112,11 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
             projectView = inflater.inflate(R.layout.fragment_scratch_project_list_item, parent, false);
             holder = new ViewHolder();
             holder.background = (RelativeLayout) projectView.findViewById(R.id.scratch_projects_list_item_background);
+            holder.checkbox = (CheckBox) projectView.findViewById(R.id.scratch_project_checkbox);
             holder.projectName = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_title);
             holder.image = (ImageView) projectView.findViewById(R.id.scratch_projects_list_item_image);
-            holder.size = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_size_2);
-            holder.dateChanged = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_changed_2);
+            holder.detailsText = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_details_text);
+            holder.projectDetails = projectView.findViewById(R.id.scratch_projects_list_item_details);
             projectView.setTag(holder);
         } else {
             holder = (ViewHolder) projectView.getTag();
@@ -74,17 +124,53 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
 
         // ------------------------------------------------------------
         ScratchProjectData projectData = getItem(position);
-        String projectName = projectData.getTitle();
 
-        //set name of project:
-        holder.projectName.setText(projectName);
+        // set name of project:
+        holder.projectName.setText(projectData.getTitle());
 
         // set size of project:
-        holder.size.setText("test");
+        holder.detailsText.setText(projectData.getContent().replace(" ... ", " - "));
+        holder.detailsText.setSingleLine(false);
 
-        //set last changed:
-        holder.dateChanged.setText("test");
-        holder.projectName.setSingleLine(true);
+        // set project image (threaded):
+        //screenshotLoader.loadAndShowScreenshot(projectName, holder.image);
+
+        if (showDetails) {
+            holder.projectDetails.setVisibility(View.VISIBLE);
+            holder.projectName.setSingleLine(true);
+        } else {
+            holder.projectDetails.setVisibility(View.GONE);
+            holder.projectName.setSingleLine(false);
+        }
+
+        holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    if (selectMode == ListView.CHOICE_MODE_SINGLE) {
+                        clearCheckedProjects();
+                    }
+                    checkedProjects.add(position);
+                } else {
+                    checkedProjects.remove(position);
+                }
+                notifyDataSetChanged();
+
+                if (onScratchProjectEditListener != null) {
+                    onScratchProjectEditListener.onProjectChecked();
+                }
+            }
+        });
+
+        holder.background.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if (selectMode != ListView.CHOICE_MODE_NONE) {
+                    return true;
+                }
+                return false;
+            }
+        });
 
         holder.background.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,14 +179,43 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
                 v.clearFocus();
                 v.requestFocus();
                 if (clickedViewHolder != null) {
-                    Log.d("S2CC", "Clicked on list view item: " + clickedViewHolder.projectName);
+                    Log.d(TAG, "Clicked on list view item: " + clickedViewHolder.projectName);
                 } else {
-                    Log.d("S2CC", "Clicked on list view item");
+                    Log.d(TAG, "Clicked on list view item");
                 }
 
                 // TODO: implement!
+                if (selectMode != ListView.CHOICE_MODE_NONE) {
+                    Log.d(TAG, "Toggling checkbox");
+                    holder.checkbox.setChecked(!holder.checkbox.isChecked());
+                } else if (onScratchProjectEditListener != null) {
+                    Log.d(TAG, "Project edit listener not set");
+                    onScratchProjectEditListener.onProjectEdit(position);
+                }
             }
         });
+
+        if (checkedProjects.contains(position)) {
+            holder.checkbox.setChecked(true);
+        } else {
+            holder.checkbox.setChecked(false);
+        }
+        if (selectMode != ListView.CHOICE_MODE_NONE) {
+            holder.checkbox.setVisibility(View.VISIBLE);
+            holder.background.setBackgroundResource(R.drawable.button_background_shadowed);
+        } else {
+            holder.checkbox.setVisibility(View.GONE);
+            holder.checkbox.setChecked(false);
+            holder.background.setBackgroundResource(R.drawable.button_background_selector);
+            clearCheckedProjects();
+        }
+
         return projectView;
+    }
+
+    public interface OnScratchProjectEditListener {
+        void onProjectChecked();
+
+        void onProjectEdit(int position);
     }
 }
