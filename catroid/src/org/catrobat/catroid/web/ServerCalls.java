@@ -44,6 +44,7 @@ import com.squareup.okhttp.Response;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.transfers.ProjectUploadService;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
 import org.catrobat.catroid.utils.Utils;
@@ -172,25 +173,6 @@ public final class ServerCalls {
 	}
 
     public enum ScratchSearchSortType { RELEVANCE, DATE }
-
-    public class ScratchSearchResult {
-        private ArrayList<ScratchProjectData> projectList;
-        private String query;
-        private int currentPageIndex;
-        private int totalNumberOfResults;
-
-        public ScratchSearchResult(ArrayList<ScratchProjectData> projectList, String query, int currentPageIndex, int totalNumberOfResults) {
-            this.query = query;
-            this.projectList = projectList;
-            this.currentPageIndex = currentPageIndex;
-            this.totalNumberOfResults = totalNumberOfResults;
-        }
-
-        public ArrayList<ScratchProjectData> getProjectList() { return projectList; }
-        public String getQuery() { return query; }
-        public int getCurrentPageIndex() { return currentPageIndex; }
-        public int getTotalNumberOfResults() { return totalNumberOfResults; }
-    }
 
 	public ScratchSearchResult scratchSearch(final String query, final ScratchSearchSortType sortType,
                                              final int numberOfItems, final int page) throws WebconnectionException

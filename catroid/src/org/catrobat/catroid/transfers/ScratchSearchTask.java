@@ -24,12 +24,15 @@
 package org.catrobat.catroid.transfers;
 
 import android.os.AsyncTask;
+
+import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.web.ServerCalls;
 
-public class ScratchSearchTask extends AsyncTask<String, Integer, ServerCalls.ScratchSearchResult> {
+public class ScratchSearchTask extends AsyncTask<String, Integer, ScratchSearchResult> {
+
     public interface ScratchSearchTaskDelegate {
         void onPreExecute();
-        void onPostExecute(ServerCalls.ScratchSearchResult result);
+        void onPostExecute(ScratchSearchResult result);
     }
 
     private ScratchSearchTaskDelegate delegate = null;
@@ -48,11 +51,11 @@ public class ScratchSearchTask extends AsyncTask<String, Integer, ServerCalls.Sc
     }
 
     @Override
-    protected ServerCalls.ScratchSearchResult doInBackground(String... params) {
+    protected ScratchSearchResult doInBackground(String... params) {
         return fetchProjectList(params[0]);
     }
 
-    public ServerCalls.ScratchSearchResult fetchProjectList(String query) {
+    public ScratchSearchResult fetchProjectList(String query) {
         try {
             ServerCalls.ScratchSearchSortType sortType = ServerCalls.ScratchSearchSortType.RELEVANCE;
             return ServerCalls.getInstance().scratchSearch(query, sortType, 20, 0);
@@ -63,7 +66,7 @@ public class ScratchSearchTask extends AsyncTask<String, Integer, ServerCalls.Sc
     }
 
     @Override
-    protected void onPostExecute(ServerCalls.ScratchSearchResult result) {
+    protected void onPostExecute(ScratchSearchResult result) {
         super.onPostExecute(result);
         if (delegate != null) {
             delegate.onPostExecute(result);

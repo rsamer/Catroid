@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.transfers.ScratchSearchTask;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
@@ -60,7 +61,7 @@ public class ScratchSearchProjectsListFragment extends Fragment implements Scrat
     private ListView searchResultsListView;
     private ProgressDialog progressDialog;
     private ScratchProjectAdapter scratchProjectAdapter;
-    private LruCache<String, ServerCalls.ScratchSearchResult> scratchSearchResultCache = null;
+    private LruCache<String, ScratchSearchResult> scratchSearchResultCache = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -132,7 +133,7 @@ public class ScratchSearchProjectsListFragment extends Fragment implements Scrat
                 searchResultsListView.setVisibility(View.VISIBLE);
 
                 // TODO: consider pagination for cache!
-                ServerCalls.ScratchSearchResult cachedResult = scratchSearchResultCache.get(newText);
+                ScratchSearchResult cachedResult = scratchSearchResultCache.get(newText);
                 if (cachedResult != null) {
                     Log.d("S2CC", "Cache hit!");
                     onPostExecute(cachedResult);
@@ -158,15 +159,15 @@ public class ScratchSearchProjectsListFragment extends Fragment implements Scrat
     }
 
     @Override
-    public void onPostExecute(ServerCalls.ScratchSearchResult result) {
+    public void onPostExecute(ScratchSearchResult result) {
         Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
         Preconditions.checkNotNull(scratchProjectAdapter, "Scratch project adapter cannot be null!");
         progressDialog.hide();
-        scratchSearchResultCache.put(result.getQuery(), result);
         if (result == null || result.getProjectList() == null) {
             Toast.makeText(getActivity(), "Unable to connect to server, please try later", Toast.LENGTH_LONG).show();
             return;
         }
+        scratchSearchResultCache.put(result.getQuery(), result);
         scratchProjectAdapter.clear();
         for (ScratchProjectData projectData : result.getProjectList()) {
             scratchProjectAdapter.add(projectData);
