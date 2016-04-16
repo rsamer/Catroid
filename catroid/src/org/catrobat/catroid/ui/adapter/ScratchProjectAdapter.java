@@ -38,17 +38,21 @@ import android.widget.TextView;
 
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.utils.FileCache;
+import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
 
 public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
+    private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
     private boolean showDetails;
     private int selectMode;
     private Set<Integer> checkedProjects = new TreeSet<Integer>();
     private OnScratchProjectEditListener onScratchProjectEditListener;
-    private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
+    private WebImageLoader webImageLoader;
 
     private static class ViewHolder {
         private RelativeLayout background;
@@ -66,6 +70,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         showDetails = true;
         selectMode = ListView.CHOICE_MODE_NONE;
+        webImageLoader = new WebImageLoader(new FileCache(context), Executors.newFixedThreadPool(5));
     }
 
     public void setOnScratchProjectEditListener(OnScratchProjectEditListener listener) {
@@ -133,7 +138,10 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
         holder.detailsText.setSingleLine(false);
 
         // set project image (threaded):
-        //screenshotLoader.loadAndShowScreenshot(projectName, holder.image);
+        ScratchProjectData.HttpImage httpImageMetadata = projectData.getProjectThumbnail();
+        if (httpImageMetadata != null) {
+            webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl(), holder.image);
+        }
 
         if (showDetails) {
             holder.projectDetails.setVisibility(View.VISIBLE);
