@@ -172,7 +172,71 @@ public final class ServerCalls {
 		return INSTANCE;
 	}
 
-    public enum ScratchSearchSortType { RELEVANCE, DATE }
+	public ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException {
+		return scratchSearch("scratch", ScratchSearchSortType.RELEVANCE, 10, 0);
+		/*
+		// TODO: implement this on server!
+		ArrayList<ScratchProjectData> projectList = new ArrayList<>();
+		try {
+			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
+				// put("paramName", "value");
+			}};
+
+			StringBuilder urlStringBuilder = new StringBuilder(Constants.SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL);
+			urlStringBuilder.append("?");
+			for (Map.Entry<String, String> entry : httpGetParams.entrySet()) {
+				urlStringBuilder.append(entry.getKey());
+				urlStringBuilder.append("=");
+				urlStringBuilder.append(entry.getValue());
+				urlStringBuilder.append("&");
+			}
+			urlStringBuilder.setLength(urlStringBuilder.length() - 1); // removes trailing "&" or "?" character
+
+			final String url = urlStringBuilder.toString();
+			Log.v(TAG, "URL to use: " + url);
+			resultString = getRequest(url);
+			Log.v(TAG, "Result string: " + resultString);
+			System.out.print("URL:" + url);
+
+			JSONObject jsonObject = new JSONObject(resultString);
+			JSONArray results = jsonObject.getJSONArray("results");
+
+			for (int i = 0; i < results.length(); ++i) {
+				JSONObject projectJson = results.getJSONObject(i);
+				String title = projectJson.getString("title");
+				String content = projectJson.getString("content");
+				String projectUrl = projectJson.getString("url");
+				if (! projectUrl.startsWith("https://scratch.mit.edu/projects/")) {
+					Log.e(TAG, "Invalid URL given!"); // just to ensure no invalid urls get injected!
+					continue;
+				}
+
+				ScratchProjectData projectData = new ScratchProjectData(title, content, projectUrl);
+				if (projectJson.has("ogImage")) {
+					String projectImageUrl = projectJson.getString("ogImage");
+					int projectImageWidth = 200;
+					int projectImageHeight = 200;
+					projectData.setProjectImage(new ScratchProjectData.HttpImage(projectImageUrl, projectImageWidth, projectImageHeight));
+				}
+
+				if (projectJson.has("cseThumbnail")) {
+					JSONObject cseThumbnail = projectJson.getJSONObject("cseThumbnail");
+					String projectThumbnailUrl = cseThumbnail.getString("src");
+					int projectThumbnailWidth = Integer.parseInt(cseThumbnail.getString("width"));
+					int projectThumbnailHeight = Integer.parseInt(cseThumbnail.getString("height"));
+					projectData.setProjectThumbnail(new ScratchProjectData.HttpImage(projectThumbnailUrl, projectThumbnailWidth, projectThumbnailHeight));
+				}
+				projectList.add(projectData);
+			}
+		} catch (Exception exception) {
+			Log.e(TAG, Log.getStackTraceString(exception));
+			throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
+		}
+		return new ScratchSearchResult(projectList, null, 0, resultString.length());
+		*/
+	}
+
+	public enum ScratchSearchSortType { RELEVANCE, DATE }
 
 	public ScratchSearchResult scratchSearch(final String query, final ScratchSearchSortType sortType,
                                              final int numberOfItems, final int page) throws WebconnectionException
