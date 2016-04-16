@@ -100,6 +100,9 @@ public final class Constants {
 
 	public static final String SCRATCH_SEARCH_BASE_URL = "https://www.googleapis.com/customsearch/";
 	public static final String SCRATCH_SEARCH_URL = SCRATCH_SEARCH_BASE_URL + "v1element";
+	public static final String SCRATCH_CONVERTER_BASE_URL = "https://scratch2.catrob.at/";
+	public static final String SCRATCH_CONVERTER_API_BASE_URL = SCRATCH_CONVERTER_BASE_URL + "api/v1/";
+	public static final String SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL = SCRATCH_CONVERTER_API_BASE_URL + "projects.json";
 
 	public static final String CATROBAT_HELP_URL = BASE_URL_HTTPS + "help";
 	public static final String CATROBAT_TOKEN_LOGIN_URL = BASE_URL_HTTPS + "tokenlogin?username=";

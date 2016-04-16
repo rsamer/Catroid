@@ -37,6 +37,13 @@ public class ScratchProjectData implements Serializable {
             this.width = width;
             this.height = height;
         }
+
+        public String getUrl() { return url; }
+
+        public int getWidth() { return width; }
+
+        public int getHeight() { return height; }
+
     }
 
     private static final long serialVersionUID = 1L;

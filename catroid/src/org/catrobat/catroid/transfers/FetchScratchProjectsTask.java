@@ -25,19 +25,21 @@ package org.catrobat.catroid.transfers;
 
 import android.os.AsyncTask;
 
+import com.google.common.base.Preconditions;
+
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.web.ServerCalls;
 
-public class ScratchSearchTask extends AsyncTask<String, Integer, ScratchSearchResult> {
+public class FetchScratchProjectsTask extends AsyncTask<String, Integer, ScratchSearchResult> {
 
-    public interface ScratchSearchTaskDelegate {
+    public interface ScratchProjectListTaskDelegate {
         void onPreExecute();
         void onPostExecute(ScratchSearchResult result);
     }
 
-    private ScratchSearchTaskDelegate delegate = null;
+    private ScratchProjectListTaskDelegate delegate = null;
 
-    public ScratchSearchTask setDelegate(ScratchSearchTaskDelegate delegate) {
+    public FetchScratchProjectsTask setDelegate(ScratchProjectListTaskDelegate delegate) {
         this.delegate = delegate;
         return this;
     }
@@ -52,13 +54,18 @@ public class ScratchSearchTask extends AsyncTask<String, Integer, ScratchSearchR
 
     @Override
     protected ScratchSearchResult doInBackground(String... params) {
-        return fetchProjectList(params[0]);
+        Preconditions.checkNotNull((params.length == 0 || params.length == 1),
+                "Invalid number of parameters!");
+        return fetchProjectList(params.length == 1 ? params[0] : null);
     }
 
     public ScratchSearchResult fetchProjectList(String query) {
         try {
-            ServerCalls.ScratchSearchSortType sortType = ServerCalls.ScratchSearchSortType.RELEVANCE;
-            return ServerCalls.getInstance().scratchSearch(query, sortType, 20, 0);
+            if (query != null) {
+                ServerCalls.ScratchSearchSortType sortType = ServerCalls.ScratchSearchSortType.RELEVANCE;
+                return ServerCalls.getInstance().scratchSearch(query, sortType, 20, 0);
+            }
+            return ServerCalls.getInstance().fetchDefaultScratchProjects();
         } catch (Exception e) {
             e.printStackTrace();
             return null;

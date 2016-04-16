@@ -215,7 +215,7 @@ public final class ServerCalls {
 				urlStringBuilder.append(entry.getValue());
 				urlStringBuilder.append("&");
 			}
-			urlStringBuilder.setLength(urlStringBuilder.length() - 1); // removes trailing "&" character
+			urlStringBuilder.setLength(urlStringBuilder.length() - 1); // removes trailing "&" or "?" character
 
 			final String url = urlStringBuilder.toString();
 			Log.v(TAG, "URL to use: " + url);
@@ -255,7 +255,7 @@ public final class ServerCalls {
                     projectData.setProjectImage(new ScratchProjectData.HttpImage(projectImageUrl, projectImageWidth, projectImageHeight));
                 }
 
-                if (metatags.has("cseThumbnail")) {
+                if (richSnippet.has("cseThumbnail")) {
                     JSONObject cseThumbnail = richSnippet.getJSONObject("cseThumbnail");
                     String projectThumbnailUrl = cseThumbnail.getString("src");
                     int projectThumbnailWidth = Integer.parseInt(cseThumbnail.getString("width"));

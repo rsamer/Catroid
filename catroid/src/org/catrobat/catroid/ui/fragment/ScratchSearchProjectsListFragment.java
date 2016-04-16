@@ -47,22 +47,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.common.base.Preconditions;
 
-import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ProjectData;
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.common.ScratchSearchResult;
-import org.catrobat.catroid.transfers.ScratchSearchTask;
-import org.catrobat.catroid.ui.BottomBar;
+import org.catrobat.catroid.transfers.FetchScratchProjectsTask;
 import org.catrobat.catroid.ui.CapitalizedTextView;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
@@ -70,14 +65,11 @@ import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 public class ScratchSearchProjectsListFragment extends Fragment
-        implements ScratchSearchTask.ScratchSearchTaskDelegate, ScratchProjectAdapter.OnScratchProjectEditListener {
+        implements FetchScratchProjectsTask.ScratchProjectListTaskDelegate, ScratchProjectAdapter.OnScratchProjectEditListener {
 
     private static final String BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA = "scratch_project_data";
     private static final String SHARED_PREFERENCE_NAME = "showDetailsScratchProjects";
@@ -91,7 +83,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
     private ProgressDialog progressDialog;
     private List<ScratchProjectData> scratchProjectList;
     private ScratchProjectData scratchProjectToEdit;
-    private LruCache<String, ScratchSearchResult> scratchSearchResultCache = null;
+    private LruCache<String, ScratchSearchResult> scratchSearchResultCache;
     private ScratchProjectAdapter scratchProjectAdapter;
     private ActionMode actionMode;
     private View selectAllActionModeButton;
@@ -214,8 +206,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
                     return false;
                 }
 
-                searchResultsListView.setVisibility(View.VISIBLE);
-
                 // TODO: consider pagination for cache!
                 ScratchSearchResult cachedResult = scratchSearchResultCache.get(newText);
                 if (cachedResult != null) {
@@ -226,12 +216,12 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
                 // cache miss
                 Log.d(TAG, "Cache miss!");
-                new ScratchSearchTask().setDelegate(fragment).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, newText);
+                new FetchScratchProjectsTask().setDelegate(fragment).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, newText);
                 return false;
             }
         });
-
         // TODO: >> powered by "https://www.google.com/uds/css/small-logo.png" Custom Search << (grey)
+        rootView.clearFocus();
         return rootView;
     }
 
@@ -243,6 +233,14 @@ public class ScratchSearchProjectsListFragment extends Fragment
             scratchProjectToEdit = (ScratchProjectData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
         }
         initAdapter();
+        searchView.setFocusable(false);
+        fetchDefaultProjects();
+    }
+
+    private void fetchDefaultProjects() {
+        Log.d(TAG, "Fetching default scratch projects");
+        searchView.setQuery("", false);
+        new FetchScratchProjectsTask().setDelegate(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     @Override
@@ -269,9 +267,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
         scratchProjectAdapter.notifyDataSetChanged();
     }
 
-    /*public boolean getActionModeActive() {
-        return actionModeActive;
-    }*/
+    /*public boolean getActionModeActive() { return actionModeActive; }*/
 
     private void initAdapter() {
         if (scratchProjectList == null) {
@@ -283,7 +279,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
                 scratchProjectList);
         searchResultsListView.setAdapter(scratchProjectAdapter);
         //setListAdapter(scratchProjectAdapter);
-
         initClickListener();
     }
 
@@ -387,19 +382,27 @@ public class ScratchSearchProjectsListFragment extends Fragment
         alertDialog.show();
     }
 
-    /* private void convertProject(ScratchProjectData project) {
-        // TODO: implement this
-    } */
+    private void convertProjects(List<ScratchProjectData> projectList) {
+        // TODO: create websocket connection and set up receiver
+        Log.i(TAG, "Converting projects:");
+        for (ScratchProjectData projectData : projectList) {
+            Log.i(TAG, projectData.getTitle());
+            //convertProject(scratchProjectToEdit);
+            // TODO: send convert command
+        }
+    }
 
     private void convertCheckedProjects() {
         int numConverted = 0;
+        ArrayList<ScratchProjectData> projectsToConvert = new ArrayList<>();
         for (int position : scratchProjectAdapter.getCheckedProjects()) {
             scratchProjectToEdit = (ScratchProjectData) searchResultsListView.getItemAtPosition(position - numConverted);
-            //convertProject(scratchProjectToEdit);
+            projectsToConvert.add(scratchProjectToEdit);
             Log.d(TAG, "Converting project '" + scratchProjectToEdit.getTitle() + "'");
             numConverted++;
         }
         initAdapter();
+        convertProjects(projectsToConvert);
     }
 
     private void clearCheckedProjectsAndEnableButtons() {
@@ -445,6 +448,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
     //----------------------------------------------------------------------------------------------
     @Override
     public void onPreExecute() {
+        Log.i(TAG, "onPreExecute for FetchScratchProjectsTask called");
         Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
         progressDialog.setMessage(getActivity().getResources().getString(R.string.search_progress));
         //progressDialog.show();
@@ -452,6 +456,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
     @Override
     public void onPostExecute(ScratchSearchResult result) {
+        Log.i(TAG, "onPostExecute for FetchScratchProjectsTask called");
         Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
         Preconditions.checkNotNull(scratchProjectAdapter, "Scratch project adapter cannot be null!");
         progressDialog.hide();
@@ -459,13 +464,16 @@ public class ScratchSearchProjectsListFragment extends Fragment
             ToastUtil.showError(getActivity(), "Unable to connect to server, please try later");
             return;
         }
-        scratchSearchResultCache.put(result.getQuery(), result);
+        if (result.getQuery() != null) {
+            scratchSearchResultCache.put(result.getQuery(), result);
+        }
         scratchProjectAdapter.clear();
         for (ScratchProjectData projectData : result.getProjectList()) {
             scratchProjectAdapter.add(projectData);
-            Log.i(TAG, projectData.getTitle());
+            Log.d(TAG, projectData.getTitle());
         }
         scratchProjectAdapter.notifyDataSetChanged();
+        searchResultsListView.setVisibility(View.VISIBLE);
     }
 
 }
