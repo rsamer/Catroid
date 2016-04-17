@@ -24,6 +24,7 @@ package org.catrobat.catroid.web;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -53,7 +54,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -172,12 +179,12 @@ public final class ServerCalls {
 		return INSTANCE;
 	}
 
-	public ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException {
+	public ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException, InterruptedIOException {
 		return scratchSearch("scratch", ScratchSearchSortType.RELEVANCE, 10, 0);
 		/*
 		// TODO: implement this on server!
-		ArrayList<ScratchProjectData> projectList = new ArrayList<>();
 		try {
+			ArrayList<ScratchProjectData> projectList = new ArrayList<>();
 			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
 				// put("paramName", "value");
 			}};
@@ -194,7 +201,7 @@ public final class ServerCalls {
 
 			final String url = urlStringBuilder.toString();
 			Log.v(TAG, "URL to use: " + url);
-			resultString = getRequest(url);
+			resultString = getRequestInterruptable(url);
 			Log.v(TAG, "Result string: " + resultString);
 			System.out.print("URL:" + url);
 
@@ -228,27 +235,31 @@ public final class ServerCalls {
 				}
 				projectList.add(projectData);
 			}
+			return new ScratchSearchResult(projectList, null, 0, resultString.length());
+		} catch (InterruptedIOException exception) {
+			Log.d(TAG, "OK! Request cancelled");
+			throw exception;
 		} catch (Exception exception) {
 			Log.e(TAG, Log.getStackTraceString(exception));
 			throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
 		}
-		return new ScratchSearchResult(projectList, null, 0, resultString.length());
 		*/
 	}
 
 	public enum ScratchSearchSortType { RELEVANCE, DATE }
 
 	public ScratchSearchResult scratchSearch(final String query, final ScratchSearchSortType sortType,
-                                             final int numberOfItems, final int page) throws WebconnectionException
+                                             final int numberOfItems, final int page)
+			throws WebconnectionException, InterruptedIOException
     {
 		Preconditions.checkNotNull(query, "Parameter query cannot be null!");
         Preconditions.checkArgument(numberOfItems > 0, "Parameter numberOfItems must be greater than 0");
         Preconditions.checkArgument(page >= 0, "Parameter page must be greater or equal than 0");
 
-        ArrayList<ScratchProjectData> projectList = new ArrayList<>();
-        int currentPageIndex = 0;
-        int totalNumberOfResults = 0;
         try {
+			ArrayList<ScratchProjectData> projectList = new ArrayList<>();
+			int currentPageIndex = 0;
+			int totalNumberOfResults = 0;
 			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
 				put("key", "AIzaSyCVAXiUzRYsML1Pv6RwSG1gunmMikTzQqY");
 				put("rsz", "filtered_cse");
@@ -260,11 +271,7 @@ public final class ServerCalls {
 				put("sig", "432dd570d1a386253361f581254f9ca1");
 				put("cx", "006344185922250120026:y4rdkv9uhp4");
 				put("q", URLEncoder.encode(query, "UTF-8") + "%20more%3Aprojects");
-				if (sortType == ScratchSearchSortType.RELEVANCE) {
-					put("sort", "");
-				} else {
-					put("sort", "date");
-				}
+				put("sort", sortType != ScratchSearchSortType.RELEVANCE ? "date" : "");
 				if (page > 0) {
 					put("start", Integer.toString(page * numberOfItems));
 				}
@@ -283,56 +290,59 @@ public final class ServerCalls {
 
 			final String url = urlStringBuilder.toString();
 			Log.v(TAG, "URL to use: " + url);
-			resultString = getRequest(url);
+			resultString = getRequestInterruptable(url);
 			Log.v(TAG, "Result string: " + resultString);
-            System.out.print("URL:" + url);
+			System.out.print("URL:" + url);
 
 			JSONObject jsonObject = new JSONObject(resultString);
 			JSONObject cursor = jsonObject.getJSONObject("cursor");
-            currentPageIndex = cursor.getInt("currentPageIndex");
-            JSONArray results = jsonObject.getJSONArray("results");
-            JSONObject context = jsonObject.getJSONObject("context");
-            totalNumberOfResults = context.has("total_results")
-                                 ? Integer.parseInt(context.getString("total_results"))
-                                 : results.length();
+			currentPageIndex = cursor.getInt("currentPageIndex");
+			JSONArray results = jsonObject.getJSONArray("results");
+			JSONObject context = jsonObject.getJSONObject("context");
+			totalNumberOfResults = context.has("total_results")
+								 ? Integer.parseInt(context.getString("total_results"))
+								 : results.length();
 
-            for (int i = 0; i < results.length(); ++i) {
-                JSONObject projectJson = results.getJSONObject(i);
-                String title = projectJson.getString("titleNoFormatting").replace(" on Scratch", "");
-                String content= projectJson.getString("contentNoFormatting");
-                String projectUrl = projectJson.getString("url");
-                if (! projectUrl.startsWith("https://scratch.mit.edu/projects/")
-					|| projectUrl.contains("/studios") || projectUrl.contains("/remixtree")
-				) {
+			for (int i = 0; i < results.length(); ++i) {
+				JSONObject projectJson = results.getJSONObject(i);
+				String title = projectJson.getString("titleNoFormatting").replace(" on Scratch", "");
+				String content = projectJson.getString("contentNoFormatting");
+				String projectUrl = projectJson.getString("url");
+				if (!projectUrl.startsWith("https://scratch.mit.edu/projects/")
+						|| projectUrl.contains("/studios") || projectUrl.contains("/remixtree")
+						) {
 					// ignore results that are no real projects (e.g. studios or remix-collections)
-                    continue;
-                }
+					continue;
+				}
 
-                JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
-                JSONObject metatags = richSnippet.getJSONObject("metatags");
+				JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
+				JSONObject metatags = richSnippet.getJSONObject("metatags");
 
-                ScratchProjectData projectData = new ScratchProjectData(title, content, projectUrl);
-                if (metatags.has("ogImage")) {
-                    String projectImageUrl = metatags.getString("ogImage");
-                    int projectImageWidth = 200;
-                    int projectImageHeight = 200;
-                    projectData.setProjectImage(new ScratchProjectData.HttpImage(projectImageUrl, projectImageWidth, projectImageHeight));
-                }
+				ScratchProjectData projectData = new ScratchProjectData(title, content, projectUrl);
+				if (metatags.has("ogImage")) {
+					String projectImageUrl = metatags.getString("ogImage");
+					int projectImageWidth = 200;
+					int projectImageHeight = 200;
+					projectData.setProjectImage(new ScratchProjectData.HttpImage(projectImageUrl, projectImageWidth, projectImageHeight));
+				}
 
-                if (richSnippet.has("cseThumbnail")) {
-                    JSONObject cseThumbnail = richSnippet.getJSONObject("cseThumbnail");
-                    String projectThumbnailUrl = cseThumbnail.getString("src");
-                    int projectThumbnailWidth = Integer.parseInt(cseThumbnail.getString("width"));
-                    int projectThumbnailHeight = Integer.parseInt(cseThumbnail.getString("height"));
-                    projectData.setProjectThumbnail(new ScratchProjectData.HttpImage(projectThumbnailUrl, projectThumbnailWidth, projectThumbnailHeight));
-                }
-                projectList.add(projectData);
-            }
+				if (richSnippet.has("cseThumbnail")) {
+					JSONObject cseThumbnail = richSnippet.getJSONObject("cseThumbnail");
+					String projectThumbnailUrl = cseThumbnail.getString("src");
+					int projectThumbnailWidth = Integer.parseInt(cseThumbnail.getString("width"));
+					int projectThumbnailHeight = Integer.parseInt(cseThumbnail.getString("height"));
+					projectData.setProjectThumbnail(new ScratchProjectData.HttpImage(projectThumbnailUrl, projectThumbnailWidth, projectThumbnailHeight));
+				}
+				projectList.add(projectData);
+			}
+			return new ScratchSearchResult(projectList, query, currentPageIndex, totalNumberOfResults);
+		} catch (InterruptedIOException exception) {
+			Log.d(TAG, "OK! Request cancelled");
+			throw exception;
 		} catch (Exception exception) {
-            Log.e(TAG, Log.getStackTraceString(exception));
-            throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
-        }
-        return new ScratchSearchResult(projectList, query, currentPageIndex, totalNumberOfResults);
+			Log.e(TAG, Log.getStackTraceString(exception));
+			throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
+		}
 	}
 
 	public void uploadProject(String projectName, String projectDescription, String zipFileString, String userEmail,
@@ -500,6 +510,38 @@ public final class ServerCalls {
 		}
 	}
 
+	public void downloadImage(final String url, final File file) throws Throwable {
+		final int HTTP_TIMEOUT = 30_000;
+		InputStream inputStream = null;
+		OutputStream outputStream = null;
+
+		try {
+			URL imageUrl = new URL(url);
+			HttpURLConnection connection = (HttpURLConnection)imageUrl.openConnection();
+			connection.setConnectTimeout(HTTP_TIMEOUT);
+			connection.setReadTimeout(HTTP_TIMEOUT);
+			connection.setInstanceFollowRedirects(true);
+			inputStream = connection.getInputStream();
+			outputStream = new FileOutputStream(file);
+			Utils.copyStream(inputStream, outputStream);
+			return;
+		} catch (Throwable exc) {
+			exc.printStackTrace();
+			throw exc;
+		} finally {
+			if (inputStream != null) {
+				try {
+					inputStream.close();
+				} catch (IOException exc) {}
+			}
+			if (outputStream != null) {
+				try {
+					outputStream.close();
+				} catch (IOException exc) {}
+			}
+		}
+	}
+
 	public boolean checkToken(String token, String username) throws WebconnectionException {
 		try {
 			HashMap<String, String> postValues = new HashMap<>();
@@ -561,6 +603,24 @@ public final class ServerCalls {
 		try {
 			Response response = okHttpClient.newCall(request).execute();
 			return response.body().string();
+		} catch (IOException ioException) {
+			Log.e(TAG, Log.getStackTraceString(ioException));
+			throw new WebconnectionException(WebconnectionException.ERROR_NETWORK,
+					"Connection could not be established!");
+		}
+	}
+
+	public String getRequestInterruptable(String url) throws InterruptedIOException, WebconnectionException {
+		Request request = new Request.Builder()
+				.url(url)
+				.build();
+
+		try {
+			Response response = okHttpClient.newCall(request).execute();
+			return response.body().string();
+		} catch (InterruptedIOException interruptedException) {
+			Log.d(TAG, "Request cancelled");
+			throw interruptedException;
 		} catch (IOException ioException) {
 			Log.e(TAG, Log.getStackTraceString(ioException));
 			throw new WebconnectionException(WebconnectionException.ERROR_NETWORK,
