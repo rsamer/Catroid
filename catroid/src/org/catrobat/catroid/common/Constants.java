@@ -152,6 +152,7 @@ public final class Constants {
 
 	// Scratch Converter
     public static final int SCRATCH_SEARCH_RESULT_CACHE_SIZE = 100;
+	public static final String SCRATCH_PROJECT_DATA = "scratchProjectData";
 
 	// Pocket Paint
 	public static final String EXTRA_PICTURE_PATH_POCKET_PAINT = "org.catrobat.extra.PAINTROID_PICTURE_PATH";
