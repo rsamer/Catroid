@@ -65,6 +65,7 @@ import org.catrobat.catroid.ui.ScratchConverterActivity;
 import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
 import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
+import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
@@ -88,7 +89,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
     private ProgressDialog progressDialog;
     private List<ScratchProjectData> scratchProjectList;
     private ScratchProjectData scratchProjectToEdit;
-    private LruCache<String, ScratchSearchResult> scratchSearchResultCache;
+    private ExpiringLruMemoryObjectCache<ScratchSearchResult> scratchSearchResultCache;
     private ScratchProjectAdapter scratchProjectAdapter;
     private ActionMode actionMode;
     private View selectAllActionModeButton;
@@ -142,7 +143,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         setRetainInstance(true);
         super.onCreate(savedInstanceState);
-        scratchSearchResultCache = new LruCache<>(Constants.SCRATCH_SEARCH_RESULT_CACHE_SIZE);
+        scratchSearchResultCache = ExpiringLruMemoryObjectCache.getInstance();
     }
 
     @Override

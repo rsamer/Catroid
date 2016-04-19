@@ -32,7 +32,7 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.utils.FileCache;
-import org.catrobat.catroid.utils.MemoryImageCache;
+import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.concurrent.ExecutorService;
@@ -57,7 +57,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity {
 
         final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 3;
         ExecutorService executorService = Executors.newFixedThreadPool(WEBIMAGE_DOWNLOADER_POOL_SIZE);
-        webImageLoader = new WebImageLoader(this, new MemoryImageCache(), new FileCache(this), executorService);
+        webImageLoader = new WebImageLoader(this, ExpiringLruMemoryImageCache.getInstance(), new FileCache(this), executorService);
 
         Log.i(TAG, scratchProjectData.getTitle());
         projectTitleTextView = (TextView) findViewById(R.id.scratch_project_title);
@@ -65,12 +65,18 @@ public class ScratchProjectDetailsActivity extends BaseActivity {
         projectInstructionsTextView = (TextView) findViewById(R.id.scratch_project_instructions_text);
         projectNotesAndCreditsTextView = (TextView) findViewById(R.id.scratch_project_notes_and_credits_text);
 
+        int width = getResources().getDimensionPixelSize(R.dimen.scratch_project_image_width);
+        int height = getResources().getDimensionPixelSize(R.dimen.scratch_project_image_height);
+
         if (scratchProjectData != null) {
             projectTitleTextView.setText(scratchProjectData.getTitle());
             projectInstructionsTextView.setText(scratchProjectData.getContent());
 
             if (scratchProjectData.getProjectImage() != null) {
-                webImageLoader.fetchAndShowImage(scratchProjectData.getProjectImage().getUrl(), projectImageView);
+                webImageLoader.fetchAndShowImage(
+                        scratchProjectData.getProjectImage().getUrl().toString(),
+                        projectImageView, width, height
+                );
             }
         }
     }

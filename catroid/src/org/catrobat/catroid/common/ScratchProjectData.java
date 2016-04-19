@@ -25,68 +25,21 @@ package org.catrobat.catroid.common;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.android.gms.common.images.WebImage;
+
+import org.catrobat.catroid.utils.WebImageLoader;
+
 import java.io.Serializable;
 
 public class ScratchProjectData implements Parcelable, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // TODO: use WebImage instead!!!!
-    public static class HttpImage implements Parcelable, Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        private String url;
-        private int width;
-        private int height;
-
-        public HttpImage(String url, int width, int height) {
-            this.url = url;
-            this.width = width;
-            this.height = height;
-        }
-
-        private HttpImage(Parcel in) {
-            this.url = in.readString();
-            this.width = in.readInt();
-            this.height = in.readInt();
-        }
-
-        public String getUrl() { return url; }
-
-        public int getWidth() { return width; }
-
-        public int getHeight() { return height; }
-
-        @Override
-        public int describeContents() { return 0; }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(url);
-            dest.writeInt(width);
-            dest.writeInt(height);
-        }
-
-        public static final Parcelable.Creator<HttpImage> CREATOR = new Parcelable.Creator<HttpImage>() {
-            @Override
-            public HttpImage createFromParcel(Parcel source) {
-                return new HttpImage(source);
-            }
-
-            @Override
-            public HttpImage[] newArray(int size) {
-                return new HttpImage[size];
-            }
-        };
-
-    }
-
     private String title;
     private String content;
     private String projectUrl;
-    private HttpImage projectImage;
-    private HttpImage projectThumbnail;
+    private WebImage projectImage;
+    private WebImage projectThumbnail;
 
     public ScratchProjectData(String title, String content, String projectUrl) {
         this.title = title;
@@ -100,8 +53,8 @@ public class ScratchProjectData implements Parcelable, Serializable {
         this.title = in.readString();
         this.content = in.readString();
         this.projectUrl = in.readString();
-        this.projectImage = in.readParcelable(HttpImage.class.getClassLoader());
-        this.projectThumbnail = in.readParcelable(HttpImage.class.getClassLoader());
+        this.projectImage = in.readParcelable(WebImage.class.getClassLoader());
+        this.projectThumbnail = in.readParcelable(WebImage.class.getClassLoader());
     }
 
     public String getProjectUrl() { return projectUrl; }
@@ -110,13 +63,13 @@ public class ScratchProjectData implements Parcelable, Serializable {
 
     public String getContent() { return content; }
 
-    public HttpImage getProjectThumbnail() { return projectThumbnail; }
+    public WebImage getProjectThumbnail() { return projectThumbnail; }
 
-    public void setProjectThumbnail(HttpImage projectThumbnail) { this.projectThumbnail = projectThumbnail; }
+    public void setProjectThumbnail(WebImage projectThumbnail) { this.projectThumbnail = projectThumbnail; }
 
-    public HttpImage getProjectImage() { return projectImage; }
+    public WebImage getProjectImage() { return projectImage; }
 
-    public void setProjectImage(HttpImage projectImage) { this.projectImage = projectImage; }
+    public void setProjectImage(WebImage projectImage) { this.projectImage = projectImage; }
 
     @Override
     public int describeContents() { return 0; }
