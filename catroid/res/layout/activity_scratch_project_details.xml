@@ -49,7 +49,8 @@
         android:layout_marginRight="10dp"
         android:id="@+id/scratch_project_image_view"
         android:src="@drawable/ic_launcher"
-        android:layout_below="@+id/scratch_project_title" />
+        android:layout_below="@+id/scratch_project_title"
+        android:layout_marginTop="10dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -76,8 +77,7 @@
         android:text="Notes and Credits"
         android:id="@+id/scratch_project_notes_and_credits_label"
         android:layout_marginTop="20dp"
-        android:layout_below="@+id/scratch_project_instructions_text"
-        android:layout_toRightOf="@+id/scratch_project_image_view" />
+        android:layout_below="@+id/scratch_project_instructions_text" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -85,8 +85,7 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam porta, tellus molestie fermentum efficitur, sem est dictum dolor, vel faucibus odio velit quis purus. Donec malesuada congue metus eu venenatis. Pellentesque eget luctus elit, vitae bibendum eros."
         android:id="@+id/scratch_project_notes_and_credits_text"
-        android:layout_below="@+id/scratch_project_notes_and_credits_label"
-        android:layout_toRightOf="@+id/scratch_project_image_view" />
+        android:layout_below="@+id/scratch_project_notes_and_credits_label" />
 
     <Button
         android:layout_width="wrap_content"

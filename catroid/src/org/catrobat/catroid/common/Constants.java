@@ -151,7 +151,10 @@ public final class Constants {
 	public static final String PLATFORM_DEFAULT = "Android";
 
 	// Scratch Converter
-    public static final int SCRATCH_SEARCH_RESULT_CACHE_SIZE = 100;
+	public static final int MEMORY_IMAGE_CACHE_EXPIRE_TIME = 300_000; // 5 minutes (in ms)
+	public static final int MEMORY_IMAGE_CACHE_ALLOCATED_FRACTION_OF_TOTAL_AVAILABLE_MEMORY = 8; // use 1/8th of available memory
+	public static final int MEMORY_OBJECT_CACHE_EXPIRE_TIME = 120_000; // 2 minutes (in ms)
+    public static final int MEMORY_OBJECT_CACHE_MAX_SIZE = 10_000;
 	public static final String SCRATCH_PROJECT_DATA = "scratchProjectData";
 
 	// Pocket Paint
