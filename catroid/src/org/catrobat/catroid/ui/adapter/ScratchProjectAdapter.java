@@ -39,7 +39,7 @@ import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.R;
-import org.catrobat.catroid.utils.FileCache;
+import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.WebImageLoader;
 
@@ -77,7 +77,11 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
         showDetails = true;
         selectMode = ListView.CHOICE_MODE_NONE;
         ExecutorService executorService = Executors.newFixedThreadPool(WEBIMAGE_DOWNLOADER_POOL_SIZE);
-        webImageLoader = new WebImageLoader(context, ExpiringLruMemoryImageCache.getInstance(), new FileCache(context), executorService);
+        webImageLoader = new WebImageLoader(
+                ExpiringLruMemoryImageCache.getInstance(),
+                ExpiringDiskCache.getInstance(context),
+                executorService
+        );
     }
 
     public void setOnScratchProjectEditListener(OnScratchProjectEditListener listener) {
@@ -151,6 +155,9 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
             int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
             webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
                     holder.image, width, height);
+        } else {
+            // clear old image of other project if this is a reused view element
+            holder.image.setImageBitmap(null);
         }
 
         if (showDetails) {
