@@ -37,7 +37,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.images.WebImage;
 
-import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
@@ -49,7 +49,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
+public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewData> {
 
     private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
     private static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
@@ -71,7 +71,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
 
     private static LayoutInflater inflater;
 
-    public ScratchProjectAdapter(Context context, int resource, int textViewResourceId, List<ScratchProjectData> objects) {
+    public ScratchProjectAdapter(Context context, int resource, int textViewResourceId, List<ScratchProjectPreviewData> objects) {
         super(context, resource, textViewResourceId, objects);
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         showDetails = true;
@@ -139,7 +139,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
         }
 
         // ------------------------------------------------------------
-        ScratchProjectData projectData = getItem(position);
+        ScratchProjectPreviewData projectData = getItem(position);
 
         // set name of project:
         holder.projectName.setText(projectData.getTitle());
@@ -149,7 +149,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectData> {
         holder.detailsText.setSingleLine(false);
 
         // set project image (threaded):
-        WebImage httpImageMetadata = projectData.getProjectThumbnail();
+        WebImage httpImageMetadata = projectData.getProjectImage();
         if (httpImageMetadata != null) {
             int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
             int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
