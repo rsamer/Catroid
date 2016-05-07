@@ -23,22 +23,38 @@
 
 package org.catrobat.catroid.ui;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchSearchResult;
+import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask;
+import org.catrobat.catroid.transfers.FetchScratchProjectsTask;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
+import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ScratchProjectDetailsActivity extends BaseActivity {
+public class ScratchProjectDetailsActivity extends BaseActivity
+        implements FetchScratchProjectDetailsTask.ScratchProjectListTaskDelegate {
 
     private static final String TAG = ScratchProjectDetailsActivity.class.getSimpleName();
 
@@ -47,13 +63,15 @@ public class ScratchProjectDetailsActivity extends BaseActivity {
     private TextView projectInstructionsTextView;
     private TextView projectNotesAndCreditsTextView;
     private WebImageLoader webImageLoader;
+    private ProgressDialog progressDialog;
+    private FetchScratchProjectDetailsTask currentTask = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scratch_project_details);
 
-        ScratchProjectData scratchProjectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
+        ScratchProjectPreviewData scratchProjectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
 
         ExecutorService executorService = Executors.newFixedThreadPool(1);
         webImageLoader = new WebImageLoader(
@@ -73,7 +91,6 @@ public class ScratchProjectDetailsActivity extends BaseActivity {
 
         if (scratchProjectData != null) {
             projectTitleTextView.setText(scratchProjectData.getTitle());
-            projectInstructionsTextView.setText(scratchProjectData.getContent());
 
             if (scratchProjectData.getProjectImage() != null) {
                 webImageLoader.fetchAndShowImage(
@@ -82,6 +99,73 @@ public class ScratchProjectDetailsActivity extends BaseActivity {
                 );
             }
         }
+
+        // TODO: consider pagination for cache!
+        // cache miss
+        Log.d(TAG, "Cache miss!");
+        if (currentTask != null) {
+            currentTask.cancel(true);
+        }
+        currentTask = new FetchScratchProjectDetailsTask();
+        currentTask.setDelegate(this).execute(scratchProjectData.getId());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        progressDialog.dismiss();
+        if (currentTask != null) {
+            currentTask.cancel(true);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    // Scratch Project Details Task Delegate Methods
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void onPreExecute() {
+        Log.i(TAG, "onPreExecute for FetchScratchProjectsTask called");
+        final ScratchProjectDetailsActivity activity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressDialog = new ProgressDialog(activity);
+                progressDialog.setCancelable(false);
+                progressDialog.getWindow().setGravity(Gravity.CENTER);
+                progressDialog.setMessage(activity.getResources().getString(R.string.loading));
+                progressDialog.show();
+            }
+        });
+    }
+
+    @Override
+    public void onPostExecute(final ScratchProjectData projectData) {
+        Log.i(TAG, "onPostExecute for FetchScratchProjectsTask called");
+        final ScratchProjectDetailsActivity activity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (! Looper.getMainLooper().equals(Looper.myLooper())) {
+                    throw new AssertionError("You should not change the UI from any thread "
+                            + "except UI thread!");
+                }
+
+                Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
+                progressDialog.dismiss();
+                if (projectData == null) {
+                    ToastUtil.showError(activity, "Unable to connect to server, please try later");
+                    return;
+                }
+
+                activity.projectTitleTextView.setText(projectData.getTitle());
+                activity.projectInstructionsTextView.setText(projectData.getDescription());
+                activity.projectNotesAndCreditsTextView.setText(
+                        "Views: " + projectData.getViews() + "\n" +
+                                "Favorites: " + projectData.getFavorites() + "\n" +
+                                "Loves: " + projectData.getLoves() + "\n"
+                );
+            }
+        });
     }
 
 }
