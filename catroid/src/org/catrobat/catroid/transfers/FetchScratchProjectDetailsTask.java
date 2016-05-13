@@ -70,8 +70,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
         try {
             return fetchProjectData(projectID);
         } catch (InterruptedIOException exception) {
-            Log.d(TAG, "CANCELLED!");
-            Log.d(TAG, "test: " + isCancelled());
+            Log.i(TAG, "Task has been cancelled in the meanwhile!");
             return null;
         }
     }

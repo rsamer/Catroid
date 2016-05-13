@@ -66,8 +66,7 @@ public class FetchScratchProjectsTask extends AsyncTask<String, Void, ScratchSea
         try {
             return fetchProjectList(params.length > 0 ? params[0] : null);
         } catch (InterruptedIOException exception) {
-            Log.d(TAG, "CANCELLED!");
-            Log.d(TAG, "test: " + isCancelled());
+            Log.i(TAG, "Task has been cancelled in the meanwhile!");
             return null;
         }
     }

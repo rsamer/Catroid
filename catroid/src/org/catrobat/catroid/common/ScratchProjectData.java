@@ -43,47 +43,60 @@ public class ScratchProjectData implements Serializable {
 
     private String title;
     private String owner;
-    private String description;
+    private String instructions;
+    private String notesAndCredits;
     private String projectUrl;
-    private WebImage projectImage;
     private int views;
     private int favorites;
     private int loves;
+    private String modifiedDate;
+    private String sharedDate;
+    private List<String> tags;
     private List<ScratchRemixProjectData> remixes;
 
-    public ScratchProjectData(String title, String owner, String description, String projectUrl,
-                              int views, int favorites, int loves) {
+    public ScratchProjectData(String title, String owner, String instructions, String notesAndCredits,
+                              String projectUrl, int views, int favorites, int loves,
+                              String modifiedDate, String sharedDate, List<String> tags) {
         this.title = title;
         this.owner = owner;
-        this.description = description;
+        this.instructions = instructions;
+        this.notesAndCredits = notesAndCredits;
         this.projectUrl = projectUrl;
-        this.projectImage = null;
-        this.remixes = new ArrayList<>();
         this.views = views;
         this.favorites = favorites;
         this.loves = loves;
+        this.modifiedDate = modifiedDate;
+        this.sharedDate = sharedDate;
+        this.tags = tags;
+        this.remixes = new ArrayList<>();
     }
 
     public String getProjectUrl() { return projectUrl; }
 
     public String getTitle() { return title; }
 
-    public String getDescription() { return description; }
+    public String getOwner() { return owner; }
 
-    public WebImage getProjectImage() { return projectImage; }
+    public String getInstructions() { return instructions; }
 
-    public void setProjectImage(WebImage projectImage) { this.projectImage = projectImage; }
+    public String getNotesAndCredits() { return notesAndCredits; }
 
     public void addRemixProject(ScratchRemixProjectData remixProjectData) {
         remixes.add(remixProjectData);
     }
-
-    public List<ScratchRemixProjectData> getRemixes() { return remixes; }
 
     public int getViews() { return views; }
 
     public int getFavorites() { return favorites; }
 
     public int getLoves() { return loves; }
+
+    public String getModifiedDate() { return modifiedDate; }
+
+    public String getSharedDate() { return sharedDate; }
+
+    public List<String> getTags() { return tags; }
+
+    public List<ScratchRemixProjectData> getRemixes() { return remixes; }
 
 }
