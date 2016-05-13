@@ -68,6 +68,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import okio.BufferedSink;
@@ -192,17 +193,30 @@ public final class ServerCalls {
 			System.out.print("URL:" + url);
 
 			final JSONObject jsonObject = new JSONObject(resultString);
-			String projectUrl = Constants.SCRATCH_PROJECT_BASE_URL_HTTPS + projectID;
-			String title = jsonObject.getString("title");
-			String description = jsonObject.getString("description");
-			int views = jsonObject.getInt("views");
-			int favorites = jsonObject.getInt("favorites");
-			int loves = jsonObject.getInt("loves");
-			String owner = jsonObject.getString("owner");
+			if (jsonObject.length() == 0) {
+				return null;
+			}
+			final String projectUrl = Constants.SCRATCH_PROJECT_BASE_URL_HTTPS + projectID;
+			final String title = jsonObject.getString("title");
+			final String owner = jsonObject.getString("owner");
+			final String instructions = jsonObject.getString("instructions");
+			final String notesAndCredits = jsonObject.getString("notes_and_credits");
+			final String modifiedDate = jsonObject.getString("modified_date");
+			final String sharedDate = jsonObject.getString("shared_date");
+			final int views = jsonObject.getInt("views");
+			final int favorites = jsonObject.getInt("favorites");
+			final int loves = jsonObject.getInt("loves");
+			List<String> tags = new ArrayList<>();
+			JSONArray jsonTags = jsonObject.getJSONArray("tags");
+			for (int i = 0; i < jsonTags.length(); ++i) {
+				tags.add(jsonTags.getString(i));
+			}
+
+			ScratchProjectData projectData = new ScratchProjectData(title, owner, instructions,
+					notesAndCredits, projectUrl, views, favorites, loves, modifiedDate, sharedDate,
+					tags);
+
 			JSONArray remixes = jsonObject.getJSONArray("remixes");
-
-			ScratchProjectData projectData = new ScratchProjectData(title, owner, description, projectUrl, views, favorites, loves);
-
 			for (int i = 0; i < remixes.length(); ++i) {
 				JSONObject remixJson = remixes.getJSONObject(i);
 				String remixTitle = remixJson.getString("title");
