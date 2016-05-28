@@ -33,6 +33,9 @@ public class ScratchProjectData implements Serializable {
 
     public static class ScratchRemixProjectData implements Serializable {
         private static final long serialVersionUID = 1L;
+
+        private long id;
+
         private String title;
 
         public String getTitle() {
@@ -47,17 +50,15 @@ public class ScratchProjectData implements Serializable {
             return projectImage;
         }
 
-        public int getId() {
-            // TODO: not included in response of server!!!
-            // /get_image/project/96781397_144x108.png
-            String[] parts = projectImage.getUrl().getPath().split("_")[1].split("/");
-            return Integer.parseInt(parts[parts.length - 1]);
+        public long getId() {
+            return id;
         }
 
         private String owner;
         private WebImage projectImage;
 
-        public ScratchRemixProjectData(String title, String owner, WebImage projectImage) {
+        public ScratchRemixProjectData(long id, String title, String owner, WebImage projectImage) {
+            this.id = id;
             this.title = title;
             this.owner = owner;
             this.projectImage = projectImage;
