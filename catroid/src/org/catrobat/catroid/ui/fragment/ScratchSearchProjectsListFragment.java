@@ -363,8 +363,8 @@ public class ScratchSearchProjectsListFragment extends Fragment
     public void onProjectEdit(int position) {
         Intent intent = new Intent(getActivity(), ScratchProjectDetailsActivity.class);
         intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) scratchProjectAdapter.getItem(position));
-
         getActivity().startActivity(intent);
+        // searchResultsListView.setSelectionAfterHeaderView(); // scroll to top...
     }
 
     public void startConvertActionMode() {
