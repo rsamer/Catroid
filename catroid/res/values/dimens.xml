@@ -29,6 +29,7 @@
     <dimen name="scratch_project_thumbnail_width">72dp</dimen>
     <dimen name="scratch_project_image_height">130dp</dimen>
     <dimen name="scratch_project_image_width">144dp</dimen>
+    <dimen name="scratch_project_image_margin_right">20dp</dimen>
     <dimen name="scratch_project_search_list_view_margin_top">15dp</dimen>
     <dimen name="my_projects_list_item_height">90dip</dimen>
     <dimen name="spritelist_item_height">90dip</dimen>
