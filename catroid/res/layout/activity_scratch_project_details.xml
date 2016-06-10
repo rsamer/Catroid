@@ -54,7 +54,7 @@
         android:layout_marginBottom="5dp" />
 
     <View
-        android:id="@+id/separation_line"
+        android:id="@+id/separation_line_above"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:background="@color/spritelist_separation_line_color"
@@ -64,7 +64,8 @@
         android:id="@+id/scratch_project_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/separation_line">
+        android:layout_below="@+id/separation_line_above"
+        android:layout_above="@+id/separation_line_bottom">
 
         <RelativeLayout
             android:id="@+id/scratch_project_text_layout"
@@ -234,25 +235,33 @@
                 android:layout_centerHorizontal="true"
                 android:layout_below="@+id/scratch_project_remixes_label"
                 android:layout_marginTop="@dimen/scratch_project_search_list_view_margin_top"
+                android:layout_marginBottom="30dp"
                 android:dividerHeight="1dp"
                 android:divider="@color/transparent"
                 android:scrollbars="none" />
 
-            <Button
-                android:id="@+id/scratch_project_convert_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/convert"
-                android:paddingLeft="130dp"
-                android:paddingRight="130dp"
-                android:paddingTop="15dp"
-                android:paddingBottom="15dp"
-                android:layout_below="@+id/scratch_project_remixes_list_view"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="25dp"
-                android:layout_marginBottom="25dp" />
-
         </RelativeLayout>
     </ScrollView>
+
+    <View
+        android:id="@+id/separation_line_bottom"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@color/spritelist_separation_line_color"
+        android:layout_above="@+id/scratch_project_convert_button" />
+
+    <Button
+        android:id="@+id/scratch_project_convert_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/convert"
+        android:paddingLeft="130dp"
+        android:paddingRight="130dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="0dp" />
 
 </RelativeLayout>
