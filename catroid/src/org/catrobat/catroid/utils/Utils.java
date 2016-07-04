@@ -44,7 +44,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -157,6 +160,44 @@ public final class Utils {
 
 	public static String formatDate(Date date, Locale locale) {
 		return DateFormat.getDateInstance(DateFormat.LONG, locale).format(date);
+	}
+
+	public static String humanFriendlyFormattedShortNumber(final int number) {
+		if (number < 1_000) {
+			return Integer.toString(number);
+		} else if (number < 10_000) {
+			return Integer.toString(number/1_000) +
+					(number%1000 > 100 ? "." + Integer.toString((number%1000)/100) : "") + "k";
+		} else if (number < 1_000_000) {
+			return Integer.toString(number/1_000) + "k";
+		}
+		return Integer.toString(number/1_000_000) + "M";
+	}
+
+	public static boolean setListViewHeightBasedOnItems(ListView listView) {
+		ListAdapter listAdapter = listView.getAdapter();
+		if (listAdapter != null) {
+			int numberOfItems = listAdapter.getCount();
+			// Get total height of all items.
+			int totalItemsHeight = 0;
+			for (int itemPos = 0; itemPos < numberOfItems; ++itemPos) {
+				View item = listAdapter.getView(itemPos, null, listView);
+				item.measure(0, 0);
+				totalItemsHeight += item.getMeasuredHeight();
+			}
+
+			// Get total height of all item dividers.
+			int totalDividersHeight = listView.getDividerHeight() * (numberOfItems - 1);
+
+			// Set list height.
+			ViewGroup.LayoutParams params = listView.getLayoutParams();
+			params.height = totalItemsHeight + totalDividersHeight;
+			listView.setLayoutParams(params);
+			listView.requestLayout();
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	/**
