@@ -52,7 +52,11 @@ import java.util.TimerTask;
 
 public class ScratchConverterActivity extends BaseActivity {
 
-	final public static class ScratchConverterClient {
+	public interface ScratchConverterClient {
+		void convertProject(final long scratchProjectID, final String projectTitle);
+	}
+
+	final public static class ScratchConverterWebSocketClient implements ScratchConverterClient {
 
 		public enum NotificationType {
 			ERROR(0),
@@ -78,7 +82,7 @@ public class ScratchConverterActivity extends BaseActivity {
 				}
 			}
 
-			private NotificationType(final int typeID) {
+			NotificationType(final int typeID) {
 				this.typeID = typeID;
 			}
 
@@ -93,9 +97,9 @@ public class ScratchConverterActivity extends BaseActivity {
 		String consoleText;
 		boolean connected;
 		boolean temp;
-		static ScratchConverterClient instance = null;
+		static ScratchConverterWebSocketClient instance = null;
 
-		public ScratchConverterClient() {
+		public ScratchConverterWebSocketClient() {
 			this.clientID = 7; // TODO: ...
 			this.connected = false;
 			this.temp = false;
@@ -110,13 +114,13 @@ public class ScratchConverterActivity extends BaseActivity {
 		}
 
 		@Nullable
-		public static ScratchConverterClient getInstance() {
+		public static ScratchConverterWebSocketClient getInstance() {
 			if (instance == null) {
 				// do it in a thread safe way
 				synchronized (ScratchConverterClient.class) {
 					if (instance == null) {
 						try {
-							instance = new ScratchConverterClient();
+							instance = new ScratchConverterWebSocketClient();
 						} catch (Exception ex) {
 							Log.w(TAG, "Unable to create disk cache!");
 							return null;
@@ -405,9 +409,12 @@ public class ScratchConverterActivity extends BaseActivity {
 						runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								convertPanelHeadlineView.setText(ScratchConverterClient.getInstance().projectTitle);
-								convertPanelStatusView.setText(ScratchConverterClient.getInstance().statusLine);
-								convertPanelConsoleView.setText(ScratchConverterClient.getInstance().consoleText);
+								convertPanelHeadlineView.setText(ScratchConverterWebSocketClient.getInstance()
+										.projectTitle);
+								convertPanelStatusView.setText(ScratchConverterWebSocketClient.getInstance()
+										.statusLine);
+								convertPanelConsoleView.setText(ScratchConverterWebSocketClient.getInstance()
+										.consoleText);
 								convertPanelConsoleView.setMovementMethod(new ScrollingMovementMethod());
 							}
 						});

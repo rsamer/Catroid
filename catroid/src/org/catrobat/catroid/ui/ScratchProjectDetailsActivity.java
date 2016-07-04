@@ -26,6 +26,7 @@ package org.catrobat.catroid.ui;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Parcelable;
@@ -50,12 +51,18 @@ import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.common.ScratchProjectData.ScratchRemixProjectData;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask;
+import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectListTaskDelegate;
+import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
+import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter.ScratchRemixedProjectEditListener;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
+import org.catrobat.catroid.web.ServerCalls;
+import org.catrobat.catroid.ui.ScratchConverterActivity.ScratchConverterClient;
+import org.catrobat.catroid.ui.ScratchConverterActivity.ScratchConverterWebSocketClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,11 +74,12 @@ import uk.co.deanwild.flowtextview.FlowTextView;
 
 import static android.view.View.*;
 
-public class ScratchProjectDetailsActivity extends BaseActivity
-        implements FetchScratchProjectDetailsTask.ScratchProjectListTaskDelegate,
-        ScratchRemixedProjectAdapter.OnScratchRemixedProjectEditListener {
+public class ScratchProjectDetailsActivity extends BaseActivity implements ScratchProjectListTaskDelegate, ScratchRemixedProjectEditListener {
 
     private static final String TAG = ScratchProjectDetailsActivity.class.getSimpleName();
+    private static ScratchProjectDataFetcher dataFetcher = ServerCalls.getInstance();
+    private static ScratchConverterClient converterClient = ScratchConverterWebSocketClient.getInstance();
+
     private int imageWidth;
     private int imageHeight;
 
@@ -91,16 +99,27 @@ public class ScratchProjectDetailsActivity extends BaseActivity
     private WebImageLoader webImageLoader;
     private ListView remixedProjectsListView;
     private ProgressDialog progressDialog;
-    private FetchScratchProjectDetailsTask currentTask = null;
     private ScratchRemixedProjectAdapter scratchRemixedProjectAdapter;
     private ScrollView mainScrollView;
     private RelativeLayout detailsLayout;
     private TextView remixesLabelView;
+    private FetchScratchProjectDetailsTask fetchDetailsTask = new FetchScratchProjectDetailsTask();
+
+    // dependency-injection for testing with mock object
+    public static void setDataFetcher(ScratchProjectDataFetcher fetcher) {
+        dataFetcher = fetcher;
+    }
+    public static void setConverterClient(ScratchConverterClient client) {
+        converterClient = client;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scratch_project_details);
+
+        final ScratchProjectPreviewData projectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
+        assert(projectData != null);
 
         ExecutorService executorService = Executors.newFixedThreadPool(1);
         webImageLoader = new WebImageLoader(
@@ -131,7 +150,6 @@ public class ScratchProjectDetailsActivity extends BaseActivity
         detailsLayout = (RelativeLayout) findViewById(R.id.scratch_project_details_layout);
         remixesLabelView = (TextView) findViewById(R.id.scratch_project_remixes_label);
 
-        final ScratchProjectPreviewData projectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
         final ScratchProjectDetailsActivity activity = this;
 
         convertButton.setOnClickListener(new View.OnClickListener() {
@@ -144,18 +162,15 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                     public void run() {
                         // TODO: create websocket connection and set up receiver
                         Log.i(TAG, "Converting project:");
-                        ScratchConverterActivity.ScratchConverterClient client = ScratchConverterActivity.ScratchConverterClient
-                                .getInstance();
                         Log.i(TAG, projectData.getTitle());
                         // TODO: send convert command
-                        client.convertProject(projectData.getId(), projectData.getTitle());
+                        converterClient.convertProject(projectData.getId(), projectData.getTitle());
                         ToastUtil.showSuccess(activity, activity.getString(R.string.scratch_conversion_started));
                         activity.finish(); // dismiss current activity!
                     }
                 });
             }
         });
-
         loadData(projectData);
     }
 
@@ -185,21 +200,16 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                 );
             }
         }
-
-        if (currentTask != null) {
-            currentTask.cancel(true);
-        }
-        currentTask = new FetchScratchProjectDetailsTask();
-        currentTask.setDelegate(this).execute(scratchProjectData.getId());
+        fetchDetailsTask.setDelegate(this);
+        fetchDetailsTask.setFetcher(dataFetcher);
+        fetchDetailsTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, scratchProjectData.getId());
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        fetchDetailsTask.cancel(true);
         progressDialog.dismiss();
-        if (currentTask != null) {
-            currentTask.cancel(true);
-        }
     }
 
     private void initRemixAdapter(List<ScratchRemixProjectData> scratchRemixedProjectsData) {

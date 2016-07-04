@@ -51,6 +51,7 @@ import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.transfers.ProjectUploadService;
+import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
 import org.catrobat.catroid.utils.Utils;
 import org.json.JSONArray;
@@ -78,7 +79,7 @@ import okio.Okio;
 
 //web status codes are on: https://github.com/Catrobat/Catroweb/blob/master/statusCodes.php
 
-public final class ServerCalls {
+public final class ServerCalls implements ScratchProjectDataFetcher {
 
 	public static final String BASE_URL_TEST_HTTPS = "https://catroid-test.catrob.at/pocketcode/";
 	public static final String TEST_FILE_UPLOAD_URL_HTTP = BASE_URL_TEST_HTTPS + "api/upload/upload.json";

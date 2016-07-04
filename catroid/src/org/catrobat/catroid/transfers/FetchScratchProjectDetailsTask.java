@@ -36,21 +36,35 @@ import org.catrobat.catroid.web.WebconnectionException;
 
 import java.io.InterruptedIOException;
 
-public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, ScratchProjectData> {
 
-    private static final String TAG = FetchScratchProjectDetailsTask.class.getSimpleName();
-    private static final int MAX_NUM_OF_RETRIES = 2;
-    private static final int MIN_TIMEOUT = 1_000; // in ms
+public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, ScratchProjectData> {
 
     public interface ScratchProjectListTaskDelegate {
         void onPreExecute();
         void onPostExecute(ScratchProjectData projectData);
     }
 
+    public interface ScratchProjectDataFetcher {
+        ScratchProjectData fetchScratchProjectDetails(final long projectID) throws WebconnectionException, InterruptedIOException;
+        ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException, InterruptedIOException;
+        ScratchSearchResult scratchSearch(final String query, final ServerCalls.ScratchSearchSortType sortType,
+                final int numberOfItems, final int page) throws WebconnectionException, InterruptedIOException;
+    }
+
+    private static final String TAG = FetchScratchProjectDetailsTask.class.getSimpleName();
+    private static final int MAX_NUM_OF_RETRIES = 2;
+    private static final int MIN_TIMEOUT = 1_000; // in ms
+
     private ScratchProjectListTaskDelegate delegate = null;
+    private ScratchProjectDataFetcher fetcher = null;
 
     public FetchScratchProjectDetailsTask setDelegate(ScratchProjectListTaskDelegate delegate) {
         this.delegate = delegate;
+        return this;
+    }
+
+    public FetchScratchProjectDetailsTask setFetcher(ScratchProjectDataFetcher fetcher) {
+        this.fetcher = fetcher;
         return this;
     }
 
@@ -83,7 +97,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
                 return null;
             }
             try {
-                return ServerCalls.getInstance().fetchScratchProjectDetails(projectID);
+                return fetcher.fetchScratchProjectDetails(projectID);
             } catch (WebconnectionException e) {
                 Log.d(TAG, e.getLocalizedMessage() + "\n" +  e.getStackTrace());
                 delay = MIN_TIMEOUT + (int) (MIN_TIMEOUT * Math.random() * (attempt + 1));
