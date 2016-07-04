@@ -123,7 +123,7 @@
   <string name="instructions">Anleitung</string>
   <string name="notes_and_credits">Anmerkungen und Danksagungen</string>
   <string name="shared">Veröffentlicht</string>
-  <string name="modified">Zuletzt geändert</string>
+  <string name="modified">Zuletzt verändert</string>
   <string name="remixes">Remixe</string>
   <!-- New Object Dialog -->
   <string name="dialog_new_object_pocketpaint">Bild zeichnen</string>
