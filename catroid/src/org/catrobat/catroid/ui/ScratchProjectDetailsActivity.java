@@ -24,9 +24,11 @@
 package org.catrobat.catroid.ui;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -36,6 +38,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -51,10 +54,12 @@ import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.ToastUtil;
+import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -89,6 +94,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity
     private FetchScratchProjectDetailsTask currentTask = null;
     private ScratchRemixedProjectAdapter scratchRemixedProjectAdapter;
     private ScrollView mainScrollView;
+    private RelativeLayout detailsLayout;
+    private TextView remixesLabelView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +128,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity
         modifiedTextView = (TextView) findViewById(R.id.scratch_project_modified_text);
         remixedProjectsListView = (ListView) findViewById(R.id.scratch_project_remixes_list_view);
         convertButton = (Button) findViewById(R.id.scratch_project_convert_button);
+        detailsLayout = (RelativeLayout) findViewById(R.id.scratch_project_details_layout);
+        remixesLabelView = (TextView) findViewById(R.id.scratch_project_remixes_label);
 
         final ScratchProjectPreviewData projectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
         final ScratchProjectDetailsActivity activity = this;
@@ -129,6 +138,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity
             @Override
             public void onClick(View v) {
                 // TODO: check if this is already running on UI-thread?
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -155,6 +165,9 @@ public class ScratchProjectDetailsActivity extends BaseActivity
         notesAndCreditsLabelView.setVisibility(GONE);
         notesAndCreditsTextView.setVisibility(GONE);
         tagsTextView.setVisibility(GONE);
+        remixesLabelView.setVisibility(GONE);
+        remixedProjectsListView.setVisibility(GONE);
+        detailsLayout.setVisibility(GONE);
 
         // TODO: use LRU cache!
 
@@ -205,13 +218,22 @@ public class ScratchProjectDetailsActivity extends BaseActivity
     public void onProjectEdit(int position) {
         // TODO: improve this
         Log.d(TAG, "Clicked on remix at position: " + position);
-        ScratchRemixProjectData scratchRemixProjectData = scratchRemixedProjectAdapter.getItem(position);
-        Log.d(TAG, "" + scratchRemixProjectData.getId());
+        ScratchRemixProjectData remixData = scratchRemixedProjectAdapter.getItem(position);
+        Log.d(TAG, "" + remixData.getId());
+
+        ScratchProjectPreviewData previewData = new ScratchProjectPreviewData(remixData.getId(), remixData.getTitle(),
+                null, null);
+        Intent intent = new Intent(this, ScratchProjectDetailsActivity.class);
+        intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) previewData);
+        startActivity(intent);
+
+        /*
         ScratchProjectPreviewData scratchProjectPreviewData = new ScratchProjectPreviewData(
                 scratchRemixProjectData.getId(),
                 scratchRemixProjectData.getTitle(), null, null);
         scratchProjectPreviewData.setProjectImage(scratchRemixProjectData.getProjectImage());
         loadData(scratchProjectPreviewData);
+        */
     }
 
     //----------------------------------------------------------------------------------------------
@@ -284,16 +306,23 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                     activity.tagsTextView.setText(tagList);
                     activity.tagsTextView.setVisibility(VISIBLE);
                 }
-                Log.d(TAG, projectData.getModifiedDate());
-                Log.d(TAG, projectData.getSharedDate());
-                activity.sharedTextView.setText(activity.getString(R.string.shared) + ": " + projectData.getSharedDate());
-                activity.modifiedTextView.setText(activity.getString(R.string.modified) + ": " + projectData.getModifiedDate());
-                activity.initRemixAdapter(projectData.getRemixes());
+                final String sharedDateString = Utils.formatDate(projectData.getSharedDate(), Locale.getDefault());
+                final String modifiedDateString = Utils.formatDate(projectData.getModifiedDate(), Locale.getDefault());
+                Log.d(TAG, "Shared: " + sharedDateString);
+                Log.d(TAG, "Modified: " + modifiedDateString);
+                activity.sharedTextView.setText(activity.getString(R.string.shared) + ": " + sharedDateString);
+                activity.modifiedTextView.setText(activity.getString(R.string.modified) + ": " + modifiedDateString);
+                detailsLayout.setVisibility(VISIBLE);
+
+                if (projectData.getRemixes() != null && projectData.getRemixes().size() > 0) {
+                    remixesLabelView.setVisibility(VISIBLE);
+                    remixedProjectsListView.setVisibility(VISIBLE);
+                    activity.initRemixAdapter(projectData.getRemixes());
+                }
                 activity.mainScrollView.fullScroll(ScrollView.FOCUS_UP); // scroll to top
             }
         });
     }
-
 
 
     // TODO: improve and move this helper method to Util class

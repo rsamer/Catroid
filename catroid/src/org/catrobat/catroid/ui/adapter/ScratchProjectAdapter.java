@@ -56,7 +56,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 
     private boolean showDetails;
     private int selectMode;
-    private Set<Integer> checkedProjects = new TreeSet<Integer>();
+    private Set<Integer> checkedProjects = new TreeSet<>();
     private OnScratchProjectEditListener onScratchProjectEditListener;
     private WebImageLoader webImageLoader;
 
