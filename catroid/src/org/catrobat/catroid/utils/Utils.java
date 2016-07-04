@@ -79,6 +79,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -151,6 +153,10 @@ public final class Utils {
 	public static boolean checkForNetworkError(WebconnectionException exception) {
 		return exception != null && exception.getStatusCode() == WebconnectionException
 				.ERROR_NETWORK;
+	}
+
+	public static String formatDate(Date date, Locale locale) {
+		return DateFormat.getDateInstance(DateFormat.LONG, locale).format(date);
 	}
 
 	/**

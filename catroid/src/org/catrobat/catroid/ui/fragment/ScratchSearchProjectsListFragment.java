@@ -31,7 +31,6 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.speech.RecognizerIntent;
 import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;

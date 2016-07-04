@@ -65,8 +65,10 @@ import java.io.InterruptedIOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -184,6 +186,9 @@ public final class ServerCalls {
 	}
 
 	public ScratchProjectData fetchScratchProjectDetails(final long projectID) throws WebconnectionException, InterruptedIOException {
+
+		final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
 		try {
 			final String url = Constants.SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL + projectID;
 
@@ -201,8 +206,13 @@ public final class ServerCalls {
 			final String owner = jsonObject.getString("owner");
 			final String instructions = jsonObject.getString("instructions");
 			final String notesAndCredits = jsonObject.getString("notes_and_credits");
-			final String modifiedDate = jsonObject.getString("modified_date");
-			final String sharedDate = jsonObject.getString("shared_date");
+
+			final String sharedDateString = jsonObject.getString("shared_date");
+			final Date sharedDate = formatter.parse(sharedDateString);
+
+			final String modifiedDateString = jsonObject.getString("modified_date");
+			final Date modifiedDate = formatter.parse(modifiedDateString);
+
 			final int views = jsonObject.getInt("views");
 			final int favorites = jsonObject.getInt("favorites");
 			final int loves = jsonObject.getInt("loves");

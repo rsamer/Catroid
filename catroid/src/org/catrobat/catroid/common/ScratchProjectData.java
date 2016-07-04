@@ -27,6 +27,7 @@ import com.google.android.gms.common.images.WebImage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ScratchProjectData implements Serializable {
@@ -75,14 +76,14 @@ public class ScratchProjectData implements Serializable {
     private int views;
     private int favorites;
     private int loves;
-    private String modifiedDate;
-    private String sharedDate;
+    private Date modifiedDate;
+    private Date sharedDate;
     private List<String> tags;
     private List<ScratchRemixProjectData> remixes;
 
     public ScratchProjectData(String title, String owner, String instructions, String notesAndCredits,
                               String projectUrl, int views, int favorites, int loves,
-                              String modifiedDate, String sharedDate, List<String> tags) {
+                              Date modifiedDate, Date sharedDate, List<String> tags) {
         this.title = title;
         this.owner = owner;
         this.instructions = instructions;
@@ -117,9 +118,9 @@ public class ScratchProjectData implements Serializable {
 
     public int getLoves() { return loves; }
 
-    public String getModifiedDate() { return modifiedDate; }
+    public Date getModifiedDate() { return modifiedDate; }
 
-    public String getSharedDate() { return sharedDate; }
+    public Date getSharedDate() { return sharedDate; }
 
     public List<String> getTags() { return tags; }
 
