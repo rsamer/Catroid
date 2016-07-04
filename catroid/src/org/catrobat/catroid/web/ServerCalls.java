@@ -222,9 +222,8 @@ public final class ServerCalls {
 				tags.add(jsonTags.getString(i));
 			}
 
-			ScratchProjectData projectData = new ScratchProjectData(title, owner, instructions,
-					notesAndCredits, projectUrl, views, favorites, loves, modifiedDate, sharedDate,
-					tags);
+			ScratchProjectData projectData = new ScratchProjectData(projectID, title, owner, instructions,
+					notesAndCredits, views, favorites, loves, modifiedDate, sharedDate, tags);
 
 			JSONArray remixes = jsonObject.getJSONArray("remixes");
 			for (int i = 0; i < remixes.length(); ++i) {
@@ -264,12 +263,10 @@ public final class ServerCalls {
 			for (int i = 0; i < results.length(); ++i) {
 				JSONObject projectJson = results.getJSONObject(i);
 				long projectID = projectJson.getLong("id");
-				String projectUrl = Constants.SCRATCH_PROJECT_BASE_URL_HTTPS + projectID;
 				String title = projectJson.getString("title");
 				String content = projectJson.getString("content");
 
-				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(projectID, title, content, projectUrl);
-
+				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(projectID, title, content);
 				final String projectImageUrl = projectJson.getString("imageurl");
 				int width = Integer.parseInt(projectJson.getString("imagewidth"));
 				int height = Integer.parseInt(projectJson.getString("imageheight"));
@@ -372,7 +369,7 @@ public final class ServerCalls {
 				JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
 				JSONObject metatags = richSnippet.getJSONObject("metatags");
 
-				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(id, title, content, projectUrl);
+				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(id, title, content);
 				if (metatags.has("ogImage")) {
 					String projectImageUrl = metatags.getString("ogImage");
 					// TODO: extract size from URL!

@@ -211,8 +211,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                 R.id.scratch_projects_list_item_title,
                 scratchRemixedProjectsData);
         remixedProjectsListView.setAdapter(scratchRemixedProjectAdapter);
-        scratchRemixedProjectAdapter.setOnScratchRemixedProjectEditListener(this);
-        setListViewHeightBasedOnItems(remixedProjectsListView);
+        scratchRemixedProjectAdapter.setScratchRemixedProjectEditListener(this);
+        Utils.setListViewHeightBasedOnItems(remixedProjectsListView);
     }
 
     public void onProjectEdit(int position) {
@@ -221,19 +221,16 @@ public class ScratchProjectDetailsActivity extends BaseActivity
         ScratchRemixProjectData remixData = scratchRemixedProjectAdapter.getItem(position);
         Log.d(TAG, "" + remixData.getId());
 
-        ScratchProjectPreviewData previewData = new ScratchProjectPreviewData(remixData.getId(), remixData.getTitle(),
-                null, null);
+        ScratchProjectPreviewData prevData = new ScratchProjectPreviewData(remixData.getId(), remixData.getTitle(), null);
         Intent intent = new Intent(this, ScratchProjectDetailsActivity.class);
-        intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) previewData);
+        intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) prevData);
         startActivity(intent);
 
-        /*
-        ScratchProjectPreviewData scratchProjectPreviewData = new ScratchProjectPreviewData(
+        /* ScratchProjectPreviewData scratchProjectPreviewData = new ScratchProjectPreviewData(
                 scratchRemixProjectData.getId(),
                 scratchRemixProjectData.getTitle(), null, null);
         scratchProjectPreviewData.setProjectImage(scratchRemixProjectData.getProjectImage());
-        loadData(scratchProjectPreviewData);
-        */
+        loadData(scratchProjectPreviewData); */
     }
 
     //----------------------------------------------------------------------------------------------
@@ -293,9 +290,9 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                 activity.instructionsFlowTextView.setTextSize(textSize);
                 activity.instructionsFlowTextView.setTextColor(Color.LTGRAY);
 
-                activity.favoritesTextView.setText(shortNumber(projectData.getFavorites()));
-                activity.lovesTextView.setText(shortNumber(projectData.getLoves()));
-                activity.viewsTextView.setText(shortNumber(projectData.getViews()));
+                activity.favoritesTextView.setText(Utils.humanFriendlyFormattedShortNumber(projectData.getFavorites()));
+                activity.lovesTextView.setText(Utils.humanFriendlyFormattedShortNumber(projectData.getLoves()));
+                activity.viewsTextView.setText(Utils.humanFriendlyFormattedShortNumber(projectData.getViews()));
 
                 StringBuilder tagList = new StringBuilder();
                 int index = 0;
@@ -322,48 +319,6 @@ public class ScratchProjectDetailsActivity extends BaseActivity
                 activity.mainScrollView.fullScroll(ScrollView.FOCUS_UP); // scroll to top
             }
         });
-    }
-
-
-    // TODO: improve and move this helper method to Util class
-    private static String shortNumber(final int number) {
-        if (number < 1_000) {
-            return Integer.toString(number);
-        } else if (number < 10_000) {
-            return Integer.toString(number/1_000) +
-                    (number%1000 > 100 ? "." + Integer.toString((number%1000)/100) : "") + "k";
-        } else if (number < 1_000_000) {
-            return Integer.toString(number/1_000) + "k";
-        }
-        return Integer.toString(number/1_000_000) + "M";
-    }
-
-    // TODO: move this helper method to Util class
-    public static boolean setListViewHeightBasedOnItems(ListView listView) {
-        ListAdapter listAdapter = listView.getAdapter();
-        if (listAdapter != null) {
-            int numberOfItems = listAdapter.getCount();
-            // Get total height of all items.
-            int totalItemsHeight = 0;
-            for (int itemPos = 0; itemPos < numberOfItems; ++itemPos) {
-                View item = listAdapter.getView(itemPos, null, listView);
-                item.measure(0, 0);
-                totalItemsHeight += item.getMeasuredHeight();
-            }
-
-            // Get total height of all item dividers.
-            int totalDividersHeight = listView.getDividerHeight() *
-                    (numberOfItems - 1);
-
-            // Set list height.
-            ViewGroup.LayoutParams params = listView.getLayoutParams();
-            params.height = totalItemsHeight + totalDividersHeight;
-            listView.setLayoutParams(params);
-            listView.requestLayout();
-            return true;
-        } else {
-            return false;
-        }
     }
 
 }

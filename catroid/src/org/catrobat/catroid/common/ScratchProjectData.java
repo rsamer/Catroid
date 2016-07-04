@@ -68,11 +68,11 @@ public class ScratchProjectData implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private long id;
     private String title;
     private String owner;
     private String instructions;
     private String notesAndCredits;
-    private String projectUrl;
     private int views;
     private int favorites;
     private int loves;
@@ -81,14 +81,13 @@ public class ScratchProjectData implements Serializable {
     private List<String> tags;
     private List<ScratchRemixProjectData> remixes;
 
-    public ScratchProjectData(String title, String owner, String instructions, String notesAndCredits,
-                              String projectUrl, int views, int favorites, int loves,
-                              Date modifiedDate, Date sharedDate, List<String> tags) {
+    public ScratchProjectData(long id, String title, String owner, String instructions, String notesAndCredits,
+                              int views, int favorites, int loves, Date modifiedDate, Date sharedDate, List<String> tags) {
+        this.id = id;
         this.title = title;
         this.owner = owner;
         this.instructions = instructions;
         this.notesAndCredits = notesAndCredits;
-        this.projectUrl = projectUrl;
         this.views = views;
         this.favorites = favorites;
         this.loves = loves;
@@ -98,7 +97,7 @@ public class ScratchProjectData implements Serializable {
         this.remixes = new ArrayList<>();
     }
 
-    public String getProjectUrl() { return projectUrl; }
+    public long getId() { return id; }
 
     public String getTitle() { return title; }
 

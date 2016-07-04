@@ -36,14 +36,12 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
     private long id;
     private String title;
     private String content;
-    private String projectUrl;
     private WebImage projectImage;
 
-    public ScratchProjectPreviewData(long id, String title, String content, String projectUrl) {
+    public ScratchProjectPreviewData(long id, String title, String content) {
         this.id = id;
         this.title = title;
         this.content = content;
-        this.projectUrl = projectUrl;
         this.projectImage = null;
     }
 
@@ -51,7 +49,6 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
         this.id = in.readLong();
         this.title = in.readString();
         this.content = in.readString();
-        this.projectUrl = in.readString();
         this.projectImage = in.readParcelable(WebImage.class.getClassLoader());
     }
 
@@ -60,8 +57,6 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
     public String getTitle() { return title; }
 
     public String getContent() { return content; }
-
-    public String getProjectUrl() { return projectUrl; }
 
     public WebImage getProjectImage() { return projectImage; }
 
@@ -75,7 +70,6 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
         dest.writeLong(id);
         dest.writeString(title);
         dest.writeString(content);
-        dest.writeString(projectUrl);
         dest.writeParcelable(projectImage, flags);
     }
 
