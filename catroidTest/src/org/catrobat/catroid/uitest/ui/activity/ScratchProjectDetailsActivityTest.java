@@ -218,6 +218,7 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		// remixed project
 		ScratchRemixProjectData expectedRemixedProjectData = remixedProjectData;
 		ScratchRemixProjectData remixedProjectData = remixedProjectAdapter.getItem(0);
+		assertTrue(solo.searchText(expectedRemixedProjectData.getTitle()));
 		assertEquals(expectedRemixedProjectData.getId(), remixedProjectData.getId());
 		assertEquals(expectedRemixedProjectData.getTitle(), remixedProjectData.getTitle());
 		assertEquals(expectedRemixedProjectData.getOwner(), remixedProjectData.getOwner());
@@ -252,10 +253,12 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 			@Override
 			public void run() {
 				convertButton.performClick();
+				solo.sleep(1_000);
 				assertTrue(convertMethodParams[0] instanceof Long);
 				assertTrue(convertMethodParams[1] instanceof String);
 				assertEquals(convertMethodParams[0], projectData.getId());
 				assertEquals(convertMethodParams[1], projectData.getTitle());
+				assertFalse(solo.getCurrentActivity() instanceof ScratchProjectDetailsActivity);
 			}
 		});
 	}
