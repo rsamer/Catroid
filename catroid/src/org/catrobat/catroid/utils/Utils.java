@@ -166,8 +166,8 @@ public final class Utils {
 		if (number < 1_000) {
 			return Integer.toString(number);
 		} else if (number < 10_000) {
-			return Integer.toString(number/1_000) +
-					(number%1000 > 100 ? "." + Integer.toString((number%1000)/100) : "") + "k";
+			return Integer.toString(number/1_000) + (number % 1_000 > 100 ? "."
+					+ Integer.toString((number % 1_000)/100) : "") + "k";
 		} else if (number < 1_000_000) {
 			return Integer.toString(number/1_000) + "k";
 		}

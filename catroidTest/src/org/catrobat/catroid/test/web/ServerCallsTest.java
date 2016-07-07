@@ -99,9 +99,6 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			for (ScratchProjectPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
-				assertNotNull(project.getProjectUrl());
-				assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
-						TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
 			}
 
 			assertNotNull("No search result returned", searchResult);
@@ -126,9 +123,6 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			for (ScratchProjectPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
-				assertNotNull(project.getProjectUrl());
-				assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
-						TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
 			}
 
 			assertNotNull("No search result returned", searchResult);
@@ -153,9 +147,6 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			for (ScratchProjectPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
-				assertNotNull(project.getProjectUrl());
-				assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
-						TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
 			}
 
 			assertNotNull("No search result returned", searchResult);
@@ -180,9 +171,6 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			for (ScratchProjectPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
-				assertNotNull(project.getProjectUrl());
-				assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
-						TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
 			}
 
 			assertNotNull("No search result returned", searchResult);
@@ -207,9 +195,6 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			for (ScratchProjectPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
-				assertNotNull(project.getProjectUrl());
-				assertTrue("Project URL " + project.getProjectUrl() + " is invalid or not reachable",
-						TestUtils.isUrlValidAndReachable(project.getProjectUrl()));
 			}
 
 			assertNotNull("No search result returned", searchResult);
