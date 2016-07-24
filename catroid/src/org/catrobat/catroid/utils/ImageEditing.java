@@ -114,8 +114,8 @@ public final class ImageEditing {
 	}
 
 	public static Bitmap getScaledBitmapOfLoadedBitmap(byte[] byteArray, int outputRectangleWidth,
-													   int outputRectangleHeight, ResizeType resizeType,
-													   boolean justScaleDown) {
+			int outputRectangleHeight, ResizeType resizeType,
+			boolean justScaleDown) {
 		if (byteArray == null) {
 			return null;
 		}

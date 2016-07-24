@@ -74,7 +74,10 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 	public ScratchProjectDetailsActivityTest() throws InterruptedIOException, WebconnectionException {
 		super(ScratchProjectDetailsActivity.class);
 
-		List<String> tags = new ArrayList<String>() {{ add("animations"); add("castle"); }};
+		List<String> tags = new ArrayList<String>() {{
+				add("animations");
+				add("castle");
+		}};
 		long projectID = 10205819;
 		projectData = new ScratchProjectData(projectID, "Dancin' in the Castle", "jschombs",
 				"Click the flag to run the stack. Click the space bar to change it up!",
@@ -113,53 +116,53 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		final View titleView = solo.getView(R.id.scratch_project_title);
 		assertEquals(titleView.getVisibility(), View.VISIBLE);
 		assertTrue(titleView instanceof TextView);
-		assertEquals(projectPreviewData.getTitle(), ((TextView)titleView).getText());
+		assertEquals(projectPreviewData.getTitle(), ((TextView) titleView).getText());
 
 		// owner
 		final View ownerView = solo.getView(R.id.scratch_project_owner);
 		assertEquals(ownerView.getVisibility(), View.VISIBLE);
 		assertTrue(ownerView instanceof TextView);
-		assertEquals(getActivity().getString(R.string.by) + " " + projectData.getOwner(), ((TextView)ownerView).getText());
+		assertEquals(getActivity().getString(R.string.by) + " " + projectData.getOwner(), ((TextView) ownerView).getText());
 
 		// instructions
 		final View instructionsLabelView = solo.getView(R.id.scratch_project_instructions_label);
 		assertEquals(instructionsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(instructionsLabelView instanceof TextView);
-		assertEquals(getActivity().getString(R.string.instructions), ((TextView)instructionsLabelView).getText());
+		assertEquals(getActivity().getString(R.string.instructions), ((TextView) instructionsLabelView).getText());
 
 		final View instructionsView = solo.getView(R.id.scratch_project_instructions_flow_text);
 		assertEquals(instructionsView.getVisibility(), View.VISIBLE);
 		assertTrue(instructionsView instanceof FlowTextView);
-		assertEquals(projectData.getInstructions(), ((FlowTextView)instructionsView).getText());
+		assertEquals(projectData.getInstructions(), ((FlowTextView) instructionsView).getText());
 
 		// notes & credits
 		final View notesAndCreditsLabelView = solo.getView(R.id.scratch_project_notes_and_credits_label);
 		assertEquals(notesAndCreditsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(notesAndCreditsLabelView instanceof TextView);
-		assertEquals(getActivity().getString(R.string.notes_and_credits), ((TextView)notesAndCreditsLabelView).getText());
+		assertEquals(getActivity().getString(R.string.notes_and_credits), ((TextView) notesAndCreditsLabelView).getText());
 
 		final View notesAndCreditsView = solo.getView(R.id.scratch_project_notes_and_credits_text);
 		assertEquals(notesAndCreditsView.getVisibility(), View.VISIBLE);
 		assertTrue(notesAndCreditsView instanceof TextView);
-		assertEquals(projectData.getNotesAndCredits(), ((TextView)notesAndCreditsView).getText());
+		assertEquals(projectData.getNotesAndCredits(), ((TextView) notesAndCreditsView).getText());
 
 		// sharing (favorites, loves and views)
 		final View favoritesLabelView = solo.getView(R.id.scratch_project_favorites_text);
 		final String expectedHumanReadableFavoritesNumber = "37k";
 		assertEquals(favoritesLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(favoritesLabelView instanceof TextView);
-		assertEquals(expectedHumanReadableFavoritesNumber, ((TextView)favoritesLabelView).getText());
+		assertEquals(expectedHumanReadableFavoritesNumber, ((TextView) favoritesLabelView).getText());
 
 		final View lovesLabelView = solo.getView(R.id.scratch_project_loves_text);
 		assertEquals(lovesLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(lovesLabelView instanceof TextView);
-		assertEquals(projectData.getLoves(), Integer.parseInt(((TextView)lovesLabelView).getText().toString()));
+		assertEquals(projectData.getLoves(), Integer.parseInt(((TextView) lovesLabelView).getText().toString()));
 
 		final View viewsLabelView = solo.getView(R.id.scratch_project_views_text);
 		final String expectedHumanReadableViewsNumber = "1M";
 		assertEquals(viewsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(viewsLabelView instanceof TextView);
-		assertEquals(expectedHumanReadableViewsNumber, ((TextView)viewsLabelView).getText());
+		assertEquals(expectedHumanReadableViewsNumber, ((TextView) viewsLabelView).getText());
 
 		// tags
 		final View tagsLabelView = solo.getView(R.id.scratch_project_tags_text);
@@ -170,24 +173,24 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		for (String tag : projectData.getTags()) {
 			tagList.append((index++ > 0 ? ", " : "") + tag);
 		}
-		assertEquals(tagList.toString(), ((TextView)tagsLabelView).getText());
+		assertEquals(tagList.toString(), ((TextView) tagsLabelView).getText());
 
 		// shared date & modified date
 		final String sharedDateString = Utils.formatDate(projectData.getSharedDate(), Locale.getDefault());
 		final View sharedDateView = solo.getView(R.id.scratch_project_shared_text);
-		final String sharedDateText = ((TextView)sharedDateView).getText().toString();
+		final String sharedDateText = ((TextView) sharedDateView).getText().toString();
 		assertEquals(sharedDateView.getVisibility(), View.VISIBLE);
 		assertTrue(sharedDateView instanceof TextView);
-		assertNotNull(((TextView)sharedDateView).getText());
+		assertNotNull(((TextView) sharedDateView).getText());
 		assertEquals(getActivity().getString(R.string.shared), sharedDateText.split(":")[0]);
 		assertEquals(sharedDateString, sharedDateText.split(":")[1].trim());
 
 		final String modifiedDateString = Utils.formatDate(projectData.getModifiedDate(), Locale.getDefault());
 		final View modifiedDateView = solo.getView(R.id.scratch_project_modified_text);
-		final String modifiedDateText = ((TextView)modifiedDateView).getText().toString();
+		final String modifiedDateText = ((TextView) modifiedDateView).getText().toString();
 		assertEquals(modifiedDateView.getVisibility(), View.VISIBLE);
 		assertTrue(modifiedDateView instanceof TextView);
-		assertNotNull(((TextView)modifiedDateView).getText());
+		assertNotNull(((TextView) modifiedDateView).getText());
 		assertEquals(getActivity().getString(R.string.modified), modifiedDateText.split(":")[0]);
 		assertEquals(modifiedDateString, sharedDateText.split(":")[1].trim());
 
@@ -195,13 +198,13 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		final View remixesLabelView = solo.getView(R.id.scratch_project_remixes_label);
 		assertEquals(remixesLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(remixesLabelView instanceof TextView);
-		assertEquals(getActivity().getString(R.string.remixes), ((TextView)remixesLabelView).getText());
+		assertEquals(getActivity().getString(R.string.remixes), ((TextView) remixesLabelView).getText());
 
 		// convert button
 		final View convertButtonView = solo.getView(R.id.scratch_project_convert_button);
 		assertEquals(convertButtonView.getVisibility(), View.VISIBLE);
 		assertTrue(convertButtonView instanceof Button);
-		assertEquals(getActivity().getString(R.string.convert), ((TextView)convertButtonView).getText());
+		assertEquals(getActivity().getString(R.string.convert), ((TextView) convertButtonView).getText());
 	}
 
 	public void testRemixListViewPopulatedWithRemixProjectData() {
@@ -209,11 +212,11 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		View remixesListView = solo.getView(R.id.scratch_project_remixes_list_view);
 		assertEquals(remixesListView.getVisibility(), View.VISIBLE);
 		assertTrue(remixesListView instanceof ListView);
-		ListAdapter listAdapter = ((ListView)remixesListView).getAdapter();
+		ListAdapter listAdapter = ((ListView) remixesListView).getAdapter();
 		assertNotNull(listAdapter);
 		assertTrue(listAdapter.getCount() == 1);
 		assertTrue(listAdapter instanceof ScratchRemixedProjectAdapter);
-		ScratchRemixedProjectAdapter remixedProjectAdapter = (ScratchRemixedProjectAdapter)listAdapter;
+		ScratchRemixedProjectAdapter remixedProjectAdapter = (ScratchRemixedProjectAdapter) listAdapter;
 
 		// remixed project
 		ScratchRemixProjectData expectedRemixedProjectData = remixedProjectData;
@@ -262,5 +265,4 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 			}
 		});
 	}
-
 }

@@ -166,12 +166,12 @@ public final class Utils {
 		if (number < 1_000) {
 			return Integer.toString(number);
 		} else if (number < 10_000) {
-			return Integer.toString(number/1_000) + (number % 1_000 > 100 ? "."
-					+ Integer.toString((number % 1_000)/100) : "") + "k";
+			return Integer.toString(number / 1_000) + (number % 1_000 > 100 ? "."
+					+ Integer.toString((number % 1_000) / 100) : "") + "k";
 		} else if (number < 1_000_000) {
-			return Integer.toString(number/1_000) + "k";
+			return Integer.toString(number / 1_000) + "k";
 		}
-		return Integer.toString(number/1_000_000) + "M";
+		return Integer.toString(number / 1_000_000) + "M";
 	}
 
 	public static boolean setListViewHeightBasedOnItems(ListView listView) {
@@ -717,8 +717,7 @@ public final class Utils {
 		String token = preferences.getString(Constants.TOKEN, Constants.NO_TOKEN);
 
 		boolean tokenValid = !(token.equals(Constants.NO_TOKEN) || token.length() != ServerCalls.TOKEN_LENGTH
-					|| token.equals(ServerCalls.TOKEN_CODE_INVALID));
+				|| token.equals(ServerCalls.TOKEN_CODE_INVALID));
 		return tokenValid;
 	}
-
 }
