@@ -21,8 +21,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.transfers;
+package org.catrobat.catroid.scratchconverter.protocol;
 
-public interface ScratchConverterClient {
-	void convertProject(final long scratchProjectID, final String projectTitle);
+public class Job {
+	private long jobID;
+	private String projectTitle;
+
+	public Job(final long jobID, final String projectTitle) {
+		this.jobID = jobID;
+		this.projectTitle = projectTitle;
+	}
+
+	public String getProjectTitle() {
+		return projectTitle;
+	}
+
+	public long getJobID() {
+		return jobID;
+	}
+
 }
