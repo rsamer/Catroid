@@ -23,8 +23,6 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,15 +30,21 @@ public class JobConsole {
 	private static final String TAG = JobConsole.class.getSimpleName();
 
 	private List<String> lines;
+	private double progress;
 
 	public JobConsole() {
 		lines = new ArrayList<>();
+		progress = 0.0;
 	}
 
-	public void addLine(final String line) {
-		lines.add(line);
-		Log.d(TAG, line);
-		// TODO: view listener! -> notify view to update
+	public void setProgress(final double progress) {
+		this.progress = progress;
+	}
+
+	public void addLines(final String[] lines) {
+		for (final String line : lines) {
+			this.lines.add(line);
+		}
 	}
 
 }

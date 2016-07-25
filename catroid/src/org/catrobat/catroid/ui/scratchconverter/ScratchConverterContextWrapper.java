@@ -21,19 +21,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.ui;
+package org.catrobat.catroid.ui.scratchconverter;
 
 import android.app.Activity;
 import android.content.ContextWrapper;
+import android.content.SharedPreferences;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.ClientCallback;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
+import org.catrobat.catroid.utils.DownloadUtil;
 import org.catrobat.catroid.utils.ToastUtil;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ScratchConverterContextWrapper extends ContextWrapper {
 
@@ -49,19 +54,19 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 		this.converterClient = converterClient;
 	}
 
-	public void convertProgram(final long jobID, final String projectTitle, final Client.CompletionCallback completionCallback) {
+	public void convertProgram(final long jobID, final String projectTitle, final ClientCallback.BaseCallback callback) {
 
 		// TODO: make sure NOT running on UI-thread!!
 		final Job job = new Job(jobID, projectTitle);
 
 		//lock.lock();
-		converterClient.convertJob(job, new Client.CompletionCallback() {
+		converterClient.convertJob(job, new ClientCallback() {
 			@Override
 			public void onConversionReady() {
 				//lock.unlock();
 				Log.i(TAG, "Conversion ready!");
-				if (completionCallback != null) {
-					completionCallback.onConversionReady();
+				if (callback != null) {
+					callback.onConversionReady();
 				}
 			}
 
@@ -74,43 +79,68 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 						ToastUtil.showSuccess(activity, activity.getString(R.string.scratch_conversion_started));
 					}
 				});
-				if (completionCallback != null) {
-					completionCallback.onConversionStart();
+				if (callback != null) {
+					callback.onConversionStart();
 				}
 			}
 
 			@Override
 			public void onConversionFinished() {
 				Log.i(TAG, "Conversion finished!");
-				if (completionCallback != null) {
-					completionCallback.onConversionFinished();
+				if (callback != null) {
+					callback.onConversionFinished();
 				}
 			}
 
 			@Override
-			public void onConnectionFailure(Client.ClientException ex) {
+			public void onClientIDChanged(final long newClientID) {
+				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME, newClientID);
+				editor.commit();
+			}
+
+			@Override
+			public void onDownloadReady(final String downloadURL) {
+				activity.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+							Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+							r.play();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						//DownloadUtil.getInstance().prepareDownloadAndStartIfPossible(activity, downloadURL);
+					}
+				});
+			}
+
+			@Override
+			public void onConnectionFailure(final ClientException ex) {
 				//lock.unlock();
 				Log.e(TAG, "Connection failed: " + ex.getLocalizedMessage());
-				if (completionCallback != null) {
-					completionCallback.onConnectionFailure(ex);
+				if (callback != null) {
+					callback.onConnectionFailure(ex);
 				}
 			}
 
 			@Override
-			public void onAuthenticationFailure(Client.ClientException ex) {
+			public void onAuthenticationFailure(final ClientException ex) {
 				//lock.unlock();
 				Log.e(TAG, "Authentication failed: " + ex.getLocalizedMessage());
-				if (completionCallback != null) {
-					completionCallback.onAuthenticationFailure(ex);
+				if (callback != null) {
+					callback.onAuthenticationFailure(ex);
 				}
 			}
 
 			@Override
-			public void onConversionFailure(Client.ClientException ex) {
+			public void onConversionFailure(final ClientException ex) {
 				//lock.unlock();
 				Log.e(TAG, "Conversion failed: " + ex.getLocalizedMessage());
-				if (completionCallback != null) {
-					completionCallback.onConversionFailure(ex);
+				if (callback != null) {
+					callback.onConversionFailure(ex);
 				}
 			}
 		});

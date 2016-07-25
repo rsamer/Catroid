@@ -42,6 +42,7 @@ import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ClientIDMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ErrorMessage;
+import org.catrobat.catroid.scratchconverter.protocol.message.base.JobInfo;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.JobsInfoMessage;
 import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 
@@ -55,7 +56,6 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	private static final String TAG = WebSocketClient.class.getSimpleName();
-	public static final long INVALID_CLIENT_ID = -1;
 
 	private Client.State state;
 	private long clientID;
@@ -63,7 +63,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	private AsyncHttpClient asyncHttpClient = AsyncHttpClient.getDefaultInstance();
 	private WebSocket webSocket;
 	private AuthCallback authCallback;
-	private CompletionCallback completionCallback;
+	private ClientCallback clientCallback;
 
 	public WebSocketClient(final long clientID, final WebSocketMessageListener messageListener) {
 		this.clientID = clientID;
@@ -72,7 +72,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		this.messageListener = messageListener;
 		this.webSocket = null;
 		this.authCallback = null;
-		this.completionCallback = null;
+		this.clientCallback = null;
 	}
 
 	public MessageListener getMessageListener() {
@@ -85,10 +85,10 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 	public boolean isJobInProgress(final long jobID) {
 		JobHandler jobHandler = messageListener.getJobHandler(jobID);
-		return jobHandler != null && jobHandler.getState().isInProgress();
+		return jobHandler != null && jobHandler.getCurrentState().isInProgress();
 	}
 
-	private void connect(final ConnectCallback connectCallback, final CompletionCallback completionCallback) {
+	private void connect(final ConnectCallback connectCallback, final ClientCallback clientCallback) {
 		if (state == State.CONNECTED) {
 			connectCallback.onSuccess();
 			return;
@@ -103,7 +103,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 						Preconditions.checkState(state != State.CONNECTED && webSocket == null);
 						if (ex != null) {
 							state = State.FAILED;
-							completionCallback.onAuthenticationFailure(new ClientException(ex));
+							clientCallback.onAuthenticationFailure(new ClientCallback.ClientException(ex));
 							return;
 						}
 
@@ -127,13 +127,13 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
-	public void convertJob(final Job job, final CompletionCallback completionCallback) {
-		this.completionCallback = completionCallback;
+	public void convertJob(final Job job, final ClientCallback clientCallback) {
+		this.clientCallback = clientCallback;
 		this.authCallback = new AuthCallback() {
 			@Override
 			public void onSuccess() {
 				Log.i(TAG, "Authentication successful!");
-				convert(job, completionCallback);
+				convert(job, clientCallback);
 			}
 		};
 
@@ -144,36 +144,38 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 					Log.i(TAG, "Successfully connected to WebSocket server");
 					authenticate(authCallback);
 				}
-			}, completionCallback);
+			}, clientCallback);
 		} else if (state == State.CONNECTED) {
 			Log.i(TAG, "Already connected to WebSocket server!");
 			authenticate(authCallback);
 		} else if (state == State.AUTHENTICATED) {
 			Log.i(TAG, "Already authenticated!");
-			convert(job, completionCallback);
+			convert(job, clientCallback);
 		} else {
 			Log.e(TAG, "Unhandled state: " + state);
 		}
 	}
 
-	private void convert(final Job job, final CompletionCallback completionCallback) {
+	private void convert(final Job job, final ClientCallback clientCallback) {
 		Preconditions.checkState(state == State.AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 
-		JobHandler jobHandler = messageListener.getJobHandler(job.getJobID());
+		final long jobID = job.getJobID();
+		JobHandler jobHandler = messageListener.getJobHandler(jobID);
 		boolean force = false;
 		if (jobHandler != null) {
-			if (jobHandler.getState().isInProgress()) {
-				completionCallback.onConversionFailure(new ClientException("Job in progress!"));
+			if (jobHandler.getCurrentState().isInProgress()) {
+				clientCallback.onConversionFailure(new ClientCallback.ClientException("Job in progress!"));
 				return;
 			}
 			force = true;
 		} else {
-			jobHandler = new JobHandler(job, completionCallback);
+			jobHandler = new JobHandler(job, clientCallback);
 			messageListener.addJobHandler(jobHandler);
 		}
-		sendCommand(new ScheduleJobCommand(job.getJobID(), clientID, force));
+		jobHandler.setJobAsScheduled(messageListener.getJobConsoleViewListeners(jobID));
+		sendCommand(new ScheduleJobCommand(jobID, clientID, force));
 	}
 
 	private void sendCommand(final Command command) {
@@ -189,14 +191,15 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	@Override
 	public void onBaseMessage(BaseMessage baseMessage, BaseInfoViewListener[] viewListeners) {
 		// case: JobsInfoMessage
-		if (baseMessage == null) { // FIXME: remove after JobsInfoMessage implemented!!!
-			return;
-		}
 		if (baseMessage instanceof JobsInfoMessage) {
-			// TODO: implement
+			final JobInfo[] jobInfos = (JobInfo[])baseMessage.getArgument(Message.ArgumentType.JOBS_INFO);
+			if (viewListeners != null) {
+				for (final BaseInfoViewListener viewListener : viewListeners) {
+					viewListener.onJobsInfo(jobInfos);
+				}
+			}
 			return;
 		}
-
 
 		// case: ErrorMessage
 		if (baseMessage instanceof ErrorMessage) {
@@ -204,11 +207,16 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			Log.e(TAG, errorMessage);
 
 			if (state == State.CONNECTED) {
-				completionCallback.onAuthenticationFailure(new ClientException(errorMessage));
+				clientCallback.onAuthenticationFailure(new ClientCallback.ClientException(errorMessage));
 			} else if (state == State.AUTHENTICATED) {
-				completionCallback.onConversionFailure(new ClientException(errorMessage));
+				clientCallback.onConversionFailure(new ClientCallback.ClientException(errorMessage));
 			}
 			state = State.FAILED;
+			if (viewListeners != null) {
+				for (final BaseInfoViewListener viewListener : viewListeners) {
+					viewListener.onError(errorMessage);
+				}
+			}
 			return;
 		}
 
@@ -217,12 +225,12 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			Preconditions.checkState(state == State.CONNECTED);
 			long oldClientID = clientID;
 			clientID = (long)baseMessage.getArgument(Message.ArgumentType.CLIENT_ID);
-			// TODO: shared preferences!
-			state = State.AUTHENTICATED;
 
 			if (clientID != oldClientID) {
 				Log.d(TAG, "New Client ID: " + clientID);
+				clientCallback.onClientIDChanged(clientID);
 			}
+			state = State.AUTHENTICATED;
 			authCallback.onSuccess();
 			return;
 		}
