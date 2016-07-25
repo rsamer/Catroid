@@ -23,7 +23,6 @@
 
 package org.catrobat.catroid.ui.fragment;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -61,7 +60,7 @@ import org.catrobat.catroid.transfers.FetchScratchProjectsTask;
 import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.ui.CapitalizedTextView;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
-import org.catrobat.catroid.ui.ScratchConverterContextWrapper;
+import org.catrobat.catroid.ui.scratchconverter.ScratchConverterContextWrapper;
 import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
 import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
@@ -187,7 +186,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		final ScratchSearchProjectsListFragment fragment = this;
 		final ScratchConverterActivity activity = (ScratchConverterActivity) getActivity();
 		final View rootView = inflater.inflate(R.layout.fragment_scratch_search_projects_list, container, false);
 		searchView = (SearchView) rootView.findViewById(R.id.search_view_scratch);

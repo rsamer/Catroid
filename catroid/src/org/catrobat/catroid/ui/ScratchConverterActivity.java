@@ -24,34 +24,31 @@ package org.catrobat.catroid.ui;
 
 import android.app.ActionBar;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
+import org.catrobat.catroid.common.Constants;
+import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.WebSocketClient;
 import org.catrobat.catroid.R;
-import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
+import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment;
-import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
+import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ScratchConverterActivity extends BaseActivity {
 
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
-	private ScratchSearchProjectsListFragment scratchSearchProjectsListFragment;
-	private TextView convertPanelHeadlineView;
-	private TextView convertPanelStatusView;
-	private TextView convertPanelConsoleView;
+	private ScratchSearchProjectsListFragment searchProjectsListFragment;
+	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
 	private static final int SPEECH_REQUEST_CODE = 0;
 
 	@Override
@@ -60,25 +57,20 @@ public class ScratchConverterActivity extends BaseActivity {
 		setContentView(R.layout.activity_scratch_converter);
 		setUpActionBar();
 
-		scratchSearchProjectsListFragment = (ScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
+		searchProjectsListFragment = (ScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_search_projects_list);
-		convertPanelHeadlineView = (TextView) findViewById(R.id.scratch_convert_headline);
-		convertPanelStatusView = (TextView) findViewById(R.id.scratch_convert_status_text);
-		convertPanelConsoleView = (TextView) findViewById(R.id.scratch_convert_panel_console);
+		converterSlidingUpPanelFragment = (ScratchConverterSlidingUpPanelFragment)getFragmentManager().findFragmentById(
+				R.id.fragment_scratch_converter_sliding_up_panel);
+
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,
+				Client.INVALID_CLIENT_ID);
 
 		WebSocketMessageListener messageListener = new WebSocketMessageListener();
-		// TODO: register views!
-		long clientID = 7; // TODO: shared preferences!
-		scratchSearchProjectsListFragment.setConverterClient(new WebSocketClient(clientID, messageListener));
+		messageListener.addBaseInfoViewListener(converterSlidingUpPanelFragment);
+		messageListener.addGlobalJobConsoleViewListener(converterSlidingUpPanelFragment);
+		searchProjectsListFragment.setConverterClient(new WebSocketClient(clientID, messageListener));
 		Log.i(TAG, "Scratch Converter Activity created");
-		/*
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				convertPanelConsoleView.setMovementMethod(new ScrollingMovementMethod());
-			}
-		});
-		 */
 	}
 
 	@Override
@@ -89,7 +81,7 @@ public class ScratchConverterActivity extends BaseActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		handleShowDetails(scratchSearchProjectsListFragment.getShowDetails(),
+		handleShowDetails(searchProjectsListFragment.getShowDetails(),
 				menu.findItem(R.id.menu_scratch_projects_show_details));
 		return super.onPrepareOptionsMenu(menu);
 	}
@@ -99,11 +91,11 @@ public class ScratchConverterActivity extends BaseActivity {
 		switch (item.getItemId()) {
 			case R.id.menu_scratch_projects_convert:
 				Log.d(TAG, "Selected menu item 'convert'");
-				scratchSearchProjectsListFragment.startConvertActionMode();
+				searchProjectsListFragment.startConvertActionMode();
 				break;
 			case R.id.menu_scratch_projects_show_details:
 				Log.d(TAG, "Selected menu item 'Show/Hide details'");
-				handleShowDetails(!scratchSearchProjectsListFragment.getShowDetails(), item);
+				handleShowDetails(!searchProjectsListFragment.getShowDetails(), item);
 				break;
 		}
 		return super.onOptionsItemSelected(item);
@@ -116,7 +108,7 @@ public class ScratchConverterActivity extends BaseActivity {
 	}
 
 	private void handleShowDetails(boolean showDetails, MenuItem item) {
-		scratchSearchProjectsListFragment.setShowDetails(showDetails);
+		searchProjectsListFragment.setShowDetails(showDetails);
 		item.setTitle(showDetails ? R.string.hide_details : R.string.show_details);
 	}
 
@@ -137,7 +129,7 @@ public class ScratchConverterActivity extends BaseActivity {
 			List<String> results = data.getStringArrayListExtra(
 					RecognizerIntent.EXTRA_RESULTS);
 			String spokenText = results.get(0);
-			scratchSearchProjectsListFragment.searchAndUpdateText(spokenText);
+			searchProjectsListFragment.searchAndUpdateText(spokenText);
 		}
 		super.onActivityResult(requestCode, resultCode, data);
 	}
