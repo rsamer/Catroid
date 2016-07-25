@@ -322,6 +322,11 @@ public final class Utils {
 		return toHex(messageDigest.digest()).toLowerCase(Locale.US);
 	}
 
+	public static double round(double value, int precision) {
+		final int scale = (int) Math.pow(10, precision);
+		return (double) Math.round(value * scale) / scale;
+	}
+
 	private static String toHex(byte[] messageDigest) {
 		final char[] hexChars = "0123456789ABCDEF".toCharArray();
 
