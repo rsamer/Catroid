@@ -23,10 +23,8 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
-import java.util.Map;
-
 public class JobsInfoMessage extends BaseMessage {
-	public JobsInfoMessage(final Map<String, String> jobsInfo) {
+	public JobsInfoMessage(final JobInfo[] jobsInfo) {
 		super(Type.JOBS_INFO);
 		addArgument(ArgumentType.JOBS_INFO, jobsInfo);
 	}

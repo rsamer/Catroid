@@ -73,6 +73,10 @@ abstract public class JobMessage extends Message {
 		this.type = type;
 	}
 
+	public Type getType() {
+		return type;
+	}
+
 	@Nullable
 	public static <T extends JobMessage> T fromJson(JSONObject jsonMessage) throws JSONException {
 		final JSONObject jsonData = jsonMessage.getJSONObject("data");
