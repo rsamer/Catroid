@@ -98,6 +98,7 @@ public final class Constants {
 	public static final String CATROBAT_ABOUT_URL = "http://www.catrobat.org/";
 	public static final String ABOUT_POCKETCODE_LICENSE_URL = "http://developer.catrobat.org/licenses";
 
+	public static final String SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME = "scratchconverter.clientID";
 	public static final String SCRATCH_PROJECT_BASE_URL_HTTPS = "https://scratch.mit.edu/projects/";
 	public static final String SCRATCH_SEARCH_BASE_URL = "https://www.googleapis.com/customsearch/";
 	public static final String SCRATCH_SEARCH_URL = SCRATCH_SEARCH_BASE_URL + "v1element";
