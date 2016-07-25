@@ -23,6 +23,17 @@
 
 package org.catrobat.catroid.ui.scratchconverter;
 
-public interface JobConsoleViewListener {
+import android.support.annotation.NonNull;
 
+import org.catrobat.catroid.scratchconverter.protocol.Job;
+
+public interface JobConsoleViewListener {
+	void onJobScheduled(Job job);
+	void onJobReady(Job job);
+	void onJobStarted(Job job);
+	void onJobProgress(Job job, double progress);
+	void onJobOutput(Job job, @NonNull String[] lines);
+	void onJobFinished(Job job);
+	void onJobFailed(Job job);
+	void onJobDownloadReady(Job job);
 }

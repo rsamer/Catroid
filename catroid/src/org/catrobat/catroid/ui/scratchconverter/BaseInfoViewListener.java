@@ -23,5 +23,9 @@
 
 package org.catrobat.catroid.ui.scratchconverter;
 
+import org.catrobat.catroid.scratchconverter.protocol.message.base.JobInfo;
+
 public interface BaseInfoViewListener {
+	void onJobsInfo(JobInfo[] jobsInfo);
+	void onError(String errorMessage);
 }
