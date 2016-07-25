@@ -23,8 +23,10 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
+import android.support.annotation.NonNull;
+
 public class JobOutputMessage extends JobMessage {
-	public JobOutputMessage(final long jobID, final String[] lines) {
+	public JobOutputMessage(final long jobID, @NonNull final String[] lines) {
 		super(Type.JOB_OUTPUT);
 		addArgument(ArgumentType.JOB_ID, jobID);
 		addArgument(ArgumentType.LINES, lines);

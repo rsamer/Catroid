@@ -29,6 +29,7 @@ import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 public interface MessageListener {
 
 	void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener);
+	void addGlobalJobConsoleViewListener(JobConsoleViewListener jobConsoleViewListener);
 	void addJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener);
 
 }

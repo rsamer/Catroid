@@ -27,28 +27,10 @@ import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 
 public interface Client {
-	class ClientException extends Exception {
-		public ClientException(String detailMessage) {
-			super(detailMessage);
-		}
-
-		public ClientException(Throwable throwable) {
-			super(throwable);
-		}
-	}
-
-	interface CompletionCallback {
-		void onConversionReady();
-		void onConversionStart();
-		void onConversionFinished();
-		void onConnectionFailure(ClientException ex);
-		void onAuthenticationFailure(ClientException ex);
-		void onConversionFailure(ClientException ex);
-	}
-
 	enum State { CONNECTED, NOT_CONNECTED, AUTHENTICATED, FAILED }
+	long INVALID_CLIENT_ID = -1;
 
 	MessageListener getMessageListener();
 	boolean isJobInProgress(final long jobID);
-	void convertJob(final Job job, final CompletionCallback callback);
+	void convertJob(final Job job, final ClientCallback callback);
 }

@@ -23,6 +23,7 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.koushikdutta.async.http.WebSocket;
@@ -39,19 +40,21 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class WebSocketMessageListener implements MessageListener, WebSocket.StringCallback {
+final public class WebSocketMessageListener implements MessageListener, WebSocket.StringCallback {
 
-	private static final String TAG = MessageListener.class.getSimpleName();
+	private static final String TAG = WebSocketMessageListener.class.getSimpleName();
 
 	private BaseMessageHandler baseMessageHandler;
 	private Map<Long, JobHandler> jobHandlers;
 	private Map<Long, Set<JobConsoleViewListener>> jobConsoleViewListeners;
+	private Set<JobConsoleViewListener> globalJobConsoleViewListeners;
 	private Set<BaseInfoViewListener> baseInfoViewListeners;
 
 	public WebSocketMessageListener() {
 		this.baseMessageHandler = null;
 		this.jobHandlers = new HashMap<>();
 		this.jobConsoleViewListeners = new HashMap<>();
+		this.globalJobConsoleViewListeners = new HashSet<>();
 		this.baseInfoViewListeners = new HashSet<>();
 	}
 
@@ -73,6 +76,11 @@ public class WebSocketMessageListener implements MessageListener, WebSocket.Stri
 	}
 
 	@Override
+	public void addGlobalJobConsoleViewListener(JobConsoleViewListener jobConsoleViewListener) {
+		globalJobConsoleViewListeners.add(jobConsoleViewListener);
+	}
+
+	@Override
 	public void addJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener) {
 		Set<JobConsoleViewListener> listeners = jobConsoleViewListeners.get(jobID);
 		if (listeners == null) {
@@ -82,16 +90,20 @@ public class WebSocketMessageListener implements MessageListener, WebSocket.Stri
 		jobConsoleViewListeners.put(jobID, listeners);
 	}
 
-	private BaseInfoViewListener[] getBaseInfoViewListeners() {
+	@NonNull
+	public BaseInfoViewListener[] getBaseInfoViewListeners() {
 		return baseInfoViewListeners.toArray(new BaseInfoViewListener[baseInfoViewListeners.size()]);
 	}
 
-	private JobConsoleViewListener[] getJobConsoleViewListeners(long jobID) {
-		Set<JobConsoleViewListener> listenersList = jobConsoleViewListeners.get(jobID);
-		if (listenersList == null) {
-			return null;
+	@NonNull
+	public JobConsoleViewListener[] getJobConsoleViewListeners(long jobID) {
+		final Set<JobConsoleViewListener> mergedListenersList = new HashSet<>();
+		final Set<JobConsoleViewListener> listenersList = jobConsoleViewListeners.get(jobID);
+		if (listenersList != null) {
+			mergedListenersList.addAll(listenersList);
 		}
-		return listenersList.toArray(new JobConsoleViewListener[listenersList.size()]);
+		mergedListenersList.addAll(globalJobConsoleViewListeners);
+		return mergedListenersList.toArray(new JobConsoleViewListener[mergedListenersList.size()]);
 	}
 
 	@Override
