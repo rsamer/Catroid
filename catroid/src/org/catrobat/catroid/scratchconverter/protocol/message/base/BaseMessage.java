@@ -30,7 +30,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 abstract public class BaseMessage extends Message {
@@ -71,22 +73,18 @@ abstract public class BaseMessage extends Message {
 		final JSONObject jsonData = jsonMessage.getJSONObject("data");
 		switch (Type.valueOf(jsonMessage.getInt("type"))) {
 			case ERROR:
-				return (T)new ErrorMessage(jsonData.getString("msg"));
+				return (T)new ErrorMessage(jsonData.getString(ArgumentType.MSG.toString()));
 			case CLIENT_ID:
-				return (T)new ClientIDMessage(jsonData.getLong("clientID"));
+				return (T)new ClientIDMessage(jsonData.getLong(ArgumentType.CLIENT_ID.toString()));
 			case JOBS_INFO:
-				JSONArray jobsInfo = jsonData.getJSONArray("jobsInfo");
-				for (int i = 0; i < jobsInfo.length(); ++i) {
-					JSONObject jobInfo = jobsInfo.getJSONObject(i);
-					jobInfo.getInt("status");
-					jobInfo.getInt("jid");
-					jobInfo.getString("title");
-					jobInfo.getString("url");
-					jobInfo.getDouble("progress");
+				final JSONArray jobsInfo = jsonData.getJSONArray(ArgumentType.JOBS_INFO.toString());
+				final List<JobInfo> jobsData = new ArrayList<>();
+				if (jobsInfo != null) {
+					for (int i = 0; i < jobsInfo.length(); ++i) {
+						jobsData.add(JobInfo.fromJson(jobsInfo.getJSONObject(i)));
+					}
 				}
-				// TODO: implement...
-				//message = new JobsInfoMessage(jsonMessage.getLong("jobID"), jobsInfo);
-				return null;
+				return (T)new JobsInfoMessage(jobsData.toArray(new JobInfo[jobsData.size()]));
 		}
 		return null;
 	}
