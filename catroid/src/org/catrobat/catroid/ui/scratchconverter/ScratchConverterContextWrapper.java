@@ -105,6 +105,8 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 
 			@Override
 			public void onDownloadReady(final String downloadURL) {
+				final String baseUrl = Constants.SCRATCH_CONVERTER_BASE_URL;
+				final String fullDownloadUrl = baseUrl.substring(0, baseUrl.length() - 1) + downloadURL;
 				activity.runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -115,7 +117,8 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						//DownloadUtil.getInstance().prepareDownloadAndStartIfPossible(activity, downloadURL);
+						Log.d(TAG, "Start download: " + fullDownloadUrl);
+						DownloadUtil.getInstance().prepareDownloadAndStartIfPossible(activity, fullDownloadUrl);
 					}
 				});
 			}

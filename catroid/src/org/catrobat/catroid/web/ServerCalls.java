@@ -499,7 +499,15 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 				.url(url)
 				.build();
 
-		okHttpClient.networkInterceptors().add(new Interceptor() {
+		// do not use default client for NON-HTTPS requests!
+		OkHttpClient httpClient = okHttpClient;
+		if (url.startsWith("http://")) {
+			httpClient = new OkHttpClient();
+			// allow HTTP instead of HTTPS! TODO: not best solution...
+			httpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT));
+		}
+
+		httpClient.networkInterceptors().add(new Interceptor() {
 			@Override
 			public Response intercept(Chain chain) throws IOException {
 				Response originalResponse = chain.proceed(chain.request());
@@ -519,7 +527,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 		});
 
 		try {
-			Response response = okHttpClient.newCall(request).execute();
+			Response response = httpClient.newCall(request).execute();
 			BufferedSink bufferedSink = Okio.buffer(Okio.sink(file));
 			bufferedSink.writeAll(response.body().source());
 			bufferedSink.close();
