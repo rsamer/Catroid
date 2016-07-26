@@ -28,6 +28,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -71,6 +74,20 @@ public class ScratchConverterActivity extends BaseActivity {
 		messageListener.addGlobalJobConsoleViewListener(converterSlidingUpPanelFragment);
 		searchProjectsListFragment.setConverterClient(new WebSocketClient(clientID, messageListener));
 		Log.i(TAG, "Scratch Converter Activity created");
+
+		appendColoredBetaLabelToTitle(Color.RED);
+		//hideSlideUpPanelBar();
+	}
+
+	private void appendColoredBetaLabelToTitle(final int color) {
+		final String title = getString(R.string.title_activity_scratch_converter);
+		final String beta = getString(R.string.beta).toUpperCase();
+		final SpannableString spanTitle = new SpannableString(title + " " + beta);
+		final int begin = title.length() + 1;
+		final int end = begin + beta.length();
+		spanTitle.setSpan(new ForegroundColorSpan(color), begin, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		getActionBar().setTitle(spanTitle);
+	}
 	}
 
 	@Override

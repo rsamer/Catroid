@@ -25,13 +25,19 @@ package org.catrobat.catroid.ui;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.TextView;
 
 import org.catrobat.catroid.BuildConfig;
 import org.catrobat.catroid.ProjectManager;
@@ -77,6 +83,21 @@ public class BaseActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		baseMenu = menu;
 		getMenuInflater().inflate(R.menu.menu_main_menu, menu);
+
+		final MenuItem scratchConverterMenuItem = menu.findItem(R.id.menu_scratch_converter);
+		if (scratchConverterMenuItem != null) {
+			if ((this instanceof MainMenuActivity) == false) {
+				scratchConverterMenuItem.setVisible(false);
+			} else {
+				final String title = getString(R.string.preference_title_scratch_converter);
+				final String beta = getString(R.string.beta).toUpperCase();
+				final SpannableString spanTitle = new SpannableString(title + " " + beta);
+				final int begin = title.length() + 1;
+				final int end = begin + beta.length();
+				spanTitle.setSpan(new ForegroundColorSpan(Color.RED), begin, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				scratchConverterMenuItem.setTitle(spanTitle);
+			}
+		}
 		return super.onCreateOptionsMenu(menu);
 	}
 
