@@ -203,10 +203,21 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		int id = searchView.getContext()
 				.getResources()
 				.getIdentifier("android:id/search_src_text", null, null);
-		TextView textView = (TextView) searchView.findViewById(id);
+		final TextView searchTextView = (TextView) searchView.findViewById(id);
+		searchTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (!hasFocus) {
+					activity.showSlideUpPanelBar(150);
+				} else {
+					activity.hideSlideUpPanelBar();
+				}
+
+			}
+		});
 		//textView.setTextColor(Color.BLACK);
 		//textView.setHintTextColor(Color.GRAY);
-		textView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+		searchTextView.setInputType(InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
 
 		audioButton.setOnClickListener(new View.OnClickListener() {
 			@Override

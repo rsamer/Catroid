@@ -25,6 +25,7 @@ package org.catrobat.catroid.ui;
 import android.app.ActionBar;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
@@ -34,6 +35,9 @@ import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.Client;
@@ -42,7 +46,6 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
 import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 
 import java.util.List;
 
