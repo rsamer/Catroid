@@ -31,14 +31,21 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.common.images.WebImage;
+
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.JobInfo;
 import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
+import org.catrobat.catroid.utils.ExpiringDiskCache;
+import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.Utils;
+import org.catrobat.catroid.utils.WebImageLoader;
 
 public class ScratchConverterSlidingUpPanelFragment extends Fragment implements BaseInfoViewListener, JobConsoleViewListener {
 
@@ -47,6 +54,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment implements 
 	private TextView convertPanelHeadlineView;
 	private TextView convertPanelStatusView;
 	private TextView convertPanelConsoleView;
+	private ImageView upDownArrowImageView;
 
 	@Nullable
 	@Override
@@ -55,7 +63,13 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment implements 
 		convertPanelHeadlineView = (TextView) rootView.findViewById(R.id.scratch_convert_headline);
 		convertPanelStatusView = (TextView) rootView.findViewById(R.id.scratch_convert_status_text);
 		convertPanelConsoleView = (TextView) rootView.findViewById(R.id.scratch_convert_panel_console);
+		upDownArrowImageView = (ImageView) rootView.findViewById(R.id.scratch_up_down_image_button);
 		return rootView;
+	}
+
+	public void rotateImageButton(float degrees) {
+		upDownArrowImageView.setAlpha(Math.max(1.0f - (float)Math.sin(degrees/360.0f * 2.0f * Math.PI), 0.3f));
+		upDownArrowImageView.setRotation(degrees);
 	}
 
 	//------------------------------------------------------------------------------------------------------------------

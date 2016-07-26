@@ -85,7 +85,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginRight="16dp"
-            android:src="@drawable/default_drone_project_orange_arrow_up"
+            android:src="@drawable/default_scratch_converter_arrow_up"
             android:layout_alignParentRight="true"
             android:layout_centerInParent="true" />
 

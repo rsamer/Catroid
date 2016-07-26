@@ -31,9 +31,11 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ActionMode;
@@ -71,7 +73,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScratchSearchProjectsListFragment extends Fragment
-		implements FetchScratchProjectsTask.ScratchProjectListTaskDelegate, ScratchProjectAdapter.OnScratchProjectEditListener {
+		implements FetchScratchProjectsTask.ScratchProjectListTaskDelegate,
+		ScratchProjectAdapter.OnScratchProjectEditListener {
 
 	private static final String BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA = "scratch_project_data";
 	private static final String SHARED_PREFERENCE_NAME = "showDetailsScratchProjects";
@@ -100,7 +103,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		converterClient = client;
 	}
 
-	private void setSearchResultsListViewMargin(int left, int top, int right, int bottom) {
+	public void setSearchResultsListViewMargin(int left, int top, int right, int bottom) {
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) searchResultsListView.getLayoutParams();
 		params.setMargins(left, top, right, bottom);
 		searchResultsListView.setLayoutParams(params);
@@ -512,4 +515,5 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			}
 		});
 	}
+
 }
