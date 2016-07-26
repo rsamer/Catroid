@@ -43,7 +43,7 @@ public interface ClientCallback {
 	void onAuthenticationFailure(ClientException ex);
 	void onConversionFailure(ClientException ex);
 
-	abstract class BaseCallback implements ClientCallback {
+	abstract class SimpleClientCallback implements ClientCallback {
 		@Override
 		public void onConversionReady() {}
 

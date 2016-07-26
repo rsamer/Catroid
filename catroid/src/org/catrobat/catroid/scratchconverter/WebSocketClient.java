@@ -127,13 +127,13 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
-	public void convertJob(final Job job, final ClientCallback clientCallback) {
+	public void convertJob(final Job job, final boolean verbose, final ClientCallback clientCallback) {
 		this.clientCallback = clientCallback;
 		this.authCallback = new AuthCallback() {
 			@Override
 			public void onSuccess() {
 				Log.i(TAG, "Authentication successful!");
-				convert(job, clientCallback);
+				convert(job, verbose, clientCallback);
 			}
 		};
 
@@ -150,13 +150,13 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			authenticate(authCallback);
 		} else if (state == State.AUTHENTICATED) {
 			Log.i(TAG, "Already authenticated!");
-			convert(job, clientCallback);
+			convert(job, verbose, clientCallback);
 		} else {
 			Log.e(TAG, "Unhandled state: " + state);
 		}
 	}
 
-	private void convert(final Job job, final ClientCallback clientCallback) {
+	private void convert(final Job job, final boolean verbose, final ClientCallback clientCallback) {
 		Preconditions.checkState(state == State.AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
@@ -175,7 +175,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			messageListener.addJobHandler(jobHandler);
 		}
 		jobHandler.setJobAsScheduled(messageListener.getJobConsoleViewListeners(jobID));
-		sendCommand(new ScheduleJobCommand(jobID, clientID, force));
+		sendCommand(new ScheduleJobCommand(jobID, clientID, force, verbose));
 	}
 
 	private void sendCommand(final Command command) {

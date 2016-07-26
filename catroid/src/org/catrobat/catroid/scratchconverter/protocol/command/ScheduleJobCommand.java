@@ -24,10 +24,11 @@
 package org.catrobat.catroid.scratchconverter.protocol.command;
 
 public class ScheduleJobCommand extends Command {
-	public ScheduleJobCommand(final long jobID, final long clientID, final boolean force) {
+	public ScheduleJobCommand(final long jobID, final long clientID, final boolean force, final boolean verbose) {
 		super(Type.SCHEDULE_JOB);
 		addArgument(ArgumentType.JOB_ID, jobID);
 		addArgument(ArgumentType.CLIENT_ID, clientID);
 		addArgument(ArgumentType.FORCE, force);
+		addArgument(ArgumentType.VERBOSE, verbose);
 	}
 }

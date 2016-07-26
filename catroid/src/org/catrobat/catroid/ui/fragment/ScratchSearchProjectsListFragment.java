@@ -407,13 +407,13 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	private void convertProjects(List<ScratchProjectPreviewData> projectList) {
-		// TODO: create websocket connection and set up receiver
 		Log.i(TAG, "Converting projects:");
 		final ScratchConverterContextWrapper contextWrapper = new ScratchConverterContextWrapper(getActivity(), converterClient);
 
 		for (final ScratchProjectPreviewData projectData : projectList) {
 			Log.i(TAG, projectData.getTitle());
-			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(), null);
+			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(),
+					projectData.getProjectImage(), false, null);
 		}
 		ToastUtil.showSuccess(getActivity(), getActivity().getString(R.string.scratch_conversion_started));
 	}

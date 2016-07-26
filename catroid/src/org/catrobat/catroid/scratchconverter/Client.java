@@ -32,5 +32,5 @@ public interface Client {
 
 	MessageListener getMessageListener();
 	boolean isJobInProgress(final long jobID);
-	void convertJob(final Job job, final ClientCallback callback);
+	void convertJob(final Job job, final boolean verbose, final ClientCallback clientCallback);
 }

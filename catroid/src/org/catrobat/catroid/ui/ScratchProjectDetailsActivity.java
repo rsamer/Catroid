@@ -154,7 +154,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements Scrat
 		convertButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(), null);
+				contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(),
+						projectData.getProjectImage(), false, null);
 			}
 		});
 		loadData(projectData);

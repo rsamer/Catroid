@@ -54,13 +54,14 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 		this.converterClient = converterClient;
 	}
 
-	public void convertProgram(final long jobID, final String projectTitle, final ClientCallback.BaseCallback callback) {
+	public void convertProgram(final long jobID, final String programTitle, final WebImage programImage,
+			final boolean verbose, final ClientCallback.SimpleClientCallback callback) {
 
 		// TODO: make sure NOT running on UI-thread!!
-		final Job job = new Job(jobID, projectTitle);
+		final Job job = new Job(jobID, programTitle, programImage);
 
 		//lock.lock();
-		converterClient.convertJob(job, new ClientCallback() {
+		converterClient.convertJob(job, verbose, new ClientCallback() {
 			@Override
 			public void onConversionReady() {
 				//lock.unlock();
