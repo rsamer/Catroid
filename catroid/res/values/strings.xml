@@ -102,7 +102,7 @@
     <string name="preference_description_quadcopter_bricks">Allow to control ARDrone 2.0 quadcopters</string>
     <string name="preference_title_enable_mindstorms_nxt_bricks">Lego Mindstorms NXT bricks</string>
     <string name="preference_description_mindstorms_nxt_bricks">Allow to control Lego Mindstorms NXT robots</string>
-    <string name="preference_title_scratch_converter">Scratch Converter BETA</string>
+    <string name="preference_title_scratch_converter">Scratch Converter</string>
     <string name="preference_description_scratch_converter">Convert your Scratch desktop projects into mobile Pocket Code programs</string>
     <string name="preference_title_mindstorms_nxt_sensors">Lego NXT sensors</string>
     <string name="preference_title_drone_config_properties">Drone configuration properties</string>
@@ -123,8 +123,8 @@
     <!--  -->
 
     <!-- Scratch Converter activity -->
-
-    <string name="title_activity_scratch_converter">Convert Scratch project BETA</string>
+    <string name="beta">beta</string>
+    <string name="title_activity_scratch_converter">Convert Scratch project</string>
     <string name="error_scratch_project_data_not_available">Error: Scratch project data not available, please try later</string>
     <string name="error_scratch_project_conversion_failed">Error: Failed to convert Scratch project, please try
         again later</string>
