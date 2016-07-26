@@ -23,21 +23,29 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
+import com.google.android.gms.common.images.WebImage;
+
 public class Job {
 	private long jobID;
-	private String projectTitle;
+	private String programTitle;
+	private WebImage programImage;
 
-	public Job(final long jobID, final String projectTitle) {
+	public Job(final long jobID, final String programTitle, final WebImage programImage) {
 		this.jobID = jobID;
-		this.projectTitle = projectTitle;
+		this.programTitle = programTitle;
+		this.programImage = programImage;
 	}
 
-	public String getProjectTitle() {
-		return projectTitle;
+	public String getProgramTitle() {
+		return programTitle;
 	}
 
 	public long getJobID() {
 		return jobID;
+	}
+
+	public WebImage getProgramImage() {
+		return programImage;
 	}
 
 }

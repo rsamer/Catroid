@@ -47,19 +47,32 @@ import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class ScratchConverterSlidingUpPanelFragment extends Fragment implements BaseInfoViewListener, JobConsoleViewListener {
 
 	private static final String TAG = ScratchConverterSlidingUpPanelFragment.class.getSimpleName();
 
+	private ImageView convertIconImageView;
 	private TextView convertPanelHeadlineView;
 	private TextView convertPanelStatusView;
 	private TextView convertPanelConsoleView;
 	private ImageView upDownArrowImageView;
+	private WebImageLoader webImageLoader;
 
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		final ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
+		webImageLoader = new WebImageLoader(
+				ExpiringLruMemoryImageCache.getInstance(),
+				ExpiringDiskCache.getInstance(getActivity()),
+				executorService
+		);
+
 		final View rootView = inflater.inflate(R.layout.fragment_scratch_converter_sliding_up_panel, container, false);
+		convertIconImageView = (ImageView) rootView.findViewById(R.id.scratch_convert_icon);
 		convertPanelHeadlineView = (TextView) rootView.findViewById(R.id.scratch_convert_headline);
 		convertPanelStatusView = (TextView) rootView.findViewById(R.id.scratch_convert_status_text);
 		convertPanelConsoleView = (TextView) rootView.findViewById(R.id.scratch_convert_panel_console);
@@ -93,8 +106,17 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment implements 
 		getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				convertPanelHeadlineView.setText(job.getProjectTitle());
+				convertPanelHeadlineView.setText(job.getProgramTitle());
 				convertPanelStatusView.setText("Scheduled!");
+
+				final WebImage httpImageMetadata = job.getProgramImage();
+				convertIconImageView.setImageBitmap(null);
+				if (httpImageMetadata != null) {
+					int width = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
+					int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
+					webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
+							convertIconImageView, width, height);
+				}
 			}
 		});
 	}
