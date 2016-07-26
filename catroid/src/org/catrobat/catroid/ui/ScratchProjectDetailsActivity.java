@@ -120,7 +120,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements Scrat
 		final ScratchProjectPreviewData projectData = getIntent().getParcelableExtra(Constants.SCRATCH_PROJECT_DATA);
 		assert (projectData != null);
 
-		ExecutorService executorService = Executors.newFixedThreadPool(1);
+		final ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),
 				ExpiringDiskCache.getInstance(this),

@@ -37,6 +37,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.images.WebImage;
 
+import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
@@ -52,7 +53,6 @@ import java.util.concurrent.Executors;
 public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewData> {
 
 	private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
-	private static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
 
 	private boolean showDetails;
 	private int selectMode;
@@ -76,7 +76,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		showDetails = true;
 		selectMode = ListView.CHOICE_MODE_NONE;
-		ExecutorService executorService = Executors.newFixedThreadPool(WEBIMAGE_DOWNLOADER_POOL_SIZE);
+		ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),
 				ExpiringDiskCache.getInstance(context),

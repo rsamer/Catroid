@@ -36,6 +36,7 @@ import android.widget.TextView;
 import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
@@ -47,7 +48,6 @@ import java.util.concurrent.Executors;
 
 public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectData.ScratchRemixProjectData> {
 	private static final String TAG = ScratchRemixedProjectAdapter.class.getSimpleName();
-	private static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
 
 	private WebImageLoader webImageLoader;
 	private ScratchRemixedProjectEditListener scratchRemixedProjectEditListener;
@@ -66,7 +66,7 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectDat
 			List<ScratchProjectData.ScratchRemixProjectData> objects) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		ExecutorService executorService = Executors.newFixedThreadPool(WEBIMAGE_DOWNLOADER_POOL_SIZE);
+		ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		Log.d(TAG, "Number of remixes: " + objects.size());
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),
