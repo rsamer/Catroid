@@ -53,6 +53,7 @@ public class ScratchConverterActivity extends BaseActivity {
 	private ScratchSearchProjectsListFragment searchProjectsListFragment;
 	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
 	private static final int SPEECH_REQUEST_CODE = 0;
+	private SlidingUpPanelLayout slidingLayout;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +74,26 @@ public class ScratchConverterActivity extends BaseActivity {
 		messageListener.addBaseInfoViewListener(converterSlidingUpPanelFragment);
 		messageListener.addGlobalJobConsoleViewListener(converterSlidingUpPanelFragment);
 		searchProjectsListFragment.setConverterClient(new WebSocketClient(clientID, messageListener));
+		slidingLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
+		slidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
+			@Override
+			public void onPanelSlide(View panel, float slideOffset) {
+				converterSlidingUpPanelFragment.rotateImageButton(slideOffset * 180.0f);
+			}
+
+			public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+				Log.d(TAG, "SlidingUpPanel state changed: " + newState.toString());
+				switch (newState) {
+					case EXPANDED:
+						converterSlidingUpPanelFragment.rotateImageButton(180);
+						break;
+					case COLLAPSED:
+						converterSlidingUpPanelFragment.rotateImageButton(0);
+						break;
+				}
+			}
+		});
+
 		Log.i(TAG, "Scratch Converter Activity created");
 
 		appendColoredBetaLabelToTitle(Color.RED);
@@ -88,6 +109,26 @@ public class ScratchConverterActivity extends BaseActivity {
 		spanTitle.setSpan(new ForegroundColorSpan(color), begin, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		getActionBar().setTitle(spanTitle);
 	}
+
+	public void showSlideUpPanelBar(final long delayMillis) {
+		if (delayMillis > 0) {
+			slidingLayout.postDelayed(new Runnable() {
+				public void run() {
+					int marginTop = getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_top);
+					int marginBottom = getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_bottom);
+					slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+					searchProjectsListFragment.setSearchResultsListViewMargin(0, marginTop, 0, marginBottom);
+				}
+			}, delayMillis);
+		} else {
+			slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+		}
+	}
+
+	public void hideSlideUpPanelBar() {
+		int marginTop = getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_top);
+		searchProjectsListFragment.setSearchResultsListViewMargin(0, marginTop, 0, 0);
+		slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.HIDDEN);
 	}
 
 	@Override
