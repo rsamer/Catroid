@@ -124,21 +124,51 @@
 
     <!-- Scratch Converter activity -->
     <string name="beta">beta</string>
-    <string name="title_activity_scratch_converter">Convert Scratch project</string>
-    <string name="error_scratch_project_data_not_available">Error: Scratch project data not available, please try later</string>
-    <string name="error_scratch_project_conversion_failed">Error: Failed to convert Scratch project, please try
-        again later</string>
-    <string name="scratch_conversion_started">Started to convert Scratch project...</string>
+    <string name="title_activity_scratch_converter">Convert Scratch program</string>
+    <string name="error_scratch_program_not_accessible_any_more">Whoops! Data of this program is not accessible any
+        more!</string>
+    <string name="error_request_timeout">Whoops! Our server is not reachable at the moment, please try later!</string>
+    <string name="error_scratch_program_data_not_available">Whoops! Information not available, please try later</string>
+    <string name="error_scratch_program_conversion_failed">Whoops! Failed to convert Scratch program, please try again
+        later</string>
+    <string name="scratch_conversion_started">Started to convert Scratch program...</string>
     <string name="convert">Convert</string>
+    <string name="converting">Converting...</string>
     <string name="show_description">Show description</string>
+    <string name="list_view_section_title_in_progress">In progress</string>
+    <string name="list_view_section_title_converted_programs">Converted programs</string>
+    <string name="status">Status</string>
     <string name="title">Title</string>
     <string name="by">by</string>
     <string name="by_author">by Author</string>
+    <string name="warning_program_visibility">WARNING:\nThis seems to be a private program. Converting it may
+        fail!</string>
     <string name="instructions">Instructions</string>
     <string name="notes_and_credits">Notes and Credits</string>
     <string name="shared">Shared</string>
     <string name="modified">Modified</string>
     <string name="remixes">Remixes</string>
+    <!--  -->
+
+    <!-- ScratchReconvertDialog Strings -->
+    <string name="reconvert_text">This program has been converted %1$s ago.</string>
+    <plurals name="minutes">
+        <item quantity="zero">less than a minute</item>
+        <item quantity="one">1 minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="zero">less than an hour</item>
+        <item quantity="one">1 hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="zero">less than a day</item>
+        <item quantity="one">1 day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="reconvert_dialog_download">Download already converted program</string>
+    <string name="reconvert_dialog_reconvert">Reconvert this program</string>
     <!--  -->
 
 
@@ -460,7 +490,6 @@
     <string name="overwrite_rename_default">Rename existing media</string>
     <!-- -->
 
-
     <!-- Stage menu dialog -->
     <string name="stage_dialog_back">Back</string>
     <string name="stage_dialog_resume">Resume</string>
@@ -676,6 +705,7 @@
     <string name="notification_invalid_text_entered">Please enter a value</string>
     <string name="notification_screenshot_ok">Preview image saved</string>
     <string name="notification_download_project_cancel">Canceled downloading program</string>
+    <string name="notification_reconvert_download_program_cancel">Canceled downloading/reconverting program</string>
     <string name="notification_copy_title_pending">"Copying "</string>
     <string name="notification_copy_pending">Copy in progress</string>
     <string name="notification_copy_finished">Copy completed</string>
