@@ -31,11 +31,9 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ActionMode;
@@ -58,11 +56,10 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
+import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.transfers.FetchScratchProjectsTask;
-import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.ui.CapitalizedTextView;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
-import org.catrobat.catroid.ui.scratchconverter.ScratchConverterContextWrapper;
 import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
 import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
@@ -79,8 +76,9 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private static final String BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA = "scratch_project_data";
 	private static final String SHARED_PREFERENCE_NAME = "showDetailsScratchProjects";
 	private static final String TAG = ScratchSearchProjectsListFragment.class.getSimpleName();
-	private static Client converterClient = null;
+	private static MessageListener messageListener = null;
 
+	private ScratchConverterActivity activity;
 	private String convertActionModeTitle;
 	private static String singleItemAppendixConvertActionMode;
 	private static String multipleItemAppendixConvertActionMode;
@@ -99,8 +97,8 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private boolean selectAll = true;
 
 	// dependency-injection for testing with mock object
-	public static void setConverterClient(Client client) {
-		converterClient = client;
+	public static void setMessageListener(final MessageListener listener) {
+		messageListener = listener;
 	}
 
 	public void setSearchResultsListViewMargin(int left, int top, int right, int bottom) {
@@ -166,8 +164,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public void onPause() {
 		super.onPause();
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity()
-				.getApplicationContext());
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean(SHARED_PREFERENCE_NAME, getShowDetails());
 		editor.commit();
@@ -180,8 +177,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			actionMode.finish();
 			actionMode = null;
 		}
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity()
-				.getApplicationContext());
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
 		setShowDetails(settings.getBoolean(SHARED_PREFERENCE_NAME, false));
 		initAdapter();
 	}
@@ -189,7 +185,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		final ScratchConverterActivity activity = (ScratchConverterActivity) getActivity();
+		activity = (ScratchConverterActivity) getActivity();
 		final View rootView = inflater.inflate(R.layout.fragment_scratch_search_projects_list, container, false);
 		searchView = (SearchView) rootView.findViewById(R.id.search_view_scratch);
 		searchResultsListView = (ListView) rootView.findViewById(R.id.list_view_search_scratch);
@@ -319,7 +315,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		if (scratchProjectList == null) {
 			scratchProjectList = new ArrayList<>();
 		}
-		scratchProjectAdapter = new ScratchProjectAdapter(getActivity(),
+		scratchProjectAdapter = new ScratchProjectAdapter(activity,
 				R.layout.fragment_scratch_project_list_item,
 				R.id.scratch_projects_list_item_title,
 				scratchProjectList);
@@ -338,7 +334,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 		scratchProjectToEdit = scratchProjectAdapter.getItem(info.position);
 		scratchProjectAdapter.addCheckedProject(info.position);
-		getActivity().getMenuInflater().inflate(R.menu.context_menu_scratch_projects, menu);
+		activity.getMenuInflater().inflate(R.menu.context_menu_scratch_projects, menu);
 	}
 
 	@Override
@@ -351,9 +347,9 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			case R.id.context_menu_convert:
 				Log.d(TAG, "Clicked convert item in context menu for scratch project '"
 						+ scratchProjectToEdit.getTitle() + "'");
-				ArrayList<ScratchProjectPreviewData> projectList = new ArrayList<>();
+				final ArrayList<ScratchProjectPreviewData> projectList = new ArrayList<>();
 				projectList.add(scratchProjectToEdit);
-				convertProjects(projectList);
+				activity.convertProjects(projectList);
 				break;
 		}
 		return super.onContextItemSelected(item);
@@ -395,38 +391,21 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	@Override
 	public void onProjectEdit(int position) {
-		ScratchProjectDetailsActivity.setConverterClient(converterClient);
-		Intent intent = new Intent(getActivity(), ScratchProjectDetailsActivity.class);
-		intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) scratchProjectAdapter.getItem(position));
-		getActivity().startActivity(intent);
-		// searchResultsListView.setSelectionAfterHeaderView(); // scroll to top...
+		ScratchProjectDetailsActivity.setMessageListener(messageListener);
+		Intent intent = new Intent(activity, ScratchProjectDetailsActivity.class);
+		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) scratchProjectAdapter.getItem(position));
+		activity.startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);
 	}
 
 	public void startConvertActionMode() {
 		if (actionMode == null) {
-			actionMode = getActivity().startActionMode(convertModeCallBack);
+			actionMode = activity.startActionMode(convertModeCallBack);
 		}
 	}
 
+	// TODO: remove!!!
 	private void showDescriptionDialog() {
-		ToastUtil.showError(getActivity(), "Not implemented yet!");
-		/*
-		SetDescriptionDialog dialogSetDescription = SetDescriptionDialog.newInstance(projectToEdit.projectName);
-        dialogSetDescription.setOnUpdateProjectDescriptionListener(ProjectsListFragment.this);
-        dialogSetDescription.show(getActivity().getFragmentManager(), SetDescriptionDialog.DIALOG_FRAGMENT_TAG);
-        */
-	}
-
-	private void convertProjects(List<ScratchProjectPreviewData> projectList) {
-		Log.i(TAG, "Converting projects:");
-		final ScratchConverterContextWrapper contextWrapper = new ScratchConverterContextWrapper(getActivity(), converterClient);
-
-		for (final ScratchProjectPreviewData projectData : projectList) {
-			Log.i(TAG, projectData.getTitle());
-			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(),
-					projectData.getProjectImage(), false, null);
-		}
-		ToastUtil.showSuccess(getActivity(), getActivity().getString(R.string.scratch_conversion_started));
+		ToastUtil.showError(activity, "Not implemented yet!");
 	}
 
 	private void convertCheckedProjects() {
@@ -439,7 +418,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			numConverted++;
 		}
 		initAdapter();
-		convertProjects(projectsToConvert);
+		activity.convertProjects(projectsToConvert);
 	}
 
 	private void clearCheckedProjectsAndEnableButtons() {
@@ -448,14 +427,14 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		actionMode = null;
 		searchView.setVisibility(View.VISIBLE);
 		audioButton.setVisibility(View.VISIBLE);
-		int marginTop = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_top);
-		int marginBottom = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_bottom);
+		int marginTop = activity.getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_top);
+		int marginBottom = activity.getResources().getDimensionPixelSize(R.dimen.scratch_project_search_list_view_margin_bottom);
 		setSearchResultsListViewMargin(0, marginTop, 0, marginBottom);
 	}
 
 	private void addSelectAllActionModeButton(ActionMode mode, Menu menu) {
 		selectAll = true;
-		selectAllActionModeButton = Utils.addSelectAllActionModeButton(getActivity().getLayoutInflater(), mode, menu);
+		selectAllActionModeButton = Utils.addSelectAllActionModeButton(activity.getLayoutInflater(), mode, menu);
 		selectAllActionModeButton.setOnClickListener(new View.OnClickListener() {
 
 			CapitalizedTextView selectAllView = (CapitalizedTextView) selectAllActionModeButton.findViewById(R.id.select_all);
@@ -488,11 +467,11 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	public void onPreExecute() {
 		Log.i(TAG, "onPreExecute for FetchScratchProjectsTask called");
 		final ScratchSearchProjectsListFragment fragment = this;
-		getActivity().runOnUiThread(new Runnable() {
+		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
-				fragment.progressDialog.setMessage(fragment.getActivity().getResources().getString(R.string.search_progress));
+				fragment.progressDialog.setMessage(activity.getResources().getString(R.string.search_progress));
 				//fragment.progressDialog.show();
 			}
 		});
@@ -505,12 +484,12 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		Preconditions.checkNotNull(scratchProjectAdapter, "Scratch project adapter cannot be null!");
 
 		final ScratchSearchProjectsListFragment fragment = this;
-		getActivity().runOnUiThread(new Runnable() {
+		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				fragment.progressDialog.hide();
 				if (result == null || result.getProjectList() == null) {
-					ToastUtil.showError(fragment.getActivity(), "Unable to connect to server, please try later");
+					ToastUtil.showError(activity, "Unable to connect to server, please try later");
 					return;
 				}
 				if (result.getQuery() != null) {

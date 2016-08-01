@@ -35,6 +35,7 @@ import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -52,10 +53,10 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 
 	public WebSocketMessageListener() {
 		this.baseMessageHandler = null;
-		this.jobHandlers = new HashMap<>();
-		this.jobConsoleViewListeners = new HashMap<>();
-		this.globalJobConsoleViewListeners = new HashSet<>();
-		this.baseInfoViewListeners = new HashSet<>();
+		this.jobHandlers = Collections.synchronizedMap(new HashMap<Long, JobHandler>());
+		this.jobConsoleViewListeners = Collections.synchronizedMap(new HashMap<Long, Set<JobConsoleViewListener>>());
+		this.globalJobConsoleViewListeners = Collections.synchronizedSet(new HashSet<JobConsoleViewListener>());
+		this.baseInfoViewListeners = Collections.synchronizedSet(new HashSet<BaseInfoViewListener>());
 	}
 
 	public JobHandler getJobHandler(final long jobID) {
@@ -88,6 +89,27 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		}
 		listeners.add(jobConsoleViewListener);
 		jobConsoleViewListeners.put(jobID, listeners);
+	}
+
+	@Override
+	public boolean removeJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener) {
+		Set<JobConsoleViewListener> listeners = jobConsoleViewListeners.get(jobID);
+		if (listeners == null) {
+			return false;
+		}
+		return listeners.remove(jobConsoleViewListener);
+	}
+
+	@Override
+	public void onUserCanceledConversion(long jobID) {
+		final JobHandler jobHandler = jobHandlers.get(jobID);
+		if (jobHandler == null) {
+			return;
+		}
+
+		for (final JobConsoleViewListener viewListener : getJobConsoleViewListeners(jobID)) {
+			viewListener.onJobCanceled(jobHandler.getJob());
+		}
 	}
 
 	@NonNull

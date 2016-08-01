@@ -40,13 +40,17 @@ import android.view.View;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
+import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.WebSocketClient;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
 import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment;
+import org.catrobat.catroid.ui.scratchconverter.ScratchConverterContextWrapper;
+import org.catrobat.catroid.utils.ToastUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ScratchConverterActivity extends BaseActivity {
@@ -55,8 +59,8 @@ public class ScratchConverterActivity extends BaseActivity {
 
 	private ScratchSearchProjectsListFragment searchProjectsListFragment;
 	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
-	private static final int SPEECH_REQUEST_CODE = 0;
 	private SlidingUpPanelLayout slidingLayout;
+	private WebSocketClient converterClient;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +80,10 @@ public class ScratchConverterActivity extends BaseActivity {
 		WebSocketMessageListener messageListener = new WebSocketMessageListener();
 		messageListener.addBaseInfoViewListener(converterSlidingUpPanelFragment);
 		messageListener.addGlobalJobConsoleViewListener(converterSlidingUpPanelFragment);
-		searchProjectsListFragment.setConverterClient(new WebSocketClient(clientID, messageListener));
+
+		converterClient = new WebSocketClient(this, clientID, messageListener);
+		searchProjectsListFragment.setMessageListener(messageListener);
+
 		slidingLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
 		slidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
 			@Override
@@ -103,6 +110,12 @@ public class ScratchConverterActivity extends BaseActivity {
 		//hideSlideUpPanelBar();
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		Log.d(TAG, "Destroyed " + ScratchConverterActivity.class.getSimpleName());
+	}
+
 	private void appendColoredBetaLabelToTitle(final int color) {
 		final String title = getString(R.string.title_activity_scratch_converter);
 		final String beta = getString(R.string.beta).toUpperCase();
@@ -111,6 +124,17 @@ public class ScratchConverterActivity extends BaseActivity {
 		final int end = begin + beta.length();
 		spanTitle.setSpan(new ForegroundColorSpan(color), begin, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 		getActionBar().setTitle(spanTitle);
+	}
+
+	public void convertProjects(List<ScratchProjectPreviewData> projectList) {
+		Log.i(TAG, "Converting projects:");
+		final ScratchConverterContextWrapper contextWrapper = new ScratchConverterContextWrapper(this, converterClient);
+		for (final ScratchProjectPreviewData projectData : projectList) {
+			Log.i(TAG, projectData.getTitle());
+			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(), projectData.getProjectImage(),
+					false, false, null, converterSlidingUpPanelFragment);
+		}
+		ToastUtil.showSuccess(this, getString(R.string.scratch_conversion_started));
 	}
 
 	public void showSlideUpPanelBar(final long delayMillis) {
@@ -178,19 +202,27 @@ public class ScratchConverterActivity extends BaseActivity {
 		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 		// Start the activity, the intent will be populated with the speech text
-		startActivityForResult(intent, SPEECH_REQUEST_CODE);
+		startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_SPEECH);
 	}
 
 	@Override
-	public void onActivityResult(int requestCode, int resultCode,
-			Intent data) {
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		// This callback is invoked when the Speech Recognizer returns.
 		// This is where you process the intent and extract the speech text from the intent.
-		if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+		if (requestCode == Constants.INTENT_REQUEST_CODE_SPEECH && resultCode == RESULT_OK) {
 			List<String> results = data.getStringArrayListExtra(
 					RecognizerIntent.EXTRA_RESULTS);
 			String spokenText = results.get(0);
 			searchProjectsListFragment.searchAndUpdateText(spokenText);
+		} else if (requestCode == Constants.INTENT_REQUEST_CODE_CONVERT && resultCode == RESULT_OK) {
+			if (! data.hasExtra(Constants.INTENT_SCRATCH_PROJECT_DATA)) {
+				super.onActivityResult(requestCode, resultCode, data);
+				return;
+			}
+			final ScratchProjectPreviewData projectData = data.getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
+			final List<ScratchProjectPreviewData> projectList = new ArrayList<>();
+			projectList.add(projectData);
+			convertProjects(projectList);
 		}
 		super.onActivityResult(requestCode, resultCode, data);
 	}
