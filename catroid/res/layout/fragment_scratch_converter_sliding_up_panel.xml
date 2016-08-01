@@ -33,7 +33,7 @@
     android:id="@+id/dragView">
 
     <View
-        android:id="@+id/separation_line"
+        android:id="@+id/separation_line_top"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:background="@color/spritelist_separation_line_color" />
@@ -46,10 +46,10 @@
 
         <ImageView
             android:id="@+id/scratch_convert_icon"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginRight="16dp"
+            android:layout_marginRight="14dp"
             android:src="@drawable/views_72x72"
             android:layout_alignParentLeft="true"
             android:layout_centerInParent="true" />
@@ -64,7 +64,7 @@
                 android:id="@+id/scratch_convert_headline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Dancin' in the Castle"
+                android:text="@string/title"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -74,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
                 android:layout_below="@+id/scratch_convert_headline"
-                android:text="Already started..."
+                android:text="@string/status"
                 android:textSize="12sp"
                 android:textStyle="italic" />
 
@@ -92,28 +92,82 @@
     </RelativeLayout>
 
     <View
-        android:id="@+id/separation_line2"
+        android:id="@+id/separation_line_bottom"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:background="@color/spritelist_separation_line_color" />
 
-    <TextView
-        android:id="@+id/scratch_convert_panel_console"
+    <ScrollView
+        android:id="@+id/scratch_conversion_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:minLines="20"
-        android:maxLines="80"
-        android:scrollbars = "vertical"
-        android:background="@color/black"
-        android:textColor="@color/white"
-        android:gravity="bottom" />
-
-    <ListView
-        android:id="@+id/list"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_below="@+id/separation_line_bottom"
+        android:layout_above="@+id/separation_line_bottom"
         android:background="@color/application_background_color">
-    </ListView>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:id="@+id/scratch_conversion_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/scratch_conversion_list_view_section_title"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:text="@string/list_view_section_title_in_progress"
+                    android:paddingTop="@dimen/scratch_remixes_list_view_margin_top" />
+
+                <ListView
+                    style="@style/ListViewShadowed"
+                    android:id="@+id/scratch_conversion_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="@dimen/scratch_conversion_list_view_margin_top"
+                    android:layout_marginBottom="@dimen/scratch_conversion_list_view_margin_bottom"
+                    android:dividerHeight="1dp"
+                    android:divider="@color/transparent"
+                    android:layout_below="@+id/scratch_conversion_list_view_section_title">
+                </ListView>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/scratch_converted_programs_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@+id/scratch_conversion_list">
+
+                <TextView
+                    android:id="@+id/scratch_converted_programs_list_view_section_title"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:text="@string/list_view_section_title_converted_programs"
+                    android:paddingTop="@dimen/scratch_remixes_list_view_margin_top" />
+
+                <ListView
+                    style="@style/ListViewShadowed"
+                    android:id="@+id/scratch_converted_programs_list_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="@dimen/scratch_conversion_list_view_margin_top"
+                    android:layout_marginBottom="@dimen/scratch_conversion_list_view_margin_bottom"
+                    android:dividerHeight="1dp"
+                    android:divider="@color/transparent"
+                    android:layout_below="@+id/scratch_converted_programs_list_view_section_title">
+                </ListView>
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </ScrollView>
 
 </LinearLayout>
