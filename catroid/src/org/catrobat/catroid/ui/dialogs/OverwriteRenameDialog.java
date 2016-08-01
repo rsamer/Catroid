@@ -43,6 +43,7 @@ import android.widget.TextView;
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.utils.DownloadUtil;
+import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
@@ -55,6 +56,7 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 	protected EditText projectText;
 	protected TextView projectTextView;
 	protected View projectTextLine;
+	protected DownloadFinishedListener[] callbacks;
 
 	public static final String DIALOG_FRAGMENT_TAG = "overwrite_rename_look";
 
@@ -64,6 +66,10 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 
 	public void setProgramName(String programName) {
 		this.programName = programName;
+	}
+
+	public void setCallbacks(DownloadFinishedListener[] callbacks) {
+		this.callbacks = callbacks;
 	}
 
 	public void setURL(String url) {
@@ -158,14 +164,14 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 	private boolean handleOkButton() {
 		if (replaceButton.isChecked()) {
 			ProjectManager.getInstance().setProject(null);
-			DownloadUtil.getInstance().startDownload(context, url, programName);
+			DownloadUtil.getInstance().startDownload(context, url, programName, callbacks);
 		} else if (renameButton.isChecked()) {
 			String newProgramName = projectText.getText().toString();
 			if (Utils.checkIfProjectExistsOrIsDownloadingIgnoreCase(newProgramName)) {
 				return false;
 			}
 
-			DownloadUtil.getInstance().startDownload(context, url, newProgramName);
+			DownloadUtil.getInstance().startDownload(context, url, newProgramName, callbacks);
 		}
 		dismiss();
 

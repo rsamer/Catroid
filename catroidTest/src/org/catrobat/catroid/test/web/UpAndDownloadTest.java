@@ -44,7 +44,7 @@ public class UpAndDownloadTest extends AndroidTestCase {
 
 	public void testDownloadUtil() {
 		try {
-			DownloadUtil.getInstance().startDownload(null, null, "projectSave");
+			DownloadUtil.getInstance().startDownload(null, null, "projectSave", null);
 		} catch (Exception expected) {
 			// Exception thrown because intent could not be started - we won't test the intent here
 		}

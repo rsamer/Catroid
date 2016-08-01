@@ -32,6 +32,7 @@ import android.os.ResultReceiver;
 import android.util.Log;
 
 import org.catrobat.catroid.common.Constants;
+import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
 import org.catrobat.catroid.transfers.MediaDownloadService;
 import org.catrobat.catroid.transfers.ProjectDownloadService;
 import org.catrobat.catroid.ui.WebViewActivity;
@@ -45,8 +46,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public final class DownloadUtil {
@@ -55,11 +58,13 @@ public final class DownloadUtil {
 	private static final String FILENAME_TAG = "fname=";
 
 	private Set<String> programDownloadQueue;
+	private Map<String, DownloadFinishedListener[]> programDownloadCallbackMap;
 
 	private WebViewActivity webViewActivity = null;
 
 	private DownloadUtil() {
 		programDownloadQueue = Collections.synchronizedSet(new HashSet<String>());
+		programDownloadCallbackMap = Collections.synchronizedMap(new HashMap<String, DownloadFinishedListener[]>());
 	}
 
 	public static DownloadUtil getInstance() {
@@ -67,6 +72,10 @@ public final class DownloadUtil {
 	}
 
 	public void prepareDownloadAndStartIfPossible(Activity activity, String url) {
+		prepareDownloadAndStartIfPossible(activity, url, null);
+	}
+
+	public void prepareDownloadAndStartIfPossible(Activity activity, String url, DownloadFinishedListener[] callbacks) {
 		String programName = getProjectNameFromUrl(url);
 		if (programName == null) {
 			return;
@@ -79,11 +88,12 @@ public final class DownloadUtil {
 
 			renameDialog.setContext(activity);
 			renameDialog.setProgramName(programName);
+			renameDialog.setCallbacks(callbacks);
 			renameDialog.setURL(url);
 
 			renameDialog.show(activity.getFragmentManager(), OverwriteRenameDialog.DIALOG_FRAGMENT_TAG);
 		} else {
-			startDownload(activity, url, programName);
+			startDownload(activity, url, programName, callbacks);
 		}
 	}
 
@@ -139,8 +149,12 @@ public final class DownloadUtil {
 		context.startService(downloadIntent);
 	}
 
-	public void startDownload(Context context, String url, String programName) {
-		programDownloadQueue.add(programName.toLowerCase(Locale.getDefault()));
+	public void startDownload(Context context, String url, String programName, DownloadFinishedListener[] callbacks) {
+		final String programNameKey = programName.toLowerCase(Locale.getDefault());
+		programDownloadQueue.add(programNameKey);
+		if (callbacks != null) {
+			programDownloadCallbackMap.put(programNameKey, callbacks);
+		}
 		Intent downloadIntent = new Intent(context, ProjectDownloadService.class);
 		downloadIntent.putExtra(ProjectDownloadService.RECEIVER_TAG, new DownloadProjectReceiver(new Handler()));
 		downloadIntent.putExtra(ProjectDownloadService.DOWNLOAD_NAME_TAG, programName);
@@ -151,8 +165,15 @@ public final class DownloadUtil {
 		context.startService(downloadIntent);
 	}
 
-	public void downloadFinished(String programName) {
-		programDownloadQueue.remove(programName.toLowerCase(Locale.getDefault()));
+	public void downloadFinished(String programName, String url) {
+		final String programNameKey = programName.toLowerCase(Locale.getDefault());
+		programDownloadQueue.remove(programNameKey);
+		final DownloadFinishedListener[] callbacks = programDownloadCallbackMap.get(programNameKey);
+		if (callbacks != null) {
+			for (DownloadFinishedListener callback : callbacks) {
+				callback.onDownloadFinished(programName, url);
+			}
+		}
 	}
 
 	public boolean isProgramNameInDownloadQueueIgnoreCase(String programName) {
