@@ -33,6 +33,7 @@ abstract public class Message {
 		LINES("lines"),
 		PROGRESS("progress"),
 		URL("url"),
+		CACHED_UTC_DATE("cachedUTCDate"),
 		JOBS_INFO("jobsInfo"),
 		CLIENT_ID("clientID");
 		private final String rawValue;

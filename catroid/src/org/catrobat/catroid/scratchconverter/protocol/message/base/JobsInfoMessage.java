@@ -23,9 +23,11 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
+import org.catrobat.catroid.scratchconverter.protocol.Job;
+
 public class JobsInfoMessage extends BaseMessage {
-	public JobsInfoMessage(final JobInfo[] jobsInfo) {
+	public JobsInfoMessage(final Job[] jobList) {
 		super(Type.JOBS_INFO);
-		addArgument(ArgumentType.JOBS_INFO, jobsInfo);
+		addArgument(ArgumentType.JOBS_INFO, jobList);
 	}
 }

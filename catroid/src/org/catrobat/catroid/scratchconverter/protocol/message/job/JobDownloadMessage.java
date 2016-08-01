@@ -23,10 +23,13 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
+import java.util.Date;
+
 public class JobDownloadMessage extends JobMessage {
-	public JobDownloadMessage(final long jobID, final String downloadURL) {
+	public JobDownloadMessage(final long jobID, final String downloadURL, final Date cachedUTCDate) {
 		super(Type.JOB_DOWNLOAD);
 		addArgument(ArgumentType.JOB_ID, jobID);
 		addArgument(ArgumentType.URL, downloadURL);
+		addArgument(ArgumentType.CACHED_UTC_DATE, cachedUTCDate);
 	}
 }

@@ -38,9 +38,13 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.ClientCallback;
+import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
+import org.catrobat.catroid.ui.dialogs.ScratchReconvertDialog;
 import org.catrobat.catroid.utils.DownloadUtil;
 import org.catrobat.catroid.utils.ToastUtil;
+
+import java.util.Date;
 
 public class ScratchConverterContextWrapper extends ContextWrapper {
 
@@ -57,19 +61,20 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 	}
 
 	public void convertProgram(final long jobID, final String programTitle, final WebImage programImage,
-			final boolean verbose, final ClientCallback.SimpleClientCallback callback) {
+			final boolean verbose, final boolean force, final ClientCallback.SimpleClientCallback clientCallback,
+			final DownloadFinishedListener downloadCallback) {
 
 		// TODO: make sure NOT running on UI-thread!!
 		final Job job = new Job(jobID, programTitle, programImage);
 
 		//lock.lock();
-		converterClient.convertJob(job, verbose, new ClientCallback() {
+		converterClient.convertJob(job, verbose, force, new ClientCallback() {
 			@Override
 			public void onConversionReady() {
 				//lock.unlock();
 				Log.i(TAG, "Conversion ready!");
-				if (callback != null) {
-					callback.onConversionReady();
+				if (clientCallback != null) {
+					clientCallback.onConversionReady();
 				}
 			}
 
@@ -82,16 +87,16 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 						ToastUtil.showSuccess(activity, activity.getString(R.string.scratch_conversion_started));
 					}
 				});
-				if (callback != null) {
-					callback.onConversionStart();
+				if (clientCallback != null) {
+					clientCallback.onConversionStart();
 				}
 			}
 
 			@Override
 			public void onConversionFinished() {
 				Log.i(TAG, "Conversion finished!");
-				if (callback != null) {
-					callback.onConversionFinished();
+				if (clientCallback != null) {
+					clientCallback.onConversionFinished();
 				}
 			}
 
@@ -104,50 +109,86 @@ public class ScratchConverterContextWrapper extends ContextWrapper {
 			}
 
 			@Override
-			public void onDownloadReady(final String downloadURL) {
-				final String baseUrl = Constants.SCRATCH_CONVERTER_BASE_URL;
-				final String fullDownloadUrl = baseUrl.substring(0, baseUrl.length() - 1) + downloadURL;
-				activity.runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-							Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-							r.play();
-						} catch (Exception e) {
-							e.printStackTrace();
+			public void onDownloadReady(final DownloadFinishedListener downloadFinishedListener,
+					final String downloadURL, final Date cachedUTCDate)
+			{
+				final DownloadFinishedListener[] callbacks;
+				callbacks = new DownloadFinishedListener[] { downloadFinishedListener, downloadCallback };
+
+				if (cachedUTCDate != null) {
+					final ScratchReconvertDialog reconvertDialog = new ScratchReconvertDialog();
+					reconvertDialog.setContext(activity);
+					reconvertDialog.setCachedUTCDate(cachedUTCDate);
+					reconvertDialog.setReconvertDialogCallback(new ScratchReconvertDialog.ReconvertDialogCallback() {
+						@Override
+						public void onDownloadExistingProgram() {
+							downloadProgram(downloadURL, callbacks);
 						}
-						Log.d(TAG, "Start download: " + fullDownloadUrl);
-						DownloadUtil.getInstance().prepareDownloadAndStartIfPossible(activity, fullDownloadUrl);
-					}
-				});
+
+						@Override
+						public void onReconvertProgram() {
+							convertProgram(jobID, programTitle, programImage, verbose, true,
+									clientCallback, downloadCallback);
+						}
+
+						@Override
+						public void onCancel() {
+							converterClient.getMessageListener().onUserCanceledConversion(jobID);
+						}
+					});
+					reconvertDialog.show(activity.getFragmentManager(), ScratchReconvertDialog.DIALOG_FRAGMENT_TAG);
+					return;
+				}
+
+				downloadProgram(downloadURL, callbacks);
 			}
 
 			@Override
 			public void onConnectionFailure(final ClientException ex) {
 				//lock.unlock();
-				Log.e(TAG, "Connection failed: " + ex.getLocalizedMessage());
-				if (callback != null) {
-					callback.onConnectionFailure(ex);
+				Log.e(TAG, "Connection failed: " + ex.getMessage());
+				if (clientCallback != null) {
+					clientCallback.onConnectionFailure(ex);
 				}
 			}
 
 			@Override
 			public void onAuthenticationFailure(final ClientException ex) {
 				//lock.unlock();
-				Log.e(TAG, "Authentication failed: " + ex.getLocalizedMessage());
-				if (callback != null) {
-					callback.onAuthenticationFailure(ex);
+				Log.e(TAG, "Authentication failed: " + ex.getMessage());
+				if (clientCallback != null) {
+					clientCallback.onAuthenticationFailure(ex);
 				}
 			}
 
 			@Override
 			public void onConversionFailure(final ClientException ex) {
 				//lock.unlock();
-				Log.e(TAG, "Conversion failed: " + ex.getLocalizedMessage());
-				if (callback != null) {
-					callback.onConversionFailure(ex);
+				Log.e(TAG, "Conversion failed: " + ex.getMessage());
+				if (clientCallback != null) {
+					clientCallback.onConversionFailure(ex);
 				}
+			}
+		});
+	}
+
+	private void downloadProgram(final String downloadURL, final DownloadFinishedListener[] downloadCallbacks) {
+		final String baseUrl = Constants.SCRATCH_CONVERTER_BASE_URL;
+		final String fullDownloadUrl = baseUrl.substring(0, baseUrl.length() - 1) + downloadURL;
+		activity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+					Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+					r.play();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				Log.d(TAG, "Start download: " + fullDownloadUrl);
+				DownloadUtil
+						.getInstance()
+						.prepareDownloadAndStartIfPossible(activity, fullDownloadUrl, downloadCallbacks);
 			}
 		});
 	}

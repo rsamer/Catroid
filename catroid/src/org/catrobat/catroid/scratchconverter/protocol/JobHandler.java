@@ -23,12 +23,15 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.scratchconverter.ClientCallback;
+import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobAlreadyRunningMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobDownloadMessage;
@@ -41,7 +44,9 @@ import org.catrobat.catroid.scratchconverter.protocol.message.job.JobReadyMessag
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobRunningMessage;
 import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 
-public class JobHandler {
+import java.util.Date;
+
+public class JobHandler implements DownloadFinishedListener {
 
 	private static final String TAG = JobHandler.class.getSimpleName();
 
@@ -53,24 +58,42 @@ public class JobHandler {
 		}
 	}
 
+	private final Handler handler;
 	private Job job;
 	private State currentState;
 	private JobConsole jobConsole;
 	private ClientCallback callback;
 
-	public JobHandler(final Job job, ClientCallback callback) {
+	public JobHandler(final Context context, final Job job, ClientCallback callback) {
 		Preconditions.checkArgument(job != null);
+		this.handler = new Handler(context.getMainLooper());
 		this.job = job;
 		this.currentState = State.UNSCHEDULED;
 		this.jobConsole = new JobConsole();
 		this.callback = callback;
 	}
 
-	public void setJobAsScheduled(@NonNull final JobConsoleViewListener[] viewListeners) {
+	public void onJobScheduled(@NonNull final JobConsoleViewListener[] viewListeners) {
+		Log.d(TAG, "Setting job as scheduled (jobID: " + job.getJobID() + ")");
 		this.currentState = State.SCHEDULED;
-		for (JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobScheduled(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobScheduled(job);
+				}
+			}
+		});
+	}
+
+	@Override
+	public void onDownloadFinished(String programName, String url) {
+		Log.d(TAG, "Resetting job with ID: " + job.getJobID());
+		this.currentState = State.UNSCHEDULED;
+	}
+
+	public Job getJob() {
+		return job;
 	}
 
 	public long getJobID() {
@@ -90,7 +113,6 @@ public class JobHandler {
 		Preconditions.checkArgument(jobID == job.getJobID());
 		Preconditions.checkState(currentState != State.UNSCHEDULED);
 
-		// state machine
 		switch (currentState) {
 
 			case SCHEDULED:
@@ -102,7 +124,8 @@ public class JobHandler {
 					return;
 				} else if (jobMessage instanceof JobDownloadMessage) {
 					final String downloadURL = (String)jobMessage.getArgument(Message.ArgumentType.URL);
-					handleJobDownloadMessage(downloadURL, viewListeners);
+					final Date cachedUTCDate = (Date)jobMessage.getArgument(Message.ArgumentType.CACHED_UTC_DATE);
+					handleJobDownloadMessage(downloadURL, viewListeners, cachedUTCDate);
 					return;
 				}
 				break;
@@ -135,7 +158,8 @@ public class JobHandler {
 			case CONVERSION_FINISHED:
 				if (jobMessage instanceof JobDownloadMessage) {
 					final String downloadURL = (String)jobMessage.getArgument(Message.ArgumentType.URL);
-					handleJobDownloadMessage(downloadURL, viewListeners);
+					final Date cachedUTCDate = (Date)jobMessage.getArgument(Message.ArgumentType.CACHED_UTC_DATE);
+					handleJobDownloadMessage(downloadURL, viewListeners, cachedUTCDate);
 					return;
 				}
 				break;
@@ -154,9 +178,14 @@ public class JobHandler {
 		currentState = State.READY;
 		callback.onConversionReady();
 
-		for (JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobReady(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobReady(job);
+				}
+			}
+		});
 	}
 
 	private void handleJobAlreadyRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
@@ -165,37 +194,51 @@ public class JobHandler {
 		handleJobRunningMessage(viewListeners);
 	}
 
-	private void handleJobRunningMessage(final JobConsoleViewListener[] viewListeners) {
+	private void handleJobRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.READY);
 
 		currentState = State.RUNNING;
 		callback.onConversionStart();
 
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobStarted(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobStarted(job);
+				}
+			}
+		});
 	}
 
 	private void handleJobProgressMessage(final double progress, @NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.RUNNING);
 
-
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobProgress(job, progress);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobProgress(job, progress);
+				}
+			}
+		});
 	}
 
 	private void handleJobOutputMessage(@NonNull final String[] lines, @NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.RUNNING);
 
-		for (final String line : lines) {
+		for (String line : lines) {
 			Log.d(TAG, line);
 		}
 		jobConsole.addLines(lines);
 
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobOutput(job, lines);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobOutput(job, lines);
+				}
+			}
+		});
 	}
 
 	private void handleJobFinishedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
@@ -204,9 +247,14 @@ public class JobHandler {
 		currentState = State.CONVERSION_FINISHED;
 		callback.onConversionFinished();
 
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobFinished(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobFinished(job);
+				}
+			}
+		});
 	}
 
 	private void handleJobFailedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
@@ -215,20 +263,35 @@ public class JobHandler {
 		currentState = State.FAILED;
 		callback.onConversionFailure(new ClientCallback.ClientException("Job failed"));
 
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobFailed(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobFailed(job);
+				}
+			}
+		});
 	}
 
-	private void handleJobDownloadMessage(final String downloadURL, @NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobDownloadMessage(@NonNull final String downloadURL,
+			@NonNull final JobConsoleViewListener[] viewListeners, @NonNull final Date cachedUTCDate) {
 		Preconditions.checkState(currentState == State.SCHEDULED || currentState == State.CONVERSION_FINISHED);
 
 		currentState = State.DOWNLOAD_READY;
-		callback.onDownloadReady(downloadURL);
+		callback.onDownloadReady(this, downloadURL, cachedUTCDate);
 
-		for (final JobConsoleViewListener viewListener : viewListeners) {
-			viewListener.onJobDownloadReady(job);
-		}
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (JobConsoleViewListener viewListener : viewListeners) {
+					viewListener.onJobDownloadReady(job);
+				}
+			}
+		});
+	}
+
+	private void runOnUiThread(Runnable r) {
+		handler.post(r);
 	}
 
 }

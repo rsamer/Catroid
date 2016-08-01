@@ -25,6 +25,7 @@ package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
 import android.support.annotation.Nullable;
 
+import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -78,13 +79,13 @@ abstract public class BaseMessage extends Message {
 				return (T)new ClientIDMessage(jsonData.getLong(ArgumentType.CLIENT_ID.toString()));
 			case JOBS_INFO:
 				final JSONArray jobsInfo = jsonData.getJSONArray(ArgumentType.JOBS_INFO.toString());
-				final List<JobInfo> jobsData = new ArrayList<>();
+				final List<Job> jobList = new ArrayList<>();
 				if (jobsInfo != null) {
 					for (int i = 0; i < jobsInfo.length(); ++i) {
-						jobsData.add(JobInfo.fromJson(jobsInfo.getJSONObject(i)));
+						jobList.add(Job.fromJson(jobsInfo.getJSONObject(i)));
 					}
 				}
-				return (T)new JobsInfoMessage(jobsData.toArray(new JobInfo[jobsData.size()]));
+				return (T)new JobsInfoMessage(jobList.toArray(new Job[jobList.size()]));
 		}
 		return null;
 	}

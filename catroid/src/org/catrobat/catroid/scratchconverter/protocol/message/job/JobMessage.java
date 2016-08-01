@@ -24,18 +24,26 @@
 package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 abstract public class JobMessage extends Message {
+
+	private static final String TAG = JobMessage.class.getSimpleName();
 
 	public enum Type {
 		// NOTE: do not change values! -> starts with 1!
@@ -98,11 +106,22 @@ abstract public class JobMessage extends Message {
 				final String[] lines = lineList.toArray(new String[lineList.size()]);
 				return (T)new JobOutputMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()), lines);
 			case JOB_PROGRESS:
-				return (T)new JobProgressMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()), jsonData.getDouble(ArgumentType.PROGRESS.toString()));
+				return (T)new JobProgressMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()),
+						jsonData.getDouble(ArgumentType.PROGRESS.toString()));
 			case JOB_FINISHED:
 				return (T)new JobFinishedMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
 			case JOB_DOWNLOAD:
-				return (T)new JobDownloadMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()), jsonData.getString(ArgumentType.URL.toString()));
+				final String dateUTC = jsonData.getString(ArgumentType.CACHED_UTC_DATE.toString());
+				final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+				Date cachedDate = null;
+				try {
+					cachedDate = dateFormat.parse(dateUTC);
+				} catch (ParseException e) {
+					Log.e(TAG, e.getLocalizedMessage());
+				}
+				return (T)new JobDownloadMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()),
+						jsonData.getString(ArgumentType.URL.toString()), cachedDate);
 			default:
 				return null;
 		}
