@@ -23,7 +23,10 @@
 
 package org.catrobat.catroid.scratchconverter;
 
+import java.util.Date;
+
 public interface ClientCallback {
+
 	class ClientException extends Exception {
 		public ClientException(String detailMessage) {
 			super(detailMessage);
@@ -34,11 +37,15 @@ public interface ClientCallback {
 		}
 	}
 
+	interface DownloadFinishedListener {
+		void onDownloadFinished(String programName, String url);
+	}
+
 	void onConversionReady();
 	void onConversionStart();
 	void onConversionFinished();
 	void onClientIDChanged(long newClientID);
-	void onDownloadReady(String downloadURL);
+	void onDownloadReady(DownloadFinishedListener downloadFinishedListener, String downloadURL, Date cachedDate);
 	void onConnectionFailure(ClientException ex);
 	void onAuthenticationFailure(ClientException ex);
 	void onConversionFailure(ClientException ex);
@@ -57,7 +64,8 @@ public interface ClientCallback {
 		public void onClientIDChanged(final long newClientID) {}
 
 		@Override
-		public void onDownloadReady(final String downloadURL) {}
+		public void onDownloadReady(final DownloadFinishedListener downloadFinishedListener, final String downloadURL,
+				final Date cachedUTCDate) {}
 
 		@Override
 		public void onConnectionFailure(final ClientException ex) {}

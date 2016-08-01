@@ -31,5 +31,7 @@ public interface MessageListener {
 	void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener);
 	void addGlobalJobConsoleViewListener(JobConsoleViewListener jobConsoleViewListener);
 	void addJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener);
+	boolean removeJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener);
+	void onUserCanceledConversion(long jobID);
 
 }
