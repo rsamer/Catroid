@@ -54,17 +54,34 @@
         android:layout_marginBottom="5dp" />
 
     <View
-        android:id="@+id/separation_line_above"
+        android:id="@+id/separation_line_top"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:background="@color/spritelist_separation_line_color"
         android:layout_below="@+id/scratch_project_owner" />
 
+    <TextView
+        android:id="@+id/scratch_project_visibility_warning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/warning_program_visibility"
+        android:layout_below="@+id/separation_line_top"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:layout_centerVertical="true"
+        android:textStyle="bold"
+        android:background="@color/color_chooser_rgb_red"
+        android:visibility="gone" />
+
     <ScrollView
         android:id="@+id/scratch_project_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/separation_line_above"
+        android:layout_below="@+id/scratch_project_visibility_warning"
         android:layout_above="@+id/separation_line_bottom">
 
         <RelativeLayout
@@ -234,7 +251,8 @@
                 android:layout_height="match_parent"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@+id/scratch_project_remixes_label"
-                android:layout_marginTop="@dimen/scratch_project_search_list_view_margin_top"
+                android:layout_marginTop="@dimen/scratch_remixes_list_view_margin_top"
+                android:layout_marginBottom="@dimen/scratch_remixes_list_view_margin_bottom"
                 android:dividerHeight="1dp"
                 android:divider="@color/transparent"
                 android:scrollbars="none" />

@@ -23,15 +23,21 @@
 
 package org.catrobat.catroid.transfers;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
+import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.common.ScratchSearchResult;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.web.ServerCalls;
+import org.catrobat.catroid.web.WebScratchProgramException;
 import org.catrobat.catroid.web.WebconnectionException;
 
 import java.io.InterruptedIOException;
@@ -44,7 +50,8 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 	}
 
 	public interface ScratchProjectDataFetcher {
-		ScratchProjectData fetchScratchProjectDetails(final long projectID) throws WebconnectionException, InterruptedIOException;
+		ScratchProjectData fetchScratchProjectDetails(final long projectID)
+				throws WebconnectionException, WebScratchProgramException, InterruptedIOException;
 		ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException, InterruptedIOException;
 		ScratchSearchResult scratchSearch(final String query, final ServerCalls.ScratchSearchSortType sortType,
 				final int numberOfItems, final int page) throws WebconnectionException, InterruptedIOException;
@@ -54,8 +61,16 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 	private static final int MAX_NUM_OF_RETRIES = 2;
 	private static final int MIN_TIMEOUT = 1_000; // in ms
 
+	private Context context;
+	private Handler handler;
 	private ScratchProjectListTaskDelegate delegate = null;
 	private ScratchProjectDataFetcher fetcher = null;
+
+	public FetchScratchProjectDetailsTask setContext(final Context context) {
+		this.context = context;
+		this.handler = new Handler(context.getMainLooper());
+		return this;
+	}
 
 	public FetchScratchProjectDetailsTask setDelegate(ScratchProjectListTaskDelegate delegate) {
 		this.delegate = delegate;
@@ -93,12 +108,29 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 		int delay;
 		for (int attempt = 0; attempt <= MAX_NUM_OF_RETRIES; attempt++) {
 			if (isCancelled()) {
+				Log.i(TAG, "Task has been cancelled in the meanwhile!");
 				return null;
 			}
+
 			try {
 				return fetcher.fetchScratchProjectDetails(projectID);
+			} catch (WebScratchProgramException e) {
+				String userErrorMessage = context.getString(R.string.error_scratch_program_not_accessible_any_more);
+				if (e.getStatusCode() == WebScratchProgramException.ERROR_PROGRAM_NOT_ACCESSIBLE) {
+					userErrorMessage = context.getString(R.string.error_scratch_program_not_accessible_any_more);
+				}
+
+				final String finalUserErrorMessage = userErrorMessage;
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						ToastUtil.showError(context, finalUserErrorMessage);
+					}
+				});
+
+				return null;
 			} catch (WebconnectionException e) {
-				Log.d(TAG, e.getLocalizedMessage() + "\n" + e.getStackTrace());
+				Log.e(TAG, e.getMessage() + "\n" + e.getStackTrace());
 				delay = MIN_TIMEOUT + (int) (MIN_TIMEOUT * Math.random() * (attempt + 1));
 				Log.i(TAG, "Retry #" + (attempt + 1) + " to fetch scratch project list scheduled in "
 						+ delay + " ms due to " + e.getLocalizedMessage());
@@ -107,8 +139,13 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 				} catch (InterruptedException e1) {}
 			}
 		}
-		Log.w(TAG, "Maximum number of " + (MAX_NUM_OF_RETRIES + 1)
-				+ " attempts exceeded! Server not reachable?!");
+		Log.w(TAG, "Maximum number of " + (MAX_NUM_OF_RETRIES + 1) + " attempts exceeded! Server not reachable?!");
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				ToastUtil.showError(context, context.getString(R.string.error_request_timeout));
+			}
+		});
 		return null;
 	}
 
@@ -119,4 +156,9 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 			delegate.onPostExecute(projectData);
 		}
 	}
+
+	private void runOnUiThread(Runnable r) {
+		handler.post(r);
+	}
+
 }

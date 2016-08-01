@@ -48,6 +48,7 @@ import com.squareup.okhttp.Response;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchProjectData.VisibilityState;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.transfers.ProjectUploadService;
@@ -186,7 +187,8 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 		return INSTANCE;
 	}
 
-	public ScratchProjectData fetchScratchProjectDetails(final long projectID) throws WebconnectionException, InterruptedIOException {
+	public ScratchProjectData fetchScratchProjectDetails(final long projectID)
+			throws WebconnectionException, WebScratchProgramException, InterruptedIOException {
 
 		final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -202,18 +204,9 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 			if (jsonObject.length() == 0) {
 				return null;
 			}
-			boolean accessible = jsonObject.getBoolean("accessible");
-			if (!accessible) {
-				// TODO: FIXME: error handling...
-				throw new WebconnectionException(WebconnectionException.ERROR_JSON, "Project not accessible!");
-			}
-
-			// TODO: enum...
-			int visibility = jsonObject.getInt("visibility");
-			if (visibility != 2) {
-				// Unknown or Private
-				// TODO: FIXME: error handling...
-				throw new WebconnectionException(WebconnectionException.ERROR_JSON, "Project not visible!");
+			if (! jsonObject.getBoolean("accessible")) {
+				throw new WebScratchProgramException(WebScratchProgramException.ERROR_PROGRAM_NOT_ACCESSIBLE,
+						"Program not accessible!");
 			}
 
 			final JSONObject jsonProjectData = jsonObject.getJSONObject("projectData");
@@ -231,14 +224,17 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 			final int views = jsonProjectData.getInt("views");
 			final int favorites = jsonProjectData.getInt("favorites");
 			final int loves = jsonProjectData.getInt("loves");
+
 			List<String> tags = new ArrayList<>();
 			JSONArray jsonTags = jsonProjectData.getJSONArray("tags");
 			for (int i = 0; i < jsonTags.length(); ++i) {
 				tags.add(jsonTags.getString(i));
 			}
 
+			final VisibilityState visibilityState = VisibilityState.valueOf(jsonObject.getInt("visibility"));
+
 			ScratchProjectData projectData = new ScratchProjectData(projectID, title, owner, instructions,
-					notesAndCredits, views, favorites, loves, modifiedDate, sharedDate, tags);
+					notesAndCredits, views, favorites, loves, modifiedDate, sharedDate, tags, visibilityState);
 
 			JSONArray remixes = jsonProjectData.getJSONArray("remixes");
 			for (int i = 0; i < remixes.length(); ++i) {
@@ -253,11 +249,12 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 						remixOwner, webImage));
 			}
 			return projectData;
+		} catch (WebScratchProgramException exception) {
+			throw  exception;
 		} catch (InterruptedIOException exception) {
 			Log.d(TAG, "OK! Request cancelled");
 			throw exception;
 		} catch (Exception exception) {
-			Log.e(TAG, Log.getStackTraceString(exception));
 			throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
 		}
 	}
@@ -597,6 +594,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 
 		InputStream inputStream = null;
 		try {
+			Log.d(TAG, url);
 			URL imageUrl = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
 			connection.setConnectTimeout(HTTP_TIMEOUT);

@@ -28,9 +28,37 @@ import com.google.android.gms.common.images.WebImage;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ScratchProjectData implements Serializable {
+
+	public enum VisibilityState {
+		// NOTE: do not change values!
+		UNKNOWN(0),
+		PRIVATE(1),
+		PUBLIC(2);
+
+		private int visibilityState;
+
+		private static Map<Integer, VisibilityState> map = new HashMap<>();
+
+		static {
+			for (VisibilityState legEnum : VisibilityState.values()) {
+				map.put(legEnum.visibilityState, legEnum);
+			}
+		}
+
+		VisibilityState(final int visibilityState) {
+			this.visibilityState = visibilityState;
+		}
+
+		public static VisibilityState valueOf(int visibilityState) {
+			return map.get(visibilityState);
+		}
+
+	}
 
 	public static class ScratchRemixProjectData implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -79,10 +107,13 @@ public class ScratchProjectData implements Serializable {
 	private Date modifiedDate;
 	private Date sharedDate;
 	private List<String> tags;
+	private VisibilityState visibiltyState;
 	private List<ScratchRemixProjectData> remixes;
 
 	public ScratchProjectData(long id, String title, String owner, String instructions, String notesAndCredits,
-			int views, int favorites, int loves, Date modifiedDate, Date sharedDate, List<String> tags) {
+			int views, int favorites, int loves, Date modifiedDate, Date sharedDate, List<String> tags,
+			VisibilityState visibilityState)
+	{
 		this.id = id;
 		this.title = title;
 		this.owner = owner;
@@ -94,6 +125,7 @@ public class ScratchProjectData implements Serializable {
 		this.modifiedDate = modifiedDate;
 		this.sharedDate = sharedDate;
 		this.tags = tags;
+		this.visibiltyState = visibilityState;
 		this.remixes = new ArrayList<>();
 	}
 
@@ -122,6 +154,10 @@ public class ScratchProjectData implements Serializable {
 	public Date getSharedDate() { return sharedDate; }
 
 	public List<String> getTags() { return tags; }
+
+	public VisibilityState getVisibilityState() {
+		return visibiltyState;
+	}
 
 	public List<ScratchRemixProjectData> getRemixes() {
 		return remixes;
