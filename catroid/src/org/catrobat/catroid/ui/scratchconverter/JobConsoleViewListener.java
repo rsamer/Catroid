@@ -35,5 +35,6 @@ public interface JobConsoleViewListener {
 	void onJobOutput(Job job, @NonNull String[] lines);
 	void onJobFinished(Job job);
 	void onJobFailed(Job job);
+	void onJobCanceled(Job job);
 	void onJobDownloadReady(Job job);
 }
