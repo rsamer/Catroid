@@ -23,10 +23,15 @@
 package org.catrobat.catroid.ui;
 
 import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.text.Spannable;
@@ -37,23 +42,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.common.base.Preconditions;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
 import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.ClientException;
 import org.catrobat.catroid.scratchconverter.WebSocketClient;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
+import org.catrobat.catroid.ui.dialogs.ScratchReconvertDialog;
 import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment;
 import org.catrobat.catroid.ui.scratchconverter.ScratchConverterContextWrapper;
+import org.catrobat.catroid.utils.DownloadUtil;
 import org.catrobat.catroid.utils.ToastUtil;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class ScratchConverterActivity extends BaseActivity {
+public class ScratchConverterActivity extends BaseActivity implements Client.ConnectAuthCallback {
 
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
@@ -63,7 +74,7 @@ public class ScratchConverterActivity extends BaseActivity {
 	private WebSocketClient converterClient;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_scratch_converter);
 		setUpActionBar();
@@ -81,8 +92,81 @@ public class ScratchConverterActivity extends BaseActivity {
 		messageListener.addBaseInfoViewListener(converterSlidingUpPanelFragment);
 		messageListener.addGlobalJobConsoleViewListener(converterSlidingUpPanelFragment);
 
-		converterClient = new WebSocketClient(this, clientID, messageListener);
+		final ScratchConverterActivity activity = this;
+		converterClient = new WebSocketClient(this, clientID, messageListener, new Client.SimpleConvertCallback() {
+			@Override
+			public void onConversionReady(final Job job) {
+				//lock.unlock();
+				Log.i(TAG, "Conversion ready!");
+			}
+
+			@Override
+			public void onConversionStart(final Job job) {
+				Log.i(TAG, "Conversion started!");
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						ToastUtil.showSuccess(activity, activity.getString(R.string.scratch_conversion_started));
+					}
+				});
+			}
+
+			@Override
+			public void onConversionFinished(final Job job) {
+				Log.i(TAG, "Conversion finished!");
+			}
+
+			@Override
+			public void onDownloadReady(final Job job, final Client.DownloadFinishedListener downloadFinishedListener,
+					final String downloadURL, final Date cachedUTCDate)
+			{
+				final Client.DownloadFinishedListener[] callbacks;
+				callbacks = new Client.DownloadFinishedListener[] { downloadFinishedListener, converterSlidingUpPanelFragment };
+
+				if (cachedUTCDate != null) {
+					final ScratchReconvertDialog reconvertDialog = new ScratchReconvertDialog();
+					reconvertDialog.setContext(activity);
+					reconvertDialog.setCachedUTCDate(cachedUTCDate);
+					reconvertDialog.setReconvertDialogCallback(new ScratchReconvertDialog.ReconvertDialogCallback() {
+						@Override
+						public void onDownloadExistingProgram() {
+							downloadProgram(downloadURL, callbacks);
+						}
+
+						@Override
+						public void onReconvertProgram() {
+							// TODO: make sure NOT running on UI-thread!!
+							// TODO: check if verbose
+							boolean verbose = false;
+							converterClient.convertJob(job, verbose, true);
+						}
+
+						@Override
+						public void onCancel() {
+							converterClient.getMessageListener().onUserCanceledConversion(job.getJobID());
+						}
+					});
+					reconvertDialog.show(activity.getFragmentManager(), ScratchReconvertDialog.DIALOG_FRAGMENT_TAG);
+					return;
+				}
+
+				downloadProgram(downloadURL, callbacks);
+			}
+
+			@Override
+			public void onConversionFailure(final Job job, final ClientException ex) {
+				//lock.unlock();
+				Log.e(TAG, "Conversion failed: " + ex.getMessage());
+			}
+		});
 		searchProjectsListFragment.setMessageListener(messageListener);
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				converterClient.connectAndAuthenticate(activity);
+			}
+		}, 500);
 
 		slidingLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
 		slidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
@@ -107,13 +191,34 @@ public class ScratchConverterActivity extends BaseActivity {
 		Log.i(TAG, "Scratch Converter Activity created");
 
 		appendColoredBetaLabelToTitle(Color.RED);
-		//hideSlideUpPanelBar();
+		hideSlideUpPanelBar();
+	}
+
+	private void downloadProgram(final String downloadURL, final Client.DownloadFinishedListener[] downloadCallbacks) {
+		final String baseUrl = Constants.SCRATCH_CONVERTER_BASE_URL;
+		final String fullDownloadUrl = baseUrl.substring(0, baseUrl.length() - 1) + downloadURL;
+		final ScratchConverterActivity activity = this;
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Log.d(TAG, "Start download: " + fullDownloadUrl);
+				DownloadUtil
+						.getInstance()
+						.prepareDownloadAndStartIfPossible(activity, fullDownloadUrl, downloadCallbacks);
+			}
+		});
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		Log.d(TAG, "Destroyed " + ScratchConverterActivity.class.getSimpleName());
+
+		final Client client = converterClient;
+		converterClient = null;
+		if (client.isClosed() == false) {
+			client.close();
+		}
 	}
 
 	private void appendColoredBetaLabelToTitle(final int color) {
@@ -132,7 +237,7 @@ public class ScratchConverterActivity extends BaseActivity {
 		for (final ScratchProjectPreviewData projectData : projectList) {
 			Log.i(TAG, projectData.getTitle());
 			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(), projectData.getProjectImage(),
-					false, false, null, converterSlidingUpPanelFragment);
+					false, false);
 		}
 		ToastUtil.showSuccess(this, getString(R.string.scratch_conversion_started));
 	}
@@ -227,4 +332,80 @@ public class ScratchConverterActivity extends BaseActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
+	@Override
+	public void onSuccess(long clientID) {
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME, clientID);
+		editor.commit();
+		Log.i(TAG, "Connection established (clientID: " + clientID + ")");
+		final Activity activity = this;
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				ToastUtil.showSuccess(activity, "Connection established!");
+			}
+		});
+		Preconditions.checkState(converterClient.isAuthenticated());
+		converterClient.retrieveJobsInfo();
+	}
+
+	@Override
+	public void onConnectionClosed(ClientException ex) {
+		Log.d(TAG, "Connection closed!");
+		final Activity activity = this;
+		final String exceptionMessage = ex.getMessage();
+		if (exceptionMessage != null) {
+			Log.e(TAG, exceptionMessage);
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					ToastUtil.showError(activity, "Connection closed!");
+					finish();
+				}
+			});
+		} else {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					ToastUtil.showSuccess(activity, "Connection closed!");
+					finish();
+				}
+			});
+		}
+
+		/*
+		if (converterClient != null) {
+			Log.i(TAG, "Reconnecting...");
+			// automatically reconnect
+			converterClient.connectAndAuthenticate(this);
+		}
+		*/
+	}
+
+	@Override
+	public void onConnectionFailure(ClientException ex) {
+		Log.e(TAG, ex.getMessage());
+		final Activity activity = this;
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				ToastUtil.showError(activity, "Connection failed, please retry later!");
+				finish();
+			}
+		});
+	}
+
+	@Override
+	public void onAuthenticationFailure(ClientException ex) {
+		Log.e(TAG, ex.getMessage());
+		final Activity activity = this;
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				ToastUtil.showError(activity, "Authentication failed, please retry later!");
+				finish();
+			}
+		});
+	}
 }
