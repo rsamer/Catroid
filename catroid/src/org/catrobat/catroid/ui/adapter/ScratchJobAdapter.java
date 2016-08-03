@@ -111,12 +111,13 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 
 		// update progress state of project:
 		final Double progress = new Double(job.getProgress());
-		holder.progress.setText(Double.toString(Utils.round(progress, 2)) + "%");
+//		holder.progress.setText(Double.toString(Utils.round(progress, 2)) + "%");
+		holder.progress.setText(progress.intValue() + "%");
 		holder.progressBar.setProgress(progress.intValue());
 
 		// set project image (threaded):
 		WebImage httpImageMetadata = job.getImage();
-		if (httpImageMetadata != null) {
+		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
 			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
 			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
 			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),

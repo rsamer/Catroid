@@ -26,6 +26,7 @@ package org.catrobat.catroid.ui;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
@@ -208,7 +209,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		if (scratchProjectData != null) {
 			titleTextView.setText(scratchProjectData.getTitle());
 
-			if (scratchProjectData.getProjectImage() != null) {
+			if (scratchProjectData.getProjectImage() != null && scratchProjectData.getProjectImage().getUrl() != null) {
 				webImageLoader.fetchAndShowImage(
 						scratchProjectData.getProjectImage().getUrl().toString(),
 						imageView, imageWidth, imageHeight

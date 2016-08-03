@@ -150,7 +150,7 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 
 		// set project image (threaded):
 		WebImage httpImageMetadata = projectData.getProjectImage();
-		if (httpImageMetadata != null) {
+		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
 			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
 			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
 			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
