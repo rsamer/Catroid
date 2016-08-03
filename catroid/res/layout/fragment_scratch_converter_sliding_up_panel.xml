@@ -67,7 +67,9 @@
                 android:layout_height="wrap_content"
                 android:text="@string/title"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
 
             <TextView
                 android:id="@+id/scratch_convert_status_text"
