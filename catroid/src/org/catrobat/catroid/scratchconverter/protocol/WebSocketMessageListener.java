@@ -107,6 +107,8 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 			return;
 		}
 
+		jobHandler.onUserCanceledConversion();
+
 		for (final JobConsoleViewListener viewListener : getJobConsoleViewListeners(jobID)) {
 			viewListener.onJobCanceled(jobHandler.getJob());
 		}
