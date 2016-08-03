@@ -145,6 +145,7 @@ public final class Constants {
 	public static final String PLATFORM_DEFAULT = "Android";
 
 	// Scratch Converter
+	public static final long INVALID_SCRATCH_PROGRAM_ID = 0;
 	public static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
 	public static final String SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME = "scratchconverter.clientID";
 	public static final String SCRATCH_PROJECT_BASE_URL_HTTPS = "https://scratch.mit.edu/projects/";

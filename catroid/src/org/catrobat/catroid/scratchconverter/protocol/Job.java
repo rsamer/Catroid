@@ -112,6 +112,10 @@ public class Job {
 		return state;
 	}
 
+	public void setState(State state) {
+		this.state = state;
+	}
+
 	public long getJobID() {
 		return jobID;
 	}
@@ -124,12 +128,16 @@ public class Job {
 		return progress;
 	}
 
-	public void setImage(WebImage image) {
-		this.image = image;
+	public void setProgress(double progress) {
+		this.progress = progress;
 	}
 
 	public WebImage getImage() {
 		return image;
+	}
+
+	public void setImage(WebImage image) {
+		this.image = image;
 	}
 
 }

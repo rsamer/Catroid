@@ -26,11 +26,60 @@ package org.catrobat.catroid.scratchconverter;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 
+import java.util.Date;
+
 public interface Client {
-	enum State { CONNECTED, NOT_CONNECTED, AUTHENTICATED, FAILED }
+
+	enum State { NOT_CONNECTED, CONNECTED, CONNECTED_AUTHENTICATED }
 	long INVALID_CLIENT_ID = -1;
 
 	MessageListener getMessageListener();
-	boolean isJobInProgress(final long jobID);
-	void convertJob(final Job job, final boolean verbose, final boolean force, final ClientCallback clientCallback);
+	boolean isClosed();
+	boolean isAuthenticated();
+	void connectAndAuthenticate(ConnectAuthCallback connectAuthCallback);
+	void retrieveJobsInfo();
+	void convertJob(Job job, boolean verbose, boolean force);
+	void close();
+
+	// callbacks
+	interface ConnectAuthCallback {
+		void onSuccess(long clientID);
+		void onConnectionClosed(ClientException ex);
+		void onConnectionFailure(ClientException ex);
+		void onAuthenticationFailure(ClientException ex);
+	}
+
+	interface ConvertCallback {
+		void onConversionReady(Job job);
+		void onConversionStart(Job job);
+		void onConversionFinished(Job job);
+		void onDownloadReady(Job job, DownloadFinishedListener downloadFinishedListener, String downloadURL,
+				Date cachedDate);
+		void onConversionFailure(Job job, ClientException ex);
+	}
+
+	interface DownloadFinishedListener {
+		void onDownloadFinished(String catrobatProgramName, String url);
+		void onUserCanceledDownload(String url);
+	}
+
+	// convenient callback base class
+	class SimpleConvertCallback implements ConvertCallback {
+		@Override
+		public void onConversionReady(Job job) {}
+
+		@Override
+		public void onConversionStart(Job job) {}
+
+		@Override
+		public void onConversionFinished(Job job) {}
+
+		@Override
+		public void onDownloadReady(Job job, DownloadFinishedListener downloadFinishedListener, String downloadURL,
+				Date cachedDate) {}
+
+		@Override
+		public void onConversionFailure(Job job, ClientException ex) {}
+	}
+
 }

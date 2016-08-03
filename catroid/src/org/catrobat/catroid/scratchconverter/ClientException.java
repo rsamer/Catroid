@@ -21,30 +21,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.scratchconverter.protocol;
+package org.catrobat.catroid.scratchconverter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class JobConsole {
-	private static final String TAG = JobConsole.class.getSimpleName();
-
-	private List<String> lines;
-	private double progress;
-
-	public JobConsole() {
-		lines = new ArrayList<>();
-		progress = 0.0;
+public class ClientException extends Exception {
+	public ClientException(String detailMessage) {
+		super(detailMessage);
 	}
 
-	public void setProgress(final double progress) {
-		this.progress = progress;
+	public ClientException(Throwable throwable) {
+		super(throwable);
 	}
-
-	public void addLines(final String[] lines) {
-		for (final String line : lines) {
-			this.lines.add(line);
-		}
-	}
-
 }

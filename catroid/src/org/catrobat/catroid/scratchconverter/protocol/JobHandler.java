@@ -30,8 +30,8 @@ import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
-import org.catrobat.catroid.scratchconverter.ClientCallback;
-import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
+import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.ClientException;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobAlreadyRunningMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobDownloadMessage;
@@ -46,7 +46,7 @@ import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 
 import java.util.Date;
 
-public class JobHandler implements DownloadFinishedListener {
+public class JobHandler implements Client.DownloadFinishedListener {
 
 	private static final String TAG = JobHandler.class.getSimpleName();
 
@@ -61,16 +61,18 @@ public class JobHandler implements DownloadFinishedListener {
 	private final Handler handler;
 	private Job job;
 	private State currentState;
-	private JobConsole jobConsole;
-	private ClientCallback callback;
+	private Client.ConvertCallback callback;
 
-	public JobHandler(final Context context, final Job job, ClientCallback callback) {
+	public JobHandler(final Context context, final Job job, Client.ConvertCallback callback) {
 		Preconditions.checkArgument(job != null);
 		this.handler = new Handler(context.getMainLooper());
 		this.job = job;
 		this.currentState = State.UNSCHEDULED;
-		this.jobConsole = new JobConsole();
 		this.callback = callback;
+	}
+
+	public void setState(State state) {
+		this.currentState = state;
 	}
 
 	public void onJobScheduled(@NonNull final JobConsoleViewListener[] viewListeners) {
@@ -88,7 +90,18 @@ public class JobHandler implements DownloadFinishedListener {
 
 	@Override
 	public void onDownloadFinished(String programName, String url) {
-		Log.d(TAG, "Resetting job with ID: " + job.getJobID());
+		Log.d(TAG, "Download finished - Resetting job with ID: " + job.getJobID());
+		this.currentState = State.UNSCHEDULED;
+	}
+
+	@Override
+	public void onUserCanceledDownload(String url) {
+		Log.d(TAG, "User canceled download - Resetting job with ID: " + job.getJobID());
+		this.currentState = State.UNSCHEDULED;
+	}
+
+	public void onUserCanceledConversion() {
+		Log.d(TAG, "User canceled conversion - Resetting job with ID: " + job.getJobID());
 		this.currentState = State.UNSCHEDULED;
 	}
 
@@ -104,7 +117,7 @@ public class JobHandler implements DownloadFinishedListener {
 		return currentState;
 	}
 
-	public void setCallback(ClientCallback callback) {
+	public void setCallback(Client.ConvertCallback callback) {
 		this.callback = callback;
 	}
 
@@ -175,8 +188,9 @@ public class JobHandler implements DownloadFinishedListener {
 	private void handleJobReadyMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.SCHEDULED);
 
+		job.setState(Job.State.READY);
 		currentState = State.READY;
-		callback.onConversionReady();
+		callback.onConversionReady(job);
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -190,6 +204,7 @@ public class JobHandler implements DownloadFinishedListener {
 
 	private void handleJobAlreadyRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.SCHEDULED);
+		job.setState(Job.State.READY);
 		currentState = State.READY;
 		handleJobRunningMessage(viewListeners);
 	}
@@ -197,8 +212,9 @@ public class JobHandler implements DownloadFinishedListener {
 	private void handleJobRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.READY);
 
+		job.setState(Job.State.RUNNING);
 		currentState = State.RUNNING;
-		callback.onConversionStart();
+		callback.onConversionStart(job);
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -212,6 +228,8 @@ public class JobHandler implements DownloadFinishedListener {
 
 	private void handleJobProgressMessage(final double progress, @NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.RUNNING);
+
+		job.setProgress(progress);
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -229,7 +247,6 @@ public class JobHandler implements DownloadFinishedListener {
 		for (String line : lines) {
 			Log.d(TAG, line);
 		}
-		jobConsole.addLines(lines);
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -244,8 +261,9 @@ public class JobHandler implements DownloadFinishedListener {
 	private void handleJobFinishedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.RUNNING);
 
+		job.setState(Job.State.FINISHED);
 		currentState = State.CONVERSION_FINISHED;
-		callback.onConversionFinished();
+		callback.onConversionFinished(job);
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -260,8 +278,9 @@ public class JobHandler implements DownloadFinishedListener {
 	private void handleJobFailedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
 		Preconditions.checkState(currentState == State.RUNNING);
 
+		job.setState(Job.State.FAILED);
 		currentState = State.FAILED;
-		callback.onConversionFailure(new ClientCallback.ClientException("Job failed"));
+		callback.onConversionFailure(job, new ClientException("Job failed"));
 
 		runOnUiThread(new Runnable() {
 			@Override
@@ -278,7 +297,7 @@ public class JobHandler implements DownloadFinishedListener {
 		Preconditions.checkState(currentState == State.SCHEDULED || currentState == State.CONVERSION_FINISHED);
 
 		currentState = State.DOWNLOAD_READY;
-		callback.onDownloadReady(this, downloadURL, cachedUTCDate);
+		callback.onDownloadReady(job, this, downloadURL, cachedUTCDate);
 
 		runOnUiThread(new Runnable() {
 			@Override

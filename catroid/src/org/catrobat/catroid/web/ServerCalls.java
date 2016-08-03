@@ -594,7 +594,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 
 		InputStream inputStream = null;
 		try {
-			Log.d(TAG, url);
+			Log.d(TAG, "Downloading file from URL: " + url);
 			URL imageUrl = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
 			connection.setConnectTimeout(HTTP_TIMEOUT);
