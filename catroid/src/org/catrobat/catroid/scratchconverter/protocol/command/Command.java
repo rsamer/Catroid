@@ -33,7 +33,9 @@ abstract public class Command {
 
 	public enum Type {
 		SET_CLIENT_ID("set_client_ID"),
+		RETRIEVE_JOBS_INFO("retrieve_jobs_info"),
 		SCHEDULE_JOB("schedule_job");
+
 		private final String rawValue;
 
 		Type(final String rawValue) {
