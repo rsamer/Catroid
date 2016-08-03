@@ -32,7 +32,7 @@ import android.os.ResultReceiver;
 import android.util.Log;
 
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.scratchconverter.ClientCallback.DownloadFinishedListener;
+import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedListener;
 import org.catrobat.catroid.transfers.MediaDownloadService;
 import org.catrobat.catroid.transfers.ProjectDownloadService;
 import org.catrobat.catroid.ui.WebViewActivity;

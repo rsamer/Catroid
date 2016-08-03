@@ -58,6 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_toRightOf="@+id/scratch_convert_icon"
+            android:layout_toLeftOf="@+id/scratch_up_down_image_button"
             android:gravity="center_vertical">
 
             <TextView
@@ -73,10 +74,42 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/white"
-                android:layout_below="@+id/scratch_convert_headline"
                 android:text="@string/status"
                 android:textSize="12sp"
-                android:textStyle="italic" />
+                android:textStyle="italic"
+                android:layout_below="@+id/scratch_convert_headline" />
+
+            <RelativeLayout
+                android:id="@+id/scratch_convert_progress_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/scratch_convert_headline"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/scratch_convert_progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@android:style/Widget.Holo.ProgressBar.Horizontal"
+                    android:layout_marginRight="10dp"
+                    android:layout_toLeftOf="@+id/scratch_convert_status_progress_text"
+                    android:layout_centerVertical="true"
+                    android:progress="60" />
+
+                <TextView
+                    android:id="@+id/scratch_convert_status_progress_text"
+                    style="@style/ListViewItemDetailsText"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:ellipsize="end"
+                    android:text="60.0%"
+                    android:textAlignment="gravity"
+                    android:gravity="right" />
+            </RelativeLayout>
+
 
         </RelativeLayout>
 

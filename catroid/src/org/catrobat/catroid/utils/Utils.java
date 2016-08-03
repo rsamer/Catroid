@@ -54,6 +54,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.facebook.AccessToken;
+import com.google.common.base.Splitter;
 import com.google.common.io.ByteStreams;
 
 import org.catrobat.catroid.ProjectManager;
@@ -86,6 +87,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class Utils {
 
@@ -160,6 +162,20 @@ public final class Utils {
 
 	public static String formatDate(Date date, Locale locale) {
 		return DateFormat.getDateInstance(DateFormat.LONG, locale).format(date);
+	}
+
+	public static long extractScratchProjectIDFromURL(final String url) {
+		if (! url.startsWith(Constants.SCRATCH_CONVERTER_BASE_URL)) {
+			return Constants.INVALID_SCRATCH_PROGRAM_ID;
+		}
+
+		final String query = url.split("\\?")[1];
+		final Map<String, String> queryParamsMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
+		final long scratchProjectID = Long.parseLong(queryParamsMap.get("id"));
+		if (scratchProjectID <= 0) {
+			return Constants.INVALID_SCRATCH_PROGRAM_ID;
+		}
+		return scratchProjectID;
 	}
 
 	public static String humanFriendlyFormattedShortNumber(final int number) {
