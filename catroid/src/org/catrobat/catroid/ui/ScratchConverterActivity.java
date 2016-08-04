@@ -63,6 +63,8 @@ import org.catrobat.catroid.utils.ToastUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ScratchConverterActivity extends BaseActivity implements Client.ConnectAuthCallback {
 
@@ -79,10 +81,13 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		setContentView(R.layout.activity_scratch_converter);
 		setUpActionBar();
 
+		final ExecutorService sharedExecutorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		searchProjectsListFragment = (ScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_search_projects_list);
+		searchProjectsListFragment.setExecutorService(sharedExecutorService);
 		converterSlidingUpPanelFragment = (ScratchConverterSlidingUpPanelFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_converter_sliding_up_panel);
+		converterSlidingUpPanelFragment.setExecutorService(sharedExecutorService);
 
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,

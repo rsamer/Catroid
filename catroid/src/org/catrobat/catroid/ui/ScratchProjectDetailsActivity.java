@@ -69,7 +69,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import uk.co.deanwild.flowtextview.FlowTextView;
 
@@ -81,6 +80,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	private static final String TAG = ScratchProjectDetailsActivity.class.getSimpleName();
 	private static ScratchProjectDataFetcher dataFetcher = ServerCalls.getInstance();
 	private static MessageListener messageListener = null;
+	private static ExecutorService executorService = null;
 
 	private int imageWidth;
 	private int imageHeight;
@@ -118,6 +118,10 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		messageListener = listener;
 	}
 
+	public static void setExecutorService(final ExecutorService service) {
+		executorService = service;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -126,11 +130,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		projectData = getIntent().getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
 		assert(projectData != null);
 
-		final ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
-		webImageLoader = new WebImageLoader(
-				ExpiringLruMemoryImageCache.getInstance(),
-				ExpiringDiskCache.getInstance(this),
-				executorService);
+		webImageLoader = new WebImageLoader(ExpiringLruMemoryImageCache.getInstance(),
+				ExpiringDiskCache.getInstance(this), executorService);
 
 		imageWidth = getResources().getDimensionPixelSize(R.dimen.scratch_project_image_width);
 		imageHeight = getResources().getDimensionPixelSize(R.dimen.scratch_project_image_height);
@@ -227,7 +228,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		scratchRemixedProjectAdapter = new ScratchRemixedProjectAdapter(this,
 				R.layout.fragment_scratch_project_list_item,
 				R.id.scratch_projects_list_item_title,
-				scratchRemixedProjectsData);
+				scratchRemixedProjectsData,
+				executorService);
 		remixedProjectsListView.setAdapter(scratchRemixedProjectAdapter);
 		scratchRemixedProjectAdapter.setScratchRemixedProjectEditListener(this);
 		Utils.setListViewHeightBasedOnItems(remixedProjectsListView);

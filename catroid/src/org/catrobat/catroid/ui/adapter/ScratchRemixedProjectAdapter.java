@@ -63,10 +63,9 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectDat
 	private static LayoutInflater inflater;
 
 	public ScratchRemixedProjectAdapter(Context context, int resource, int textViewResourceId,
-			List<ScratchProjectData.ScratchRemixProjectData> objects) {
+			List<ScratchProjectData.ScratchRemixProjectData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		Log.d(TAG, "Number of remixes: " + objects.size());
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),

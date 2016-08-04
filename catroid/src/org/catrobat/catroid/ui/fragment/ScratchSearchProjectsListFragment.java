@@ -68,6 +68,7 @@ import org.catrobat.catroid.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 public class ScratchSearchProjectsListFragment extends Fragment
 		implements FetchScratchProjectsTask.ScratchProjectListTaskDelegate,
@@ -77,6 +78,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private static final String SHARED_PREFERENCE_NAME = "showDetailsScratchProjects";
 	private static final String TAG = ScratchSearchProjectsListFragment.class.getSimpleName();
 	private static MessageListener messageListener = null;
+	private static ExecutorService executorService = null;
 
 	private ScratchConverterActivity activity;
 	private String convertActionModeTitle;
@@ -105,6 +107,10 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) searchResultsListView.getLayoutParams();
 		params.setMargins(left, top, right, bottom);
 		searchResultsListView.setLayoutParams(params);
+	}
+
+	public static void setExecutorService(final ExecutorService service) {
+		executorService = service;
 	}
 
 	private ActionMode.Callback convertModeCallBack = new ActionMode.Callback() {
@@ -203,7 +209,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		searchTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
-				if (!hasFocus) {
+				if (hasFocus == false && activity.isSlideUpPanelEmpty() == false) {
 					activity.showSlideUpPanelBar(150);
 				} else {
 					activity.hideSlideUpPanelBar();
@@ -318,7 +324,8 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		scratchProjectAdapter = new ScratchProjectAdapter(activity,
 				R.layout.fragment_scratch_project_list_item,
 				R.id.scratch_projects_list_item_title,
-				scratchProjectList);
+				scratchProjectList,
+				executorService);
 		searchResultsListView.setAdapter(scratchProjectAdapter);
 		//setListAdapter(scratchProjectAdapter);
 		initClickListener();
@@ -392,6 +399,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public void onProjectEdit(int position) {
 		ScratchProjectDetailsActivity.setMessageListener(messageListener);
+		ScratchProjectDetailsActivity.setExecutorService(executorService);
 		Intent intent = new Intent(activity, ScratchProjectDetailsActivity.class);
 		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) scratchProjectAdapter.getItem(position));
 		activity.startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);

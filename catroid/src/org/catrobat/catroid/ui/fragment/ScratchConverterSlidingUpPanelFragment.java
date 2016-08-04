@@ -66,12 +66,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		implements BaseInfoViewListener, JobConsoleViewListener, DownloadFinishedListener, ScratchJobEditListener {
 
 	private static final String TAG = ScratchConverterSlidingUpPanelFragment.class.getSimpleName();
+	private static ExecutorService executorService = null;
 
 	private ImageView convertIconImageView;
 	private TextView convertPanelHeadlineView;
@@ -90,6 +90,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	private ScratchJobAdapter conversionAdapter;
 	private ScratchJobAdapter convertedProgramsAdapter;
 	private Job[] allJobs;
+
+	public static void setExecutorService(final ExecutorService service) {
+		executorService = service;
+	}
 
 	@Nullable
 	@Override
@@ -121,7 +125,6 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		final ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),
 				ExpiringDiskCache.getInstance(getActivity()),
@@ -135,14 +138,16 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		conversionAdapter = new ScratchJobAdapter(getActivity(),
 				R.layout.fragment_scratch_job_list_item,
 				R.id.scratch_job_list_item_title,
-				new ArrayList<Job>());
+				new ArrayList<Job>(),
+				executorService);
 		conversionListView.setAdapter(conversionAdapter);
 		conversionList.setVisibility(View.GONE);
 
 		convertedProgramsAdapter = new ScratchJobAdapter(getActivity(),
 				R.layout.fragment_scratch_job_list_item,
 				R.id.scratch_job_list_item_title,
-				new ArrayList<Job>());
+				new ArrayList<Job>(),
+				executorService);
 		convertedProgramsAdapter.setScratchJobEditListener(this);
 		convertedProgramsListView.setAdapter(convertedProgramsAdapter);
 		convertedProgramsList.setVisibility(View.GONE);

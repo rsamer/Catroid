@@ -71,12 +71,12 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 
 	private static LayoutInflater inflater;
 
-	public ScratchProjectAdapter(Context context, int resource, int textViewResourceId, List<ScratchProjectPreviewData> objects) {
+	public ScratchProjectAdapter(Context context, int resource, int textViewResourceId,
+			List<ScratchProjectPreviewData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		showDetails = true;
 		selectMode = ListView.CHOICE_MODE_NONE;
-		ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		webImageLoader = new WebImageLoader(
 				ExpiringLruMemoryImageCache.getInstance(),
 				ExpiringDiskCache.getInstance(context),
