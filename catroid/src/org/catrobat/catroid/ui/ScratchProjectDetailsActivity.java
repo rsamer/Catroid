@@ -336,7 +336,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 			public void run() {
 				mainScrollView.fullScroll(ScrollView.FOCUS_UP);
 			}
-		}, 100);
+		}, 300);
 	}
 
 	//----------------------------------------------------------------------------------------------
