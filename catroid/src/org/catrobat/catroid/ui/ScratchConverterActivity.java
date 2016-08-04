@@ -247,6 +247,10 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		ToastUtil.showSuccess(this, getString(R.string.scratch_conversion_started));
 	}
 
+	public boolean isSlideUpPanelEmpty() {
+		return converterSlidingUpPanelFragment.hasJobs() == false;
+	}
+
 	public void showSlideUpPanelBar(final long delayMillis) {
 		if (delayMillis > 0) {
 			slidingLayout.postDelayed(new Runnable() {

@@ -158,6 +158,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		upDownArrowImageView.setRotation(degrees);
 	}
 
+	public boolean hasJobs() {
+		return allJobs != null && allJobs.length > 0;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------
 	// BaseInfoViewListener callbacks
 	//------------------------------------------------------------------------------------------------------------------
