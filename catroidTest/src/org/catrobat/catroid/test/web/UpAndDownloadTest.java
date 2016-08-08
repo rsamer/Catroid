@@ -52,7 +52,7 @@ public class UpAndDownloadTest extends AndroidTestCase {
 				Utils.checkIfProjectExistsOrIsDownloadingIgnoreCase("projectSave"));
 		assertTrue("Program should be in download queue",
 				Utils.checkIfProjectExistsOrIsDownloadingIgnoreCase("PrOJEcTsAVE"));
-		DownloadUtil.getInstance().downloadFinished("projectSave");
+		DownloadUtil.getInstance().downloadFinished("projectSave", null);
 		assertFalse("Program shouldn't be in download queue anymore",
 				Utils.checkIfProjectExistsOrIsDownloadingIgnoreCase("projectSave"));
 		assertFalse("Program shouldn't be in download queue anymore",

@@ -23,9 +23,11 @@
 
 package org.catrobat.catroid.uitest.ui.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListAdapter;
@@ -39,12 +41,13 @@ import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.ScratchProjectData;
 import org.catrobat.catroid.common.ScratchProjectData.ScratchRemixProjectData;
 import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
-import org.catrobat.catroid.ui.ScratchConverterActivity.ScratchConverterClient;
 import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
 import org.catrobat.catroid.utils.Utils;
+import org.catrobat.catroid.web.WebScratchProgramException;
 import org.catrobat.catroid.web.WebconnectionException;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -55,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 import uk.co.deanwild.flowtextview.FlowTextView;
 
@@ -71,7 +75,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 
 	private ScratchProjectDataFetcher fetcherMock;
 
-	public ScratchProjectDetailsActivityTest() throws InterruptedIOException, WebconnectionException {
+	public ScratchProjectDetailsActivityTest()
+			throws InterruptedIOException, WebconnectionException, WebScratchProgramException
+	{
 		super(ScratchProjectDetailsActivity.class);
 
 		List<String> tags = new ArrayList<String>() {{
@@ -80,23 +86,60 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		}};
 		long projectID = 10205819;
 		projectData = new ScratchProjectData(projectID, "Dancin' in the Castle", "jschombs",
-				"Click the flag to run the stack. Click the space bar to change it up!",
-				"First project on Scratch! This was great.", 1_723_123, 37_239, 11, new Date(), new Date(), tags);
+				"Click the flag to run the stack. Click the space bar to change it up!", "First project on Scratch! "
+				+ "This was great.", 1_723_123, 37_239, 11, new Date(), new Date(), tags,
+				ScratchProjectData.VisibilityState.PUBLIC);
+
 		Uri uri = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10211023_144x108.png?v=1368486334.0");
 		remixedProjectData = new ScratchRemixProjectData(10211023, "Dancin' in the Castle remake",
 				"Amanda69", new WebImage(uri, 150, 150));
 		projectData.addRemixProject(remixedProjectData);
 		projectPreviewData = new ScratchProjectPreviewData(projectID, projectData.getTitle(), "May 13, 2013 ... Click "
 				+ "the flag to run the stack.");
+
+		// mocks
 		fetcherMock = Mockito.mock(ScratchProjectDataFetcher.class);
 		when(fetcherMock.fetchScratchProjectDetails(any(Long.class))).thenReturn(projectData);
+
+		final MessageListener messageListenerMock = Mockito.mock(MessageListener.class);
+		doAnswer(new Answer<Void>() {
+			public Void answer(InvocationOnMock invocation) {
+				assertNotNull("No arguments for addJobConsoleViewListener call given", invocation.getArguments());
+				assertEquals(invocation.getArguments().length, 2);
+				assertEquals(invocation.getArguments()[0], projectPreviewData.getId());
+				assertTrue(invocation.getArguments()[1] instanceof ScratchProjectDetailsActivity);
+				return null;
+			}
+		}).when(messageListenerMock).addJobConsoleViewListener(any(Long.class), any(ScratchProjectDetailsActivity.class));
+
+		// dependency injection
 		ScratchProjectDetailsActivity.setDataFetcher(fetcherMock);
+		ScratchProjectDetailsActivity.setMessageListener(messageListenerMock);
+		ScratchProjectDetailsActivity.setExecutorService(Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE));
+
+		/*
+		final Object[] convertMethodParams = { null, null };
+		WebSocketClient clientMock = Mockito.mock(WebSocketClient.class);
+		doAnswer(new Answer<Void>() {
+			public Void answer(InvocationOnMock invocation) {
+				assertEquals(invocation.getArguments().length, 2);
+				convertMethodParams[0] = invocation.getArguments()[0];
+				convertMethodParams[1] = invocation.getArguments()[1];
+				return null;
+			}
+		}).when(clientMock).convertProject(any(Long.class), any(String.class));
+		ScratchProjectDetailsActivity.setConverterClient(clientMock);
+				assertTrue(convertMethodParams[0] instanceof Long);
+				assertTrue(convertMethodParams[1] instanceof String);
+				assertEquals(convertMethodParams[0], projectData.getId());
+				assertEquals(convertMethodParams[1], projectData.getTitle());
+		*/
 	}
 
 	@Override
 	public ScratchProjectDetailsActivity getActivity() {
 		Intent intent = new Intent();
-		intent.putExtra(Constants.SCRATCH_PROJECT_DATA, (Parcelable) projectPreviewData);
+		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) projectPreviewData);
 		setActivityIntent(intent);
 		return super.getActivity();
 	}
@@ -111,20 +154,21 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		super.tearDown();
 	}
 
-	public void testAreAllDetailViewsPresentAndPopulatedWithProjectData() {
-		// title
+	public void testIsTitleViewPresentAndHasCorrectContent() {
 		final View titleView = solo.getView(R.id.scratch_project_title);
 		assertEquals(titleView.getVisibility(), View.VISIBLE);
 		assertTrue(titleView instanceof TextView);
 		assertEquals(projectPreviewData.getTitle(), ((TextView) titleView).getText());
+	}
 
-		// owner
+	public void testIsOwnerViewPresentAndHasCorrectContent() {
 		final View ownerView = solo.getView(R.id.scratch_project_owner);
 		assertEquals(ownerView.getVisibility(), View.VISIBLE);
 		assertTrue(ownerView instanceof TextView);
 		assertEquals(getActivity().getString(R.string.by) + " " + projectData.getOwner(), ((TextView) ownerView).getText());
+	}
 
-		// instructions
+	public void testIsInstructionsViewPresentAndHasCorrectContent() {
 		final View instructionsLabelView = solo.getView(R.id.scratch_project_instructions_label);
 		assertEquals(instructionsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(instructionsLabelView instanceof TextView);
@@ -134,8 +178,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		assertEquals(instructionsView.getVisibility(), View.VISIBLE);
 		assertTrue(instructionsView instanceof FlowTextView);
 		assertEquals(projectData.getInstructions(), ((FlowTextView) instructionsView).getText());
+	}
 
-		// notes & credits
+	public void testIsNotesAndCreditsViewPresentAndHasCorrectContent() {
 		final View notesAndCreditsLabelView = solo.getView(R.id.scratch_project_notes_and_credits_label);
 		assertEquals(notesAndCreditsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(notesAndCreditsLabelView instanceof TextView);
@@ -145,8 +190,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		assertEquals(notesAndCreditsView.getVisibility(), View.VISIBLE);
 		assertTrue(notesAndCreditsView instanceof TextView);
 		assertEquals(projectData.getNotesAndCredits(), ((TextView) notesAndCreditsView).getText());
+	}
 
-		// sharing (favorites, loves and views)
+	public void testIsSharingViewPresentAndHasCorrectContent() {
 		final View favoritesLabelView = solo.getView(R.id.scratch_project_favorites_text);
 		final String expectedHumanReadableFavoritesNumber = "37k";
 		assertEquals(favoritesLabelView.getVisibility(), View.VISIBLE);
@@ -163,8 +209,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		assertEquals(viewsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(viewsLabelView instanceof TextView);
 		assertEquals(expectedHumanReadableViewsNumber, ((TextView) viewsLabelView).getText());
+	}
 
-		// tags
+	public void testIsTagViewPresentAndHasCorrectContent() {
 		final View tagsLabelView = solo.getView(R.id.scratch_project_tags_text);
 		assertEquals(tagsLabelView.getVisibility(), View.VISIBLE);
 		assertTrue(tagsLabelView instanceof TextView);
@@ -174,8 +221,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 			tagList.append((index++ > 0 ? ", " : "") + tag);
 		}
 		assertEquals(tagList.toString(), ((TextView) tagsLabelView).getText());
+	}
 
-		// shared date & modified date
+	public void testIsSharedDateViewPresentAndHasCorrectContent() {
 		final String sharedDateString = Utils.formatDate(projectData.getSharedDate(), Locale.getDefault());
 		final View sharedDateView = solo.getView(R.id.scratch_project_shared_text);
 		final String sharedDateText = ((TextView) sharedDateView).getText().toString();
@@ -184,7 +232,9 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		assertNotNull(((TextView) sharedDateView).getText());
 		assertEquals(getActivity().getString(R.string.shared), sharedDateText.split(":")[0]);
 		assertEquals(sharedDateString, sharedDateText.split(":")[1].trim());
+	}
 
+	public void testIsModifiedDateViewPresentAndHasCorrectContent() {
 		final String modifiedDateString = Utils.formatDate(projectData.getModifiedDate(), Locale.getDefault());
 		final View modifiedDateView = solo.getView(R.id.scratch_project_modified_text);
 		final String modifiedDateText = ((TextView) modifiedDateView).getText().toString();
@@ -192,77 +242,62 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		assertTrue(modifiedDateView instanceof TextView);
 		assertNotNull(((TextView) modifiedDateView).getText());
 		assertEquals(getActivity().getString(R.string.modified), modifiedDateText.split(":")[0]);
-		assertEquals(modifiedDateString, sharedDateText.split(":")[1].trim());
+		assertEquals("Modified date text!", modifiedDateString, modifiedDateText.split(":")[1].trim());
+	}
 
-		// remix label
+	public void testIsRemixViewPresentAndHasCorrectContent() {
 		final View remixesLabelView = solo.getView(R.id.scratch_project_remixes_label);
-		assertEquals(remixesLabelView.getVisibility(), View.VISIBLE);
-		assertTrue(remixesLabelView instanceof TextView);
-		assertEquals(getActivity().getString(R.string.remixes), ((TextView) remixesLabelView).getText());
+		assertEquals("Remix-text-view is invisible!", remixesLabelView.getVisibility(), View.VISIBLE);
+		assertTrue("Remix-text-view should be instance of TextView-class!", remixesLabelView instanceof TextView);
+		assertEquals("Remix-text-view is not labeled correctly!", getActivity().getString(R.string.remixes),
+				((TextView) remixesLabelView).getText());
+	}
 
+	public void testIsConvertButtonViewPresentAndHasCorrectContent() {
 		// convert button
 		final View convertButtonView = solo.getView(R.id.scratch_project_convert_button);
-		assertEquals(convertButtonView.getVisibility(), View.VISIBLE);
-		assertTrue(convertButtonView instanceof Button);
-		assertEquals(getActivity().getString(R.string.convert), ((TextView) convertButtonView).getText());
+		assertEquals("Convert-button is invisible!", convertButtonView.getVisibility(), View.VISIBLE);
+		assertTrue("Convert-button should be instance of Button-class!", convertButtonView instanceof Button);
+		assertEquals("Wrong label name assigned to convert-button!", getActivity().getString(R.string.convert),
+				((TextView) convertButtonView).getText());
 	}
 
 	public void testRemixListViewPopulatedWithRemixProjectData() {
 		// remixed list view
 		View remixesListView = solo.getView(R.id.scratch_project_remixes_list_view);
-		assertEquals(remixesListView.getVisibility(), View.VISIBLE);
-		assertTrue(remixesListView instanceof ListView);
+		assertEquals("ListView is not visible!", remixesListView.getVisibility(), View.VISIBLE);
+		assertTrue("View is no list view!", remixesListView instanceof ListView);
 		ListAdapter listAdapter = ((ListView) remixesListView).getAdapter();
-		assertNotNull(listAdapter);
-		assertTrue(listAdapter.getCount() == 1);
-		assertTrue(listAdapter instanceof ScratchRemixedProjectAdapter);
+		assertNotNull("ListView has no adapter!", listAdapter);
+		assertTrue("Wrong number of remixes!", listAdapter.getCount() == 1);
 		ScratchRemixedProjectAdapter remixedProjectAdapter = (ScratchRemixedProjectAdapter) listAdapter;
 
 		// remixed project
 		ScratchRemixProjectData expectedRemixedProjectData = remixedProjectData;
 		ScratchRemixProjectData remixedProjectData = remixedProjectAdapter.getItem(0);
-		assertTrue(solo.searchText(expectedRemixedProjectData.getTitle()));
-		assertEquals(expectedRemixedProjectData.getId(), remixedProjectData.getId());
-		assertEquals(expectedRemixedProjectData.getTitle(), remixedProjectData.getTitle());
-		assertEquals(expectedRemixedProjectData.getOwner(), remixedProjectData.getOwner());
-		assertNotNull(remixedProjectData.getProjectImage());
-		assertEquals(expectedRemixedProjectData.getProjectImage().getUrl().toString(),
+		assertTrue("Title not set!", solo.searchText(expectedRemixedProjectData.getTitle()));
+		assertEquals("No or wrong project ID set!", expectedRemixedProjectData.getId(), remixedProjectData.getId());
+		assertEquals("No or wrong project title set!", expectedRemixedProjectData.getTitle(),
+				remixedProjectData.getTitle());
+		assertEquals("No or wrong project owner set!", expectedRemixedProjectData.getOwner(),
+				remixedProjectData.getOwner());
+		assertNotNull("No project image set!", remixedProjectData.getProjectImage());
+		assertEquals("Wrong project image set!", expectedRemixedProjectData.getProjectImage().getUrl().toString(),
 				remixedProjectData.getProjectImage().getUrl().toString());
 	}
 
-	public void testConvertButtonClickable() {
-		assertTrue("Convert button not clickable!", solo.getButton(solo.getString(R.string.convert)).isClickable());
-		assertTrue("Convert button not enabled!", solo.getButton(solo.getString(R.string.convert)).isEnabled());
-	}
-
-	public void testClickOnConvertButtonShouldTriggersConvertMethodOfClient() {
-		// setup mock-client and convert-method callback
+	public void testClickOnConvertButtonShouldDisableButton() {
 		final ScratchProjectDetailsActivity activity = getActivity();
-		final Object[] convertMethodParams = { null, null };
-		ScratchConverterClient clientMock = Mockito.mock(ScratchConverterClient.class);
-		doAnswer(new Answer<Void>() {
-			public Void answer(InvocationOnMock invocation) {
-				assertEquals(invocation.getArguments().length, 2);
-				convertMethodParams[0] = invocation.getArguments()[0];
-				convertMethodParams[1] = invocation.getArguments()[1];
-				return null;
-			}
-		}).when(clientMock).convertProject(any(Long.class), any(String.class));
-		ScratchProjectDetailsActivity.setConverterClient(clientMock);
-
-		// click on convert button
 		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+		assertTrue("Convert button not clickable!", solo.getButton(solo.getString(R.string.convert)).isClickable());
+		assertTrue("Convert button not enabled!", convertButton.isEnabled());
 		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				convertButton.performClick();
-				solo.sleep(1_000);
-				assertTrue(convertMethodParams[0] instanceof Long);
-				assertTrue(convertMethodParams[1] instanceof String);
-				assertEquals(convertMethodParams[0], projectData.getId());
-				assertEquals(convertMethodParams[1], projectData.getTitle());
-				assertFalse(solo.getCurrentActivity() instanceof ScratchProjectDetailsActivity);
+				assertFalse("Convert button not disabled!", convertButton.isEnabled());
 			}
 		});
 	}
+
 }
