@@ -131,9 +131,25 @@
     <string name="error_scratch_program_data_not_available">Whoops! Information not available, please try later</string>
     <string name="error_scratch_program_conversion_failed">Whoops! Failed to convert Scratch program, please try again
         later</string>
+    <string name="connection_established">Connection established!</string>
+    <string name="search_failed">Search failed, please retry later!</string>
+    <string name="connection_closed">Connection to server closed!</string>
+    <string name="connection_failed">Connection to server failed, please retry later!</string>
+    <string name="authentication_failed">Authentication failed, please contact the Pocket Code team!</string>
     <string name="scratch_conversion_started">Started to convert Scratch program...</string>
     <string name="convert">Convert</string>
     <string name="converting">Converting...</string>
+    <string name="status_scheduled">Scheduled</string>
+    <string name="status_prepare">Prepare...</string>
+    <string name="status_started">Started...</string>
+    <string name="status_conversion_finished">Conversion finished...</string>
+    <string name="status_in_progress_x_jobs">In progress: %1$d jobs</string>
+    <string name="status_completed_x_jobs">Completed: %1$d jobs</string>
+    <string name="status_job_failed">Job failed!</string>
+    <string name="status_job_canceled">Job canceled!</string>
+    <string name="status_downloading">Downloading...</string>
+    <string name="status_download_finished">Download finished!</string>
+    <string name="status_download_canceled">Download canceled!</string>
     <string name="show_description">Show description</string>
     <string name="list_view_section_title_in_progress">In progress</string>
     <string name="list_view_section_title_converted_programs">Converted programs</string>

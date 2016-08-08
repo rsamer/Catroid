@@ -57,6 +57,7 @@ import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
 
@@ -167,9 +168,6 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	//------------------------------------------------------------------------------------------------------------------
 	@Override
 	public void onJobsInfo(final Job[] jobs) {
-		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
-			throw new AssertionError("You should not change the UI from any thread except UI thread!");
-		}
 		if (jobs == null || jobs.length == 0) {
 			((ScratchConverterActivity)getActivity()).hideSlideUpPanelBar();
 			return;
@@ -193,13 +191,18 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
 			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(), convertIconImageView, width, height);
 		}
-		convertPanelHeadlineView.setText("In progress: " + (jobs.length - finishedJobs) + " jobs");
-		convertPanelStatusView.setText("Completed: " + finishedJobs + " jobs");
+		convertPanelHeadlineView.setText(getResources().getString(R.string.status_in_progress_x_jobs, (jobs.length - finishedJobs)));
+		convertPanelStatusView.setText(getResources().getString(R.string.status_completed_x_jobs, finishedJobs));
 	}
 
 	@Override
 	public void onError(final String errorMessage) {
-		// TODO: implement
+		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
+			throw new AssertionError("You should not change the UI from any thread except UI thread!");
+		}
+
+		Log.e(TAG, "An error occurred: " + errorMessage);
+		ToastUtil.showError(getActivity(), errorMessage);
 	}
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -209,7 +212,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	public void onJobScheduled(final Job job) {
 		((ScratchConverterActivity)getActivity()).showSlideUpPanelBar(0);
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Scheduled");
+		convertPanelStatusView.setText(R.string.status_scheduled);
 		convertProgressLayout.setVisibility(View.GONE);
 
 		final WebImage httpImageMetadata = job.getImage();
@@ -277,7 +280,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobReady(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Prepare...");
+		convertPanelStatusView.setText(R.string.status_prepare);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		job.setProgress(0.0);
@@ -287,7 +290,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobStarted(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Started...");
+		convertPanelStatusView.setText(R.string.status_started);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		job.setProgress(0.0);
@@ -318,7 +321,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobFinished(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Conversion finished...");
+		convertPanelStatusView.setText(R.string.status_conversion_finished);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		updateAdapterSingleJob(job);
@@ -327,7 +330,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobFailed(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Job failed!");
+		convertPanelStatusView.setText(R.string.status_job_failed);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		updateAdapterSingleJob(job);
@@ -336,7 +339,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobCanceled(Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Job canceled!");
+		convertPanelStatusView.setText(R.string.status_job_canceled);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		updateAdapterSingleJob(job);
@@ -345,7 +348,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobDownloadReady(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText("Downloading...");
+		convertPanelStatusView.setText(R.string.status_downloading);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		updateAdapterSingleJob(job);
@@ -354,6 +357,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 
 	@Override
 	public void onDownloadFinished(final String catrobatProgramName, final String url) {
+		if (Looper.getMainLooper().equals(Looper.myLooper())) {
+			throw new AssertionError("Not expecting to run this on UI thread!");
+		}
+
 		Log.i(TAG, "Download of program '" + catrobatProgramName + "' finished (URL was " + url + ")");
 		long jobID = Utils.extractScratchProjectIDFromURL(url);
 		if (jobID == Constants.INVALID_SCRATCH_PROGRAM_ID) {
@@ -367,6 +374,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			Log.e(TAG, "No job with ID " + jobID + " found in downloadJobsMap!");
 			return;
 		}
+
 		getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -377,7 +385,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				convertPanelStatusView.setText("Download finished!");
+				convertPanelStatusView.setText(R.string.status_download_finished);
 				updateAdapterSingleJob(job);
 			}
 		});
@@ -385,6 +393,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 
 	@Override
 	public void onUserCanceledDownload(final String url) {
+		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
+			throw new AssertionError("You should not change the UI from any thread except UI thread!");
+		}
+
 		Log.i(TAG, "User canceled download with URL: " + url);
 		long jobID = Utils.extractScratchProjectIDFromURL(url);
 		if (jobID == Constants.INVALID_SCRATCH_PROGRAM_ID) {
@@ -397,17 +409,17 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			Log.e(TAG, "No job with ID " + jobID + " found in downloadJobsMap!");
 			return;
 		}
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				convertPanelStatusView.setText("Download canceled!");
-				updateAdapterSingleJob(job);
-			}
-		});
+
+		convertPanelStatusView.setText(R.string.status_download_canceled);
+		updateAdapterSingleJob(job);
 	}
 
 	@Override
 	public void onProjectEdit(int position) {
+		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
+			throw new AssertionError("You should not change the UI from any thread except UI thread!");
+		}
+
 		Log.i(TAG, "User clicked on position: " + position);
 
 		final Job job = convertedProgramsAdapter.getItem(position);

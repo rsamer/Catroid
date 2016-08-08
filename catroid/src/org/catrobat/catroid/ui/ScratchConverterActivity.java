@@ -32,6 +32,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.text.Spannable;
@@ -140,10 +141,10 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 
 						@Override
 						public void onReconvertProgram() {
-							// TODO: make sure NOT running on UI-thread!!
-							// TODO: check if verbose
-							boolean verbose = false;
-							converterClient.convertJob(job, verbose, true);
+							if (Looper.getMainLooper().equals(Looper.myLooper())) {
+								throw new AssertionError("You should not run this on the UI thread!");
+							}
+							converterClient.convertJob(job, false, true);
 						}
 
 						@Override
@@ -244,7 +245,7 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 			contextWrapper.convertProgram(projectData.getId(), projectData.getTitle(), projectData.getProjectImage(),
 					false, false);
 		}
-		ToastUtil.showSuccess(this, getString(R.string.scratch_conversion_started));
+		ToastUtil.showSuccess(this, R.string.scratch_conversion_started);
 	}
 
 	public boolean isSlideUpPanelEmpty() {
@@ -312,17 +313,13 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 	}
 
 	public void displaySpeechRecognizer() {
-		// Create an intent that can start the Speech Recognizer activity
 		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		// Start the activity, the intent will be populated with the speech text
 		startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_SPEECH);
 	}
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// This callback is invoked when the Speech Recognizer returns.
-		// This is where you process the intent and extract the speech text from the intent.
 		if (requestCode == Constants.INTENT_REQUEST_CODE_SPEECH && resultCode == RESULT_OK) {
 			List<String> results = data.getStringArrayListExtra(
 					RecognizerIntent.EXTRA_RESULTS);
@@ -352,7 +349,7 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				ToastUtil.showSuccess(activity, "Connection established!");
+				ToastUtil.showSuccess(activity, R.string.connection_established);
 			}
 		});
 		Preconditions.checkState(converterClient.isAuthenticated());
@@ -364,32 +361,18 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		Log.d(TAG, "Connection closed!");
 		final Activity activity = this;
 		final String exceptionMessage = ex.getMessage();
-		if (exceptionMessage != null) {
-			Log.e(TAG, exceptionMessage);
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					ToastUtil.showError(activity, "Connection closed!");
-					finish();
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (exceptionMessage != null) {
+					Log.e(TAG, exceptionMessage);
+					ToastUtil.showError(activity, R.string.connection_closed);
+				} else {
+					ToastUtil.showSuccess(activity, R.string.connection_closed);
 				}
-			});
-		} else {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					ToastUtil.showSuccess(activity, "Connection closed!");
-					finish();
-				}
-			});
-		}
-
-		/*
-		if (converterClient != null) {
-			Log.i(TAG, "Reconnecting...");
-			// automatically reconnect
-			converterClient.connectAndAuthenticate(this);
-		}
-		*/
+				finish();
+			}
+		});
 	}
 
 	@Override
@@ -399,7 +382,7 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				ToastUtil.showError(activity, "Connection failed, please retry later!");
+				ToastUtil.showError(activity, R.string.connection_failed);
 				finish();
 			}
 		});
@@ -412,7 +395,7 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				ToastUtil.showError(activity, "Authentication failed, please retry later!");
+				ToastUtil.showError(activity, R.string.authentication_failed);
 				finish();
 			}
 		});

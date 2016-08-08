@@ -217,8 +217,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 			}
 		});
-		//textView.setTextColor(Color.BLACK);
-		//textView.setHintTextColor(Color.GRAY);
 		searchTextView.setInputType(InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
 
 		audioButton.setOnClickListener(new View.OnClickListener() {
@@ -231,8 +229,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
 			public boolean onQueryTextSubmit(String query) {
-				Log.i(TAG, "SUBMIT");
-				Log.i(TAG, query);
+				Log.i(TAG, "Submitting query: " + query);
 				searchView.clearFocus();
 				return false;
 			}
@@ -327,7 +324,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 				scratchProjectList,
 				executorService);
 		searchResultsListView.setAdapter(scratchProjectAdapter);
-		//setListAdapter(scratchProjectAdapter);
 		initClickListener();
 	}
 
@@ -347,10 +343,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.context_menu_show_description:
-				showDescriptionDialog();
-				break;
-
 			case R.id.context_menu_convert:
 				Log.d(TAG, "Clicked convert item in context menu for scratch project '"
 						+ scratchProjectToEdit.getTitle() + "'");
@@ -409,11 +401,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		if (actionMode == null) {
 			actionMode = activity.startActionMode(convertModeCallBack);
 		}
-	}
-
-	// TODO: remove!!!
-	private void showDescriptionDialog() {
-		ToastUtil.showError(activity, "Not implemented yet!");
 	}
 
 	private void convertCheckedProjects() {
@@ -497,7 +484,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			public void run() {
 				fragment.progressDialog.hide();
 				if (result == null || result.getProjectList() == null) {
-					ToastUtil.showError(activity, "Unable to connect to server, please try later");
+					ToastUtil.showError(activity, R.string.search_failed);
 					return;
 				}
 				if (result.getQuery() != null) {

@@ -161,8 +161,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		convertButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				convertButton.setEnabled(false);
-				convertButton.setText(R.string.converting);
+				disableConvertButton();
 
 				Intent intent = new Intent();
 				intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) projectData);
@@ -252,6 +251,12 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		convertButton.setEnabled(true);
 	}
 
+	private void disableConvertButton() {
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+	}
+
+
 	//----------------------------------------------------------------------------------------------
 	// Scratch Project Details Task Delegate Methods
 	//----------------------------------------------------------------------------------------------
@@ -281,8 +286,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 
 		titleTextView.setText(projectData.getTitle());
 		ownerTextView.setText(getString(R.string.by) + " " + projectData.getOwner());
-		String temp = projectData.getInstructions().replace("\n\n", "\n");
-		final String instructionsText = (temp.length() > 0) ? temp : "--";
+		String instructionsText = projectData.getInstructions().replace("\n\n", "\n");
+		instructionsText = (instructionsText.length() > 0) ? instructionsText : "--";
 		Log.d(TAG, "Instructions: " + instructionsText);
 		final String notesAndCredits = projectData.getNotesAndCredits().replace("\n\n", "\n");
 
@@ -343,7 +348,11 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	// JobConsoleViewListener Events
 	//----------------------------------------------------------------------------------------------
 	@Override
-	public void onJobScheduled(Job job) {}
+	public void onJobScheduled(Job job) {
+		if (job.getJobID() == projectData.getId()) {
+			disableConvertButton();
+		}
+	}
 
 	@Override
 	public void onJobReady(Job job) {}
@@ -362,16 +371,22 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 
 	@Override
 	public void onJobFailed(Job job) {
-		enableConvertButton();
+		if (job.getJobID() == projectData.getId()) {
+			enableConvertButton();
+		}
 	}
 
 	@Override
 	public void onJobCanceled(Job job) {
-		enableConvertButton();
+		if (job.getJobID() == projectData.getId()) {
+			enableConvertButton();
+		}
 	}
 
 	@Override
 	public void onJobDownloadReady(Job job) {
-		enableConvertButton();
+		if (job.getJobID() == projectData.getId()) {
+			enableConvertButton();
+		}
 	}
 }
