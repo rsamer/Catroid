@@ -141,9 +141,6 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 
 						@Override
 						public void onReconvertProgram() {
-							if (Looper.getMainLooper().equals(Looper.myLooper())) {
-								throw new AssertionError("You should not run this on the UI thread!");
-							}
 							converterClient.convertJob(job, false, true);
 						}
 
@@ -166,13 +163,6 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 			}
 		});
 		searchProjectsListFragment.setMessageListener(messageListener);
-		final Handler handler = new Handler();
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				converterClient.connectAndAuthenticate(activity);
-			}
-		}, 500);
 
 		slidingLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
 		slidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
@@ -198,6 +188,14 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 
 		appendColoredBetaLabelToTitle(Color.RED);
 		hideSlideUpPanelBar();
+
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				converterClient.connectAndAuthenticate(activity);
+			}
+		}, 500);
 	}
 
 	private void downloadProgram(final String downloadURL, final Client.DownloadFinishedListener[] downloadCallbacks) {
