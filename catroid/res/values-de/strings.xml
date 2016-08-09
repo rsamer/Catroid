@@ -113,19 +113,48 @@
   <!-- Scratch Converter activity -->
   <string name="beta">beta</string>
   <string name="title_activity_scratch_converter">Konvertiere Scratch Programm</string>
-  <string name="error_scratch_project_data_not_available">Fehler: Die Details des gewünschten Scratchprojekts können
+  <string name="error_scratch_program_not_accessible_any_more">Hoppla! DiesesScratch Programm ist leider nicht mehr
+      verfügbar!</string>
+  <string name="error_request_timeout">Hoppla! Unser Server ist derzeit nicht erreichbar. Bitte probiere es etwas
+      später noch einmal!</string>
+  <string name="error_scratch_project_data_not_available">Hoppla! Weitere Daten dieses Scratch Programms können
     derzeit leider nicht abgerufen werden. Bitte probiere es etwas später noch einmal!</string>
-  <string name="scratch_conversion_started">Konvertierung gestartet...</string>
+  <string name="error_scratch_program_conversion_failed">Hoppla! Konvertierung des Scratch Programms
+      fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
+  <string name="connection_established">Verbindung zum Server hergestellt!</string>
+  <string name="search_failed">Suche fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
+  <string name="connection_closed">Verbindung zum Server getrennt!</string>
+  <string name="connection_failed">Verbindung zum Server fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
+  <string name="authentication_failed">Authentifizierung fehlgeschlagen. Bitte kontaktiere das Pocket Code Team!</string>
+  <string name="scratch_conversion_started">Konvertierung gestarted...</string>
   <string name="convert">Konvertieren</string>
+  <string name="converting">Konvertierung in Bearbeitung...</string>
+  <string name="status_scheduled">Konvertierung in Bearbeitung</string>
+  <string name="status_prepare">Bereite vor...</string>
+  <string name="status_started">Konvertierung läuft...</string>
+  <string name="status_conversion_finished">Konvertierung beendet...</string>
+  <string name="status_in_progress_x_jobs">In Bearbeitung: %1$d Programme</string>
+  <string name="status_completed_x_jobs">Abgeschlossen: %1$d Programme</string>
+  <string name="status_job_failed">Konvertierung fehlgeschlagen!</string>
+  <string name="status_job_canceled">Konvertierung abgebrochen!</string>
+  <string name="status_downloading">Download läuft...</string>
+  <string name="status_download_finished">Download abgeschlossen!</string>
+  <string name="status_download_canceled">Download abgebrochen!</string>
   <string name="show_description">Beschreibung anzeigen</string>
+  <string name="list_view_section_title_in_progress">In Bearbeitung</string>
+  <string name="list_view_section_title_converted_programs">Fertig konvertierte Programme</string>
+  <string name="status">Status</string>
   <string name="title">Titel</string>
   <string name="by">von</string>
   <string name="by_author">von User</string>
+  <string name="warning_program_visibility">ACHTUNG:\nDieses Programm ist privat. Konvertierung ist zwar möglich,
+    könnte aber möglicherweise fehlschlagen!</string>
   <string name="instructions">Anleitung</string>
   <string name="notes_and_credits">Anmerkungen und Danksagungen</string>
   <string name="shared">Veröffentlicht</string>
   <string name="modified">Zuletzt verändert</string>
   <string name="remixes">Remixe</string>
+
   <!-- New Object Dialog -->
   <string name="dialog_new_object_pocketpaint">Bild zeichnen</string>
   <string name="dialog_new_object_gallery">Bild auswählen</string>
