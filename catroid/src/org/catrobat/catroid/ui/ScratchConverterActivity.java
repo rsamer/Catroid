@@ -27,12 +27,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.text.Spannable;
@@ -89,6 +85,7 @@ public class ScratchConverterActivity extends BaseActivity implements Client.Con
 		converterSlidingUpPanelFragment = (ScratchConverterSlidingUpPanelFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_converter_sliding_up_panel);
 		converterSlidingUpPanelFragment.setExecutorService(sharedExecutorService);
+
 
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,

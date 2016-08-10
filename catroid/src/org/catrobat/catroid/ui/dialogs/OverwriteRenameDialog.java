@@ -102,6 +102,11 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						ToastUtil.showError(context, R.string.notification_download_project_cancel);
+						if (callbacks != null) {
+							for (DownloadFinishedListener callback : callbacks) {
+								callback.onUserCanceledDownload(url);
+							}
+						}
 					}
 				}).create();
 

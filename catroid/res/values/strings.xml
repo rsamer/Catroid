@@ -131,7 +131,7 @@
     <string name="error_scratch_program_data_not_available">Whoops! Information not available, please try later</string>
     <string name="error_scratch_program_conversion_failed">Whoops! Failed to convert Scratch program, please try again
         later</string>
-    <string name="connection_established">Connection established!</string>
+    <string name="connection_established">Connection to server established!</string>
     <string name="search_failed">Search failed, please retry later!</string>
     <string name="connection_closed">Connection to server closed!</string>
     <string name="connection_failed">Connection to server failed, please retry later!</string>
