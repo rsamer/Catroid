@@ -37,14 +37,12 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ActionMode;
-import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -275,7 +273,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		registerForContextMenu(searchResultsListView);
 		if (savedInstanceState != null) {
 			scratchProjectToEdit = (ScratchProjectPreviewData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
 		}
@@ -329,29 +326,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	private void initClickListener() {
 		scratchProjectAdapter.setOnScratchProjectEditListener(this);
-	}
-
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, view, menuInfo);
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-		scratchProjectToEdit = scratchProjectAdapter.getItem(info.position);
-		scratchProjectAdapter.addCheckedProject(info.position);
-		activity.getMenuInflater().inflate(R.menu.context_menu_scratch_projects, menu);
-	}
-
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.context_menu_convert:
-				Log.d(TAG, "Clicked convert item in context menu for scratch project '"
-						+ scratchProjectToEdit.getTitle() + "'");
-				final ArrayList<ScratchProjectPreviewData> projectList = new ArrayList<>();
-				projectList.add(scratchProjectToEdit);
-				activity.convertProjects(projectList);
-				break;
-		}
-		return super.onContextItemSelected(item);
 	}
 
 	@Override
