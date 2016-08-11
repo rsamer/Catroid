@@ -25,6 +25,8 @@ package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
 import android.support.annotation.Nullable;
 
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys;
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys.JSONDataKeys;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.json.JSONArray;
@@ -39,10 +41,9 @@ import java.util.Map;
 abstract public class BaseMessage extends Message {
 
 	public enum Type {
-		// NOTE: do not change values!
 		ERROR(0),
-		JOBS_INFO(9),
-		CLIENT_ID(10);
+		JOBS_INFO(1),
+		CLIENT_ID(2);
 
 		private int typeID;
 
@@ -63,31 +64,31 @@ abstract public class BaseMessage extends Message {
 		}
 	}
 
-	private Type type;
-
-	public BaseMessage(Type type) {
-		this.type = type;
-	}
-
 	@Nullable
 	public static <T extends BaseMessage> T fromJson(final JSONObject jsonMessage) throws JSONException {
-		final JSONObject jsonData = jsonMessage.getJSONObject("data");
-		switch (Type.valueOf(jsonMessage.getInt("type"))) {
+		final JSONObject jsonData = jsonMessage.getJSONObject(JSONKeys.DATA.toString());
+
+		switch (Type.valueOf(jsonMessage.getInt(JSONKeys.TYPE.toString()))) {
 			case ERROR:
-				return (T)new ErrorMessage(jsonData.getString(ArgumentType.MSG.toString()));
+				return (T) new ErrorMessage(jsonData.getString(JSONDataKeys.MSG.toString()));
+
 			case CLIENT_ID:
-				return (T)new ClientIDMessage(jsonData.getLong(ArgumentType.CLIENT_ID.toString()));
+				return (T) new ClientIDMessage(jsonData.getLong(JSONDataKeys.CLIENT_ID.toString()));
+
 			case JOBS_INFO:
-				final JSONArray jobsInfo = jsonData.getJSONArray(ArgumentType.JOBS_INFO.toString());
+				final double catrobatLangVersion = jsonData.getDouble(JSONDataKeys.CATROBAT_LANGUAGE_VERSION.toString());
+				final JSONArray jobsInfo = jsonData.getJSONArray(JSONDataKeys.JOBS_INFO.toString());
 				final List<Job> jobList = new ArrayList<>();
 				if (jobsInfo != null) {
 					for (int i = 0; i < jobsInfo.length(); ++i) {
 						jobList.add(Job.fromJson(jobsInfo.getJSONObject(i)));
 					}
 				}
-				return (T)new JobsInfoMessage(jobList.toArray(new Job[jobList.size()]));
+				return (T) new InfoMessage((float)catrobatLangVersion, jobList.toArray(new Job[jobList.size()]));
+
+			default:
+				return null;
 		}
-		return null;
 	}
 
 }

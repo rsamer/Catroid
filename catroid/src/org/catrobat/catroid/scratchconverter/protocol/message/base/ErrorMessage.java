@@ -24,8 +24,16 @@
 package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
 public class ErrorMessage extends BaseMessage {
+
+	private final String message;
+
 	public ErrorMessage(final String message) {
-		super(Type.ERROR);
-		addArgument(ArgumentType.MSG, message);
+		super();
+		this.message = message;
 	}
+
+	public String getMessage() {
+		return message;
+	}
+
 }

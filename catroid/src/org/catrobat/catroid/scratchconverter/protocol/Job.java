@@ -25,6 +25,7 @@ package org.catrobat.catroid.scratchconverter.protocol;
 
 import android.net.Uri;
 
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys.JSONJobDataKeys;
 import com.google.android.gms.common.images.WebImage;
 
 import org.json.JSONException;
@@ -34,25 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Job {
-	public enum ArgumentType {
-		STATUS("status"),
-		JOB_ID("jobID"),
-		TITLE("title"),
-		IMAGE_URL("imageURL"),
-		IMAGE_WIDTH("imageWidth"),
-		IMAGE_HEIGHT("imageHeight"),
-		PROGRESS("progress");
-		private final String rawValue;
-
-		ArgumentType(final String rawValue) {
-			this.rawValue = rawValue;
-		}
-
-		@Override
-		public String toString() {
-			return rawValue;
-		}
-	}
 
 	public enum State {
 		INITIALIZED(-1),
@@ -85,6 +67,8 @@ public class Job {
 	private String title;
 	private WebImage image;
 	private double progress;
+	private boolean alreadyDownloaded;
+	private String downloadURL;
 
 	public Job(long jobID, String title, WebImage image) {
 		this.state = State.INITIALIZED;
@@ -92,19 +76,25 @@ public class Job {
 		this.title = title;
 		this.image = image;
 		this.progress = 0.0;
+		this.alreadyDownloaded = false;
+		this.downloadURL = null;
 	}
 
 	public static Job fromJson(JSONObject data) throws JSONException {
-		final State state = State.valueOf(data.getInt(ArgumentType.STATUS.toString()));
-		final long jobID = data.getLong(ArgumentType.JOB_ID.toString());
-		final String title = data.getString(ArgumentType.TITLE.toString());
-		final String imageURL = data.getString(ArgumentType.IMAGE_URL.toString());
-		final int imageWidth = data.getInt(ArgumentType.IMAGE_WIDTH.toString());
-		final int imageHeight = data.getInt(ArgumentType.IMAGE_HEIGHT.toString());
-		final double progress = data.getDouble(ArgumentType.PROGRESS.toString());
+		final State state = State.valueOf(data.getInt(JSONJobDataKeys.STATUS.toString()));
+		final long jobID = data.getLong(JSONJobDataKeys.JOB_ID.toString());
+		final String title = data.getString(JSONJobDataKeys.TITLE.toString());
+		final String imageURL = data.getString(JSONJobDataKeys.IMAGE_URL.toString());
+		final int imageWidth = data.getInt(JSONJobDataKeys.IMAGE_WIDTH.toString());
+		final int imageHeight = data.getInt(JSONJobDataKeys.IMAGE_HEIGHT.toString());
+		final double progress = data.getDouble(JSONJobDataKeys.PROGRESS.toString());
+		final boolean alreadyDownloaded = data.getBoolean(JSONJobDataKeys.ALREADY_DOWNLOADED.toString());
+		final String downloadURL = data.getString(JSONJobDataKeys.DOWNLOAD_URL.toString());
 		final Job job = new Job(jobID, title, new WebImage(Uri.parse(imageURL), imageWidth, imageHeight));
 		job.state = state;
 		job.progress = progress;
+		job.alreadyDownloaded = alreadyDownloaded;
+		job.downloadURL = downloadURL;
 		return job;
 	}
 
@@ -138,6 +128,14 @@ public class Job {
 
 	public void setImage(WebImage image) {
 		this.image = image;
+	}
+
+	public boolean isAlreadyDownloaded() {
+		return alreadyDownloaded;
+	}
+
+	public String getDownloadURL() {
+		return downloadURL;
 	}
 
 }

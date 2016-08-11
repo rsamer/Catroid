@@ -23,23 +23,20 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.koushikdutta.async.http.WebSocket;
 
+import org.catrobat.catroid.scratchconverter.protocol.message.Message.CategoryType;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobMessage;
-import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys.JSONDataKeys;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 final public class WebSocketMessageListener implements MessageListener, WebSocket.StringCallback {
 
@@ -47,16 +44,10 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 
 	private BaseMessageHandler baseMessageHandler;
 	private Map<Long, JobHandler> jobHandlers;
-	private Map<Long, Set<JobConsoleViewListener>> jobConsoleViewListeners;
-	private Set<JobConsoleViewListener> globalJobConsoleViewListeners;
-	private Set<BaseInfoViewListener> baseInfoViewListeners;
 
 	public WebSocketMessageListener() {
 		this.baseMessageHandler = null;
 		this.jobHandlers = Collections.synchronizedMap(new HashMap<Long, JobHandler>());
-		this.jobConsoleViewListeners = Collections.synchronizedMap(new HashMap<Long, Set<JobConsoleViewListener>>());
-		this.globalJobConsoleViewListeners = Collections.synchronizedSet(new HashSet<JobConsoleViewListener>());
-		this.baseInfoViewListeners = Collections.synchronizedSet(new HashSet<BaseInfoViewListener>());
 	}
 
 	public JobHandler getJobHandler(final long jobID) {
@@ -72,32 +63,12 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 	}
 
 	@Override
-	public void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener) {
-		baseInfoViewListeners.add(baseInfoViewListener);
-	}
-
-	@Override
-	public void addGlobalJobConsoleViewListener(JobConsoleViewListener jobConsoleViewListener) {
-		globalJobConsoleViewListeners.add(jobConsoleViewListener);
-	}
-
-	@Override
-	public void addJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener) {
-		Set<JobConsoleViewListener> listeners = jobConsoleViewListeners.get(jobID);
-		if (listeners == null) {
-			listeners = new HashSet<>();
-		}
-		listeners.add(jobConsoleViewListener);
-		jobConsoleViewListeners.put(jobID, listeners);
-	}
-
-	@Override
-	public boolean removeJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener) {
-		Set<JobConsoleViewListener> listeners = jobConsoleViewListeners.get(jobID);
-		if (listeners == null) {
+	public boolean isJobInProgress(long jobID) {
+		final JobHandler jobHandler = jobHandlers.get(jobID);
+		if (jobHandler == null) {
 			return false;
 		}
-		return listeners.remove(jobConsoleViewListener);
+		return jobHandler.getCurrentState().isInProgress();
 	}
 
 	@Override
@@ -106,28 +77,7 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		if (jobHandler == null) {
 			return;
 		}
-
 		jobHandler.onUserCanceledConversion();
-
-		for (final JobConsoleViewListener viewListener : getJobConsoleViewListeners(jobID)) {
-			viewListener.onJobCanceled(jobHandler.getJob());
-		}
-	}
-
-	@NonNull
-	public BaseInfoViewListener[] getBaseInfoViewListeners() {
-		return baseInfoViewListeners.toArray(new BaseInfoViewListener[baseInfoViewListeners.size()]);
-	}
-
-	@NonNull
-	public JobConsoleViewListener[] getJobConsoleViewListeners(long jobID) {
-		final Set<JobConsoleViewListener> mergedListenersList = new HashSet<>();
-		final Set<JobConsoleViewListener> listenersList = jobConsoleViewListeners.get(jobID);
-		if (listenersList != null) {
-			mergedListenersList.addAll(listenersList);
-		}
-		mergedListenersList.addAll(globalJobConsoleViewListeners);
-		return mergedListenersList.toArray(new JobConsoleViewListener[mergedListenersList.size()]);
 	}
 
 	@Override
@@ -141,23 +91,29 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 			if (jsonMessage.length() == 0) {
 				return;
 			}
-			BaseMessage.Type baseMessageType = BaseMessage.Type.valueOf(jsonMessage.getInt("type"));
 
-			if (baseMessageType != null) {
-				// case: base message
-				baseMessageHandler.onBaseMessage(BaseMessage.fromJson(jsonMessage), getBaseInfoViewListeners());
+			final int categoryID = jsonMessage.getInt(JSONKeys.CATEGORY.toString());
+			final CategoryType categoryType = CategoryType.valueOf(categoryID);
 
-			} else {
-				// case: job message
-				final JSONObject jsonData = jsonMessage.getJSONObject("data");
-				final long jobID = jsonData.getLong(JobMessage.ArgumentType.JOB_ID.toString());
-				JobHandler jobHandler = jobHandlers.get(jobID);
-				if (jobHandler != null) {
-					jobHandler.onJobMessage(JobMessage.fromJson(jsonMessage), getJobConsoleViewListeners(jobID));
-				} else {
-					Log.w(TAG, "No JobHandler registered for job with ID: " + jobID);
-				}
+			switch (categoryType) {
+				case BASE:
+					baseMessageHandler.onBaseMessage(BaseMessage.fromJson(jsonMessage));
+					break;
 
+				case JOB:
+					final JSONObject jsonData = jsonMessage.getJSONObject("data");
+					final long jobID = jsonData.getLong(JSONDataKeys.JOB_ID.toString());
+					JobHandler jobHandler = jobHandlers.get(jobID);
+					if (jobHandler != null) {
+						jobHandler.onJobMessage(JobMessage.fromJson(jsonMessage));
+					} else {
+						Log.w(TAG, "No JobHandler registered for job with ID: " + jobID);
+					}
+					break;
+
+				default:
+					Log.w(TAG, "Message of unsupported category-type " + categoryType + " received");
+					return;
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();

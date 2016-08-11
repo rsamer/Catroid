@@ -24,8 +24,16 @@
 package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
 public class ClientIDMessage extends BaseMessage {
+
+	private final long clientID;
+
 	public ClientIDMessage(final long clientID) {
-		super(Type.CLIENT_ID);
-		addArgument(ArgumentType.CLIENT_ID, clientID);
+		super();
+		this.clientID = clientID;
 	}
+
+	public long getClientID() {
+		return clientID;
+	}
+
 }

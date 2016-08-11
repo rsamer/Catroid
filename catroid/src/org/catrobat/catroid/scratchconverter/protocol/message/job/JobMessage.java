@@ -26,6 +26,8 @@ package org.catrobat.catroid.scratchconverter.protocol.message.job;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys;
+import org.catrobat.catroid.scratchconverter.protocol.JSONKeys.JSONDataKeys;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,16 +47,17 @@ abstract public class JobMessage extends Message {
 
 	private static final String TAG = JobMessage.class.getSimpleName();
 
+	private final long jobID;
+
 	public enum Type {
-		// NOTE: do not change values! -> starts with 1!
-		JOB_FAILED(1),
-		JOB_RUNNING(2),
-		JOB_ALREADY_RUNNING(3),
-		JOB_READY(4),
-		JOB_OUTPUT(5),
-		JOB_PROGRESS(6),
-		JOB_FINISHED(7),
-		JOB_DOWNLOAD(8);
+		JOB_FAILED(0),
+		JOB_RUNNING(1),
+		JOB_ALREADY_RUNNING(2),
+		JOB_READY(3),
+		JOB_OUTPUT(4),
+		JOB_PROGRESS(5),
+		JOB_FINISHED(6),
+		JOB_DOWNLOAD(7);
 
 		private int typeID;
 
@@ -75,43 +78,50 @@ abstract public class JobMessage extends Message {
 		}
 	}
 
-	private Type type;
-
-	public JobMessage(Type type) {
-		this.type = type;
+	public JobMessage(final long jobID) {
+		this.jobID = jobID;
 	}
 
-	public Type getType() {
-		return type;
+	public long getJobID() {
+		return jobID;
 	}
 
 	@Nullable
 	public static <T extends JobMessage> T fromJson(JSONObject jsonMessage) throws JSONException {
-		final JSONObject jsonData = jsonMessage.getJSONObject("data");
-		switch (Type.valueOf(jsonMessage.getInt("type"))) {
+		final JSONObject jsonData = jsonMessage.getJSONObject(JSONKeys.DATA.toString());
+		final long jobID = jsonData.getLong(JSONDataKeys.JOB_ID.toString());
+		switch (Type.valueOf(jsonMessage.getInt(JSONKeys.TYPE.toString()))) {
 			case JOB_FAILED:
-				return (T)new JobFailedMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
+				return (T)new JobFailedMessage(jobID, jsonData.getString(JSONDataKeys.MSG.toString()));
+
 			case JOB_RUNNING:
-				return (T)new JobRunningMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
+				return (T)new JobRunningMessage(jobID);
+
 			case JOB_ALREADY_RUNNING:
-				return (T)new JobAlreadyRunningMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
+				return (T)new JobAlreadyRunningMessage(jobID);
+
 			case JOB_READY:
-				return (T)new JobReadyMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
+				return (T)new JobReadyMessage(jobID);
+
 			case JOB_OUTPUT:
-				final JSONArray jsonLines = jsonData.getJSONArray(ArgumentType.LINES.toString());
+				final JSONArray jsonLines = jsonData.getJSONArray(JSONDataKeys.LINES.toString());
 				final List<String> lineList = new ArrayList<>();
 				for (int i = 0; i < jsonLines.length(); ++i) {
 					lineList.add(jsonLines.getString(i));
 				}
 				final String[] lines = lineList.toArray(new String[lineList.size()]);
-				return (T)new JobOutputMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()), lines);
+				return (T)new JobOutputMessage(jobID, lines);
+
 			case JOB_PROGRESS:
-				return (T)new JobProgressMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()),
-						jsonData.getDouble(ArgumentType.PROGRESS.toString()));
+				final double progress = jsonData.getDouble(JSONDataKeys.PROGRESS.toString());
+				return (T)new JobProgressMessage(jobID, progress);
+
 			case JOB_FINISHED:
-				return (T)new JobFinishedMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()));
+				return (T)new JobFinishedMessage(jobID);
+
 			case JOB_DOWNLOAD:
-				final String dateUTC = jsonData.getString(ArgumentType.CACHED_UTC_DATE.toString());
+				final String downloadURL = jsonData.getString(JSONDataKeys.URL.toString());
+				final String dateUTC = jsonData.getString(JSONDataKeys.CACHED_UTC_DATE.toString());
 				final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 				Date cachedDate = null;
@@ -120,8 +130,8 @@ abstract public class JobMessage extends Message {
 				} catch (ParseException e) {
 					Log.e(TAG, e.getLocalizedMessage());
 				}
-				return (T)new JobDownloadMessage(jsonData.getLong(ArgumentType.JOB_ID.toString()),
-						jsonData.getString(ArgumentType.URL.toString()), cachedDate);
+				return (T)new JobDownloadMessage(jobID, downloadURL, cachedDate);
+
 			default:
 				return null;
 		}

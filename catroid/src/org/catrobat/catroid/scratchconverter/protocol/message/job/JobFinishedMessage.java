@@ -24,8 +24,7 @@
 package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
 public class JobFinishedMessage extends JobMessage {
-	public JobFinishedMessage(final long jobID) {
-		super(Type.JOB_FINISHED);
-		addArgument(ArgumentType.JOB_ID, jobID);
+	public JobFinishedMessage(long jobID) {
+		super(jobID);
 	}
 }

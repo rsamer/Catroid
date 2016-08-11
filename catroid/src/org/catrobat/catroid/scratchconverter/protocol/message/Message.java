@@ -27,39 +27,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract public class Message {
-	public enum ArgumentType {
-		MSG("msg"),
-		JOB_ID("jobID"),
-		LINES("lines"),
-		PROGRESS("progress"),
-		URL("url"),
-		CACHED_UTC_DATE("cachedUTCDate"),
-		JOBS_INFO("jobsInfo"),
-		CLIENT_ID("clientID");
-		private final String rawValue;
 
-		ArgumentType(final String rawValue) {
-			this.rawValue = rawValue;
+	public enum CategoryType {
+		BASE(0),
+		JOB(1);
+
+		private int categoryID;
+		private static Map<Integer, CategoryType> map = new HashMap<>();
+
+		static {
+			for (CategoryType legEnum : CategoryType.values()) {
+				map.put(legEnum.categoryID, legEnum);
+			}
 		}
 
-		@Override
-		public String toString() {
-			return rawValue;
+		CategoryType(final int categoryID) {
+			this.categoryID = categoryID;
 		}
-	}
 
-	private final Map<ArgumentType, Object> payload;
-
-	public Message() {
-		this.payload = new HashMap<>();
-	}
-
-	final protected void addArgument(ArgumentType type, Object value) {
-		payload.put(type, value);
-	}
-
-	final public Object getArgument(ArgumentType type) {
-		return payload.get(type);
+		public static CategoryType valueOf(int categoryID) {
+			return map.get(categoryID);
+		}
 	}
 
 }

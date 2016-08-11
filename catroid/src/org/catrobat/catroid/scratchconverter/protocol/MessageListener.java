@@ -23,15 +23,7 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
-import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
-
 public interface MessageListener {
-
-	void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener);
-	void addGlobalJobConsoleViewListener(JobConsoleViewListener jobConsoleViewListener);
-	void addJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener);
-	boolean removeJobConsoleViewListener(long jobID, JobConsoleViewListener jobConsoleViewListener);
 	void onUserCanceledConversion(long jobID);
-
+	boolean isJobInProgress(long jobID);
 }

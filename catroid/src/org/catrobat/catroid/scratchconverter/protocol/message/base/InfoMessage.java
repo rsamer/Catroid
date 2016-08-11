@@ -25,9 +25,23 @@ package org.catrobat.catroid.scratchconverter.protocol.message.base;
 
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 
-public class JobsInfoMessage extends BaseMessage {
-	public JobsInfoMessage(final Job[] jobList) {
-		super(Type.JOBS_INFO);
-		addArgument(ArgumentType.JOBS_INFO, jobList);
+public class InfoMessage extends BaseMessage {
+
+	private final Job[] jobList;
+	private final float catrobatLanguageVersion;
+
+	public InfoMessage(final float catrobatLanguageVersion, final Job[] jobList) {
+		super();
+		this.catrobatLanguageVersion = catrobatLanguageVersion;
+		this.jobList = jobList;
 	}
+
+	public Job[] getJobList() {
+		return jobList;
+	}
+
+	public float getCatrobatLanguageVersion() {
+		return catrobatLanguageVersion;
+	}
+
 }

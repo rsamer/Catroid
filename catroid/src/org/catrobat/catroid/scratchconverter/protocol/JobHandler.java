@@ -23,8 +23,6 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
-import android.content.Context;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -32,7 +30,6 @@ import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.ClientException;
-import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobAlreadyRunningMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobDownloadMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobFailedMessage;
@@ -42,14 +39,12 @@ import org.catrobat.catroid.scratchconverter.protocol.message.job.JobOutputMessa
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobProgressMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobReadyMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobRunningMessage;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
 
-import java.util.Date;
-
-public class JobHandler implements Client.DownloadFinishedListener {
+public class JobHandler implements Client.DownloadFinishedCallback {
 
 	private static final String TAG = JobHandler.class.getSimpleName();
 
+	// TODO: combine JobHandler and Job states !!!
 	public enum State {
 		UNSCHEDULED, SCHEDULED, READY, RUNNING, CONVERSION_FINISHED, DOWNLOAD_READY, FAILED;
 
@@ -58,34 +53,26 @@ public class JobHandler implements Client.DownloadFinishedListener {
 		}
 	}
 
-	private final Handler handler;
 	private Job job;
 	private State currentState;
 	private Client.ConvertCallback callback;
 
-	public JobHandler(final Context context, final Job job, Client.ConvertCallback callback) {
+	public JobHandler(final Job job, Client.ConvertCallback callback) {
 		Preconditions.checkArgument(job != null);
-		this.handler = new Handler(context.getMainLooper());
 		this.job = job;
 		this.currentState = State.UNSCHEDULED;
 		this.callback = callback;
 	}
 
 	public void setState(State state) {
+		Log.d(TAG, "Setting state of job to " + state + " (jobID: " + job.getJobID() + ")");
 		this.currentState = state;
 	}
 
-	public void onJobScheduled(@NonNull final JobConsoleViewListener[] viewListeners) {
+	public void onJobScheduled() {
 		Log.d(TAG, "Setting job as scheduled (jobID: " + job.getJobID() + ")");
 		this.currentState = State.SCHEDULED;
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobScheduled(job);
-				}
-			}
-		});
+		callback.onJobScheduled(job);
 	}
 
 	@Override
@@ -121,196 +108,132 @@ public class JobHandler implements Client.DownloadFinishedListener {
 		this.callback = callback;
 	}
 
-	public void onJobMessage(final JobMessage jobMessage, @NonNull final JobConsoleViewListener[] viewListeners) {
-		final long jobID = (long)jobMessage.getArgument(Message.ArgumentType.JOB_ID);
-		Preconditions.checkArgument(jobID == job.getJobID());
+	public void onJobMessage(final JobMessage jobMessage) {
+		Preconditions.checkArgument(job.getJobID() == jobMessage.getJobID());
 		Preconditions.checkState(currentState != State.UNSCHEDULED);
 
 		switch (currentState) {
-
 			case SCHEDULED:
 				if (jobMessage instanceof JobReadyMessage) {
-					handleJobReadyMessage(viewListeners);
+					handleJobReadyMessage((JobReadyMessage) jobMessage);
 					return;
 				} else if (jobMessage instanceof JobAlreadyRunningMessage) {
-					handleJobAlreadyRunningMessage(viewListeners);
+					handleJobAlreadyRunningMessage((JobAlreadyRunningMessage) jobMessage);
 					return;
 				} else if (jobMessage instanceof JobDownloadMessage) {
-					final String downloadURL = (String)jobMessage.getArgument(Message.ArgumentType.URL);
-					final Date cachedUTCDate = (Date)jobMessage.getArgument(Message.ArgumentType.CACHED_UTC_DATE);
-					handleJobDownloadMessage(downloadURL, viewListeners, cachedUTCDate);
+					handleJobDownloadMessage((JobDownloadMessage)jobMessage);
+					return;
+				} else if (jobMessage instanceof JobFailedMessage) {
+					handleJobFailedMessage((JobFailedMessage) jobMessage);
 					return;
 				}
 				break;
 
 			case READY:
 				if (jobMessage instanceof JobRunningMessage) {
-					handleJobRunningMessage(viewListeners);
+					handleJobRunningMessage((JobRunningMessage) jobMessage);
 					return;
 				}
 				break;
 
 			case RUNNING:
 				if (jobMessage instanceof JobProgressMessage) {
-					final double progress = (double)jobMessage.getArgument(Message.ArgumentType.PROGRESS);
-					handleJobProgressMessage(progress, viewListeners);
+					handleJobProgressMessage((JobProgressMessage) jobMessage);
 					return;
 				} else if (jobMessage instanceof JobOutputMessage) {
-					final String[] lines = (String[])jobMessage.getArgument(Message.ArgumentType.LINES);
-					handleJobOutputMessage(lines, viewListeners);
+					handleJobOutputMessage((JobOutputMessage) jobMessage);
 					return;
 				} else if (jobMessage instanceof JobFinishedMessage) {
-					handleJobFinishedMessage(viewListeners);
+					handleJobFinishedMessage((JobFinishedMessage) jobMessage);
 					return;
 				} else if (jobMessage instanceof JobFailedMessage) {
-					handleJobFailedMessage(viewListeners);
+					handleJobFailedMessage((JobFailedMessage) jobMessage);
 					return;
 				}
 				break;
 
 			case CONVERSION_FINISHED:
 				if (jobMessage instanceof JobDownloadMessage) {
-					final String downloadURL = (String)jobMessage.getArgument(Message.ArgumentType.URL);
-					final Date cachedUTCDate = (Date)jobMessage.getArgument(Message.ArgumentType.CACHED_UTC_DATE);
-					handleJobDownloadMessage(downloadURL, viewListeners, cachedUTCDate);
+					handleJobDownloadMessage((JobDownloadMessage) jobMessage);
 					return;
 				}
 				break;
 
-			default:
-				break;
 		}
 
-		Log.e(TAG, "Ignoring message of incompatible type '" + jobMessage.getType()
-				+ "' for current state '" + currentState + "'");
+		Log.w(TAG, "Unable to handle message of type in current state " + currentState);
 	}
 
-	private void handleJobReadyMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobReadyMessage(@NonNull final JobReadyMessage jobReadyMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobReadyMessage.getJobID());
 		Preconditions.checkState(currentState == State.SCHEDULED);
 
 		job.setState(Job.State.READY);
 		currentState = State.READY;
 		callback.onConversionReady(job);
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobReady(job);
-				}
-			}
-		});
 	}
 
-	private void handleJobAlreadyRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobAlreadyRunningMessage(@NonNull final JobAlreadyRunningMessage jobAlreadyRunningMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobAlreadyRunningMessage.getJobID());
 		Preconditions.checkState(currentState == State.SCHEDULED);
+
 		job.setState(Job.State.READY);
 		currentState = State.READY;
-		handleJobRunningMessage(viewListeners);
+		handleJobRunningMessage(new JobRunningMessage(jobAlreadyRunningMessage.getJobID()));
 	}
 
-	private void handleJobRunningMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobRunningMessage(@NonNull final JobRunningMessage jobRunningMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobRunningMessage.getJobID());
 		Preconditions.checkState(currentState == State.READY);
 
 		job.setState(Job.State.RUNNING);
 		currentState = State.RUNNING;
 		callback.onConversionStart(job);
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobStarted(job);
-				}
-			}
-		});
 	}
 
-	private void handleJobProgressMessage(final double progress, @NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobProgressMessage(@NonNull final JobProgressMessage jobProgressMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobProgressMessage.getJobID());
 		Preconditions.checkState(currentState == State.RUNNING);
 
-		job.setProgress(progress);
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobProgress(job, progress);
-				}
-			}
-		});
+		job.setProgress(jobProgressMessage.getProgress());
+		callback.onJobProgress(job, jobProgressMessage.getProgress());
 	}
 
-	private void handleJobOutputMessage(@NonNull final String[] lines, @NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobOutputMessage(@NonNull final JobOutputMessage jobOutputMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobOutputMessage.getJobID());
 		Preconditions.checkState(currentState == State.RUNNING);
 
+		final String[] lines = jobOutputMessage.getLines();
 		for (String line : lines) {
 			Log.d(TAG, line);
 		}
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobOutput(job, lines);
-				}
-			}
-		});
+		callback.onJobOutput(job, lines);
 	}
 
-	private void handleJobFinishedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
+	private void handleJobFinishedMessage(@NonNull final JobFinishedMessage jobFinishedMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobFinishedMessage.getJobID());
 		Preconditions.checkState(currentState == State.RUNNING);
 
 		job.setState(Job.State.FINISHED);
 		currentState = State.CONVERSION_FINISHED;
 		callback.onConversionFinished(job);
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobFinished(job);
-				}
-			}
-		});
 	}
 
-	private void handleJobFailedMessage(@NonNull final JobConsoleViewListener[] viewListeners) {
-		Preconditions.checkState(currentState == State.RUNNING);
+	private void handleJobFailedMessage(@NonNull final JobFailedMessage jobFailedMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobFailedMessage.getJobID());
+		Preconditions.checkState(currentState == State.SCHEDULED || currentState == State.RUNNING);
 
 		job.setState(Job.State.FAILED);
 		currentState = State.FAILED;
-		callback.onConversionFailure(job, new ClientException("Job failed"));
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobFailed(job);
-				}
-			}
-		});
+		callback.onConversionFailure(job, new ClientException("Job failed - Reason: " + jobFailedMessage.getMessage()));
 	}
 
-	private void handleJobDownloadMessage(@NonNull final String downloadURL,
-			@NonNull final JobConsoleViewListener[] viewListeners, @NonNull final Date cachedUTCDate) {
+	private void handleJobDownloadMessage(@NonNull final JobDownloadMessage jobDownloadMessage) {
+		Preconditions.checkArgument(getJob().getJobID() == jobDownloadMessage.getJobID());
 		Preconditions.checkState(currentState == State.SCHEDULED || currentState == State.CONVERSION_FINISHED);
 
 		currentState = State.DOWNLOAD_READY;
-		callback.onDownloadReady(job, this, downloadURL, cachedUTCDate);
-
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobConsoleViewListener viewListener : viewListeners) {
-					viewListener.onJobDownloadReady(job);
-				}
-			}
-		});
-	}
-
-	private void runOnUiThread(Runnable r) {
-		handler.post(r);
+		callback.onDownloadReady(job, this, jobDownloadMessage.getDownloadURL(), jobDownloadMessage.getCachedUTCDate());
 	}
 
 }

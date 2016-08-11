@@ -21,24 +21,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.scratchconverter.protocol.command;
+package org.catrobat.catroid.scratchconverter.protocol;
 
-import org.json.JSONObject;
+public enum JSONKeys {
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+	// main JSON-keys for messages received by server
+	CATEGORY("category"),
+	DATA("data"),
+	TYPE("type");
 
-abstract public class Command {
+	private final String rawValue;
 
-	public enum Type {
-		SET_CLIENT_ID("set_client_ID"),
-		RETRIEVE_INFO("retrieve_info"),
-		SCHEDULE_JOB("schedule_job");
+	JSONKeys(final String rawValue) {
+		this.rawValue = rawValue;
+	}
+
+	@Override
+	public String toString() {
+		return rawValue;
+	}
+
+	// JSON-keys of arguments contained in data
+	public enum JSONDataKeys {
+		MSG("msg"),
+		JOB_ID("jobID"),
+		LINES("lines"),
+		PROGRESS("progress"),
+		URL("url"),
+		CACHED_UTC_DATE("cachedUTCDate"),
+		JOBS_INFO("jobsInfo"),
+		CATROBAT_LANGUAGE_VERSION("catLangVers"),
+		CLIENT_ID("clientID");
 
 		private final String rawValue;
 
-		Type(final String rawValue) {
+		JSONDataKeys(final String rawValue) {
 			this.rawValue = rawValue;
 		}
 
@@ -48,11 +65,20 @@ abstract public class Command {
 		}
 	}
 
-	public enum ArgumentType {
-		CLIENT_ID("clientID"), JOB_ID("jobID"), FORCE("force"), VERBOSE("verbose");
+	// JSON-keys of job-arguments in InfoMessage
+	public enum JSONJobDataKeys {
+		STATUS("status"),
+		JOB_ID("jobID"),
+		TITLE("title"),
+		IMAGE_URL("imageURL"),
+		IMAGE_WIDTH("imageWidth"),
+		IMAGE_HEIGHT("imageHeight"),
+		PROGRESS("progress"),
+		ALREADY_DOWNLOADED("alreadyDownloaded"),
+		DOWNLOAD_URL("downloadUrl");
 		private final String rawValue;
 
-		ArgumentType(final String rawValue) {
+		JSONJobDataKeys(final String rawValue) {
 			this.rawValue = rawValue;
 		}
 
@@ -62,31 +88,4 @@ abstract public class Command {
 		}
 	}
 
-	private final Type type;
-	private final Map<ArgumentType, Object> arguments;
-
-	public Command(Type type) {
-		this.type = type;
-		this.arguments = new EnumMap<>(ArgumentType.class);
-	}
-
-	public void addArgument(ArgumentType type, Object value) {
-		arguments.put(type, value);
-	}
-
-	public JSONObject toJson() {
-		final Map<String, Object> args = new HashMap<>();
-		for (Map.Entry<ArgumentType, Object> entry : arguments.entrySet()) {
-			args.put(entry.getKey().toString(), entry.getValue());
-		}
-		final Map<String, Object> payloadMap = new HashMap<String, Object>() {{
-				put("cmd", type.toString());
-				put("args", args);
-		}};
-		return new JSONObject(payloadMap);
-	}
-
-	public Type getType() {
-		return type;
-	}
 }

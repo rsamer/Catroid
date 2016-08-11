@@ -25,7 +25,6 @@ package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
 public class JobRunningMessage extends JobMessage {
 	public JobRunningMessage(final long jobID) {
-		super(Type.JOB_RUNNING);
-		addArgument(ArgumentType.JOB_ID, jobID);
+		super(jobID);
 	}
 }
