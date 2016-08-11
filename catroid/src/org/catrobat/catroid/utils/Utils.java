@@ -55,7 +55,6 @@ import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.facebook.AccessToken;
 import com.google.common.base.Splitter;
-import com.google.common.io.ByteStreams;
 
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
@@ -79,12 +78,13 @@ import org.catrobat.catroid.web.WebconnectionException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -164,18 +164,24 @@ public final class Utils {
 		return DateFormat.getDateInstance(DateFormat.LONG, locale).format(date);
 	}
 
-	public static long extractScratchProjectIDFromURL(final String url) {
+	public static String extractParameterFromURL(final String url, final String parameterKey) {
+		final String query = url.split("\\?")[1];
+		final Map<String, String> queryParamsMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
+		return queryParamsMap.get(parameterKey);
+	}
+
+	public static long extractScratchJobIDFromURL(final String url) {
 		if (! url.startsWith(Constants.SCRATCH_CONVERTER_BASE_URL)) {
 			return Constants.INVALID_SCRATCH_PROGRAM_ID;
 		}
 
-		final String query = url.split("\\?")[1];
-		final Map<String, String> queryParamsMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
-		final long scratchProjectID = Long.parseLong(queryParamsMap.get("id"));
-		if (scratchProjectID <= 0) {
+		final String jobIDString = extractParameterFromURL(url, "job_id");
+		if (jobIDString == null) {
 			return Constants.INVALID_SCRATCH_PROGRAM_ID;
 		}
-		return scratchProjectID;
+
+		final long jobID = Long.parseLong(jobIDString);
+		return jobID > 0 ? jobID : Constants.INVALID_SCRATCH_PROGRAM_ID;
 	}
 
 	public static String humanFriendlyFormattedShortNumber(final int number) {
@@ -383,6 +389,28 @@ public final class Utils {
 	public static int getPhysicalPixels(int densityIndependentPixels, Context context) {
 		final float scale = context.getResources().getDisplayMetrics().density;
 		return (int) (densityIndependentPixels * scale + 0.5f);
+	}
+
+	public static Activity getActivity() throws IllegalAccessException, NoSuchFieldException, ClassNotFoundException,
+			NoSuchMethodException, InvocationTargetException
+	{
+		Class activityThreadClass = Class.forName("android.app.ActivityThread");
+		Object activityThread = activityThreadClass.getMethod("currentActivityThread").invoke(null);
+		Field activitiesField = activityThreadClass.getDeclaredField("mActivities");
+		activitiesField.setAccessible(true);
+		HashMap activities = (HashMap) activitiesField.get(activityThread);
+		for(Object activityRecord:activities.values()){
+			Class activityRecordClass = activityRecord.getClass();
+			Field pausedField = activityRecordClass.getDeclaredField("paused");
+			pausedField.setAccessible(true);
+			if(! pausedField.getBoolean(activityRecord)) {
+				Field activityField = activityRecordClass.getDeclaredField("activity");
+				activityField.setAccessible(true);
+				Activity activity = (Activity) activityField.get(activityRecord);
+				return activity;
+			}
+		}
+		return null;
 	}
 
 	public static void saveToPreferences(Context context, String key, String message) {

@@ -47,14 +47,14 @@ import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedListener;
+import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedCallback;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.ui.ProjectActivity;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
 import org.catrobat.catroid.ui.adapter.ScratchJobAdapter;
 import org.catrobat.catroid.ui.adapter.ScratchJobAdapter.ScratchJobEditListener;
 import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
+import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.ToastUtil;
@@ -69,7 +69,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class ScratchConverterSlidingUpPanelFragment extends Fragment
-		implements BaseInfoViewListener, JobConsoleViewListener, DownloadFinishedListener, ScratchJobEditListener {
+		implements BaseInfoViewListener, JobViewListener, DownloadFinishedCallback, ScratchJobEditListener {
 
 	private static final String TAG = ScratchConverterSlidingUpPanelFragment.class.getSimpleName();
 	private static ExecutorService executorService = null;
@@ -163,64 +163,12 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		return allJobs != null && allJobs.length > 0;
 	}
 
-	//------------------------------------------------------------------------------------------------------------------
-	// BaseInfoViewListener callbacks
-	//------------------------------------------------------------------------------------------------------------------
-	@Override
-	public void onJobsInfo(final Job[] jobs) {
-		if (jobs == null || jobs.length == 0) {
-			((ScratchConverterActivity)getActivity()).hideSlideUpPanelBar();
-			return;
-		}
-		((ScratchConverterActivity)getActivity()).showSlideUpPanelBar(0);
-		updateAdapterJobs(jobs);
-
-		int finishedJobs = 0;
-		WebImage httpImageMetadata = null;
-		for (Job job : jobs) {
-			if (job.getImage() != null && job.getImage().getUrl() != null) {
-				httpImageMetadata = job.getImage();
-			}
-			if (job.getState() == Job.State.FINISHED) {
-				finishedJobs++;
-			}
-		}
+	private void setIconImageView(final WebImage webImage) {
 		convertIconImageView.setImageBitmap(null);
-		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
+		if (webImage != null && webImage.getUrl() != null) {
 			int width = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
 			int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(), convertIconImageView, width, height);
-		}
-		convertPanelHeadlineView.setText(getResources().getString(R.string.status_in_progress_x_jobs, (jobs.length - finishedJobs)));
-		convertPanelStatusView.setText(getResources().getString(R.string.status_completed_x_jobs, finishedJobs));
-	}
-
-	@Override
-	public void onError(final String errorMessage) {
-		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
-			throw new AssertionError("You should not change the UI from any thread except UI thread!");
-		}
-
-		Log.e(TAG, "An error occurred: " + errorMessage);
-		ToastUtil.showError(getActivity(), errorMessage);
-	}
-
-	//------------------------------------------------------------------------------------------------------------------
-	// JobConsoleViewListener callbacks
-	//------------------------------------------------------------------------------------------------------------------
-	@Override
-	public void onJobScheduled(final Job job) {
-		((ScratchConverterActivity)getActivity()).showSlideUpPanelBar(0);
-		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText(R.string.status_scheduled);
-		convertProgressLayout.setVisibility(View.GONE);
-
-		final WebImage httpImageMetadata = job.getImage();
-		convertIconImageView.setImageBitmap(null);
-		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
-			int width = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
-			int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(), convertIconImageView, width, height);
+			webImageLoader.fetchAndShowImage(webImage.getUrl().toString(), convertIconImageView, width, height);
 		}
 	}
 
@@ -277,12 +225,62 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		updateAdapterJobs(jobsList.toArray(new Job[jobsList.size()]));
 	}
 
+	//------------------------------------------------------------------------------------------------------------------
+	// BaseInfoViewListener callbacks
+	//------------------------------------------------------------------------------------------------------------------
+	@Override
+	public void onJobsInfo(final Job[] jobs) {
+		if (jobs == null || jobs.length == 0) {
+			((ScratchConverterActivity) getActivity()).hideSlideUpPanelBar();
+			return;
+		}
+		((ScratchConverterActivity) getActivity()).showSlideUpPanelBar(0);
+		updateAdapterJobs(jobs);
+
+		int finishedJobs = 0;
+		WebImage webImage = null;
+		for (Job job : jobs) {
+			if (job.getImage() != null && job.getImage().getUrl() != null) {
+				webImage = job.getImage();
+			}
+			if (job.getState() == Job.State.FINISHED) {
+				finishedJobs++;
+			}
+		}
+		setIconImageView(webImage);
+		convertPanelHeadlineView.setText(getResources().getString(R.string.status_in_progress_x_jobs, (jobs.length - finishedJobs)));
+		convertPanelStatusView.setText(getResources().getString(R.string.status_completed_x_jobs, finishedJobs));
+	}
+
+	@Override
+	public void onError(final String errorMessage) {
+		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
+			throw new AssertionError("You should not change the UI from any thread except UI thread!");
+		}
+
+		Log.e(TAG, "An error occurred: " + errorMessage);
+		ToastUtil.showError(getActivity(), errorMessage);
+	}
+
+	//------------------------------------------------------------------------------------------------------------------
+	// JobViewListener callbacks
+	//------------------------------------------------------------------------------------------------------------------
+	@Override
+	public void onJobScheduled(final Job job) {
+		((ScratchConverterActivity)getActivity()).showSlideUpPanelBar(0);
+		convertPanelHeadlineView.setText(job.getTitle());
+		convertPanelStatusView.setText(R.string.status_scheduled);
+		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
+	}
+
 	@Override
 	public void onJobReady(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
 		convertPanelStatusView.setText(R.string.status_prepare);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		job.setProgress(0.0);
 		updateAdapterSingleJob(job);
 	}
@@ -293,6 +291,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setText(R.string.status_started);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		job.setProgress(0.0);
 		updateAdapterSingleJob(job);
 	}
@@ -302,6 +301,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelHeadlineView.setText(job.getTitle());
 		convertPanelStatusView.setVisibility(View.GONE);
 		convertProgressLayout.setVisibility(View.VISIBLE);
+		setIconImageView(job.getImage());
 		convertProgressBar.setProgress(new Double(progress).intValue());
 		//convertStatusProgressTextView.setText(String.format("%.1f", progress) + "%");
 		convertStatusProgressTextView.setText(new Double(progress).intValue() + "%");
@@ -324,6 +324,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setText(R.string.status_conversion_finished);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		updateAdapterSingleJob(job);
 	}
 
@@ -333,6 +334,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setText(R.string.status_job_failed);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		updateAdapterSingleJob(job);
 	}
 
@@ -342,6 +344,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setText(R.string.status_job_canceled);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		updateAdapterSingleJob(job);
 	}
 
@@ -351,18 +354,15 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setText(R.string.status_downloading);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
+		setIconImageView(job.getImage());
 		updateAdapterSingleJob(job);
 		downloadJobsMap.put(job.getJobID(), job);
 	}
 
 	@Override
 	public void onDownloadFinished(final String catrobatProgramName, final String url) {
-		if (Looper.getMainLooper().equals(Looper.myLooper())) {
-			throw new AssertionError("Not expecting to run this on UI thread!");
-		}
-
 		Log.i(TAG, "Download of program '" + catrobatProgramName + "' finished (URL was " + url + ")");
-		long jobID = Utils.extractScratchProjectIDFromURL(url);
+		long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == Constants.INVALID_SCRATCH_PROGRAM_ID) {
 			Log.w(TAG, "Received download-finished call for program: '" + catrobatProgramName + "' with invalid url: " + url);
 			return;
@@ -375,30 +375,21 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			return;
 		}
 
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-					Ringtone r = RingtoneManager.getRingtone(getActivity().getApplicationContext(), notification);
-					r.play();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				convertPanelStatusView.setText(R.string.status_download_finished);
-				updateAdapterSingleJob(job);
-			}
-		});
+		try {
+			Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+			Ringtone r = RingtoneManager.getRingtone(getActivity().getApplicationContext(), notification);
+			r.play();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		convertPanelStatusView.setText(R.string.status_download_finished);
+		updateAdapterSingleJob(job);
 	}
 
 	@Override
 	public void onUserCanceledDownload(final String url) {
-		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
-			throw new AssertionError("You should not change the UI from any thread except UI thread!");
-		}
-
 		Log.i(TAG, "User canceled download with URL: " + url);
-		long jobID = Utils.extractScratchProjectIDFromURL(url);
+		long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == Constants.INVALID_SCRATCH_PROGRAM_ID) {
 			Log.w(TAG, "Received download-canceled call for program with invalid url: " + url);
 			return;

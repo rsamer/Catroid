@@ -43,7 +43,7 @@ import android.widget.TextView;
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.utils.DownloadUtil;
-import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedListener;
+import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedCallback;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 
@@ -56,7 +56,7 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 	protected EditText projectText;
 	protected TextView projectTextView;
 	protected View projectTextLine;
-	protected DownloadFinishedListener[] callbacks;
+	protected DownloadFinishedCallback[] callbacks;
 
 	public static final String DIALOG_FRAGMENT_TAG = "overwrite_rename_look";
 
@@ -68,7 +68,7 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 		this.programName = programName;
 	}
 
-	public void setCallbacks(DownloadFinishedListener[] callbacks) {
+	public void setCallbacks(DownloadFinishedCallback[] callbacks) {
 		this.callbacks = callbacks;
 	}
 
@@ -103,7 +103,7 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 					public void onClick(DialogInterface dialog, int which) {
 						ToastUtil.showError(context, R.string.notification_download_project_cancel);
 						if (callbacks != null) {
-							for (DownloadFinishedListener callback : callbacks) {
+							for (DownloadFinishedCallback callback : callbacks) {
 								callback.onUserCanceledDownload(url);
 							}
 						}
@@ -137,7 +137,7 @@ public class OverwriteRenameDialog extends DialogFragment implements OnClickList
 				} else if (keyCode == KeyEvent.KEYCODE_BACK) {
 					ToastUtil.showError(context, R.string.notification_download_project_cancel);
 					if (callbacks != null) {
-						for (DownloadFinishedListener callback : callbacks) {
+						for (DownloadFinishedCallback callback : callbacks) {
 							callback.onUserCanceledDownload(url);
 						}
 					}

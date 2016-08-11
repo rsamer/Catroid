@@ -37,8 +37,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.images.WebImage;
 
-import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
@@ -48,31 +47,30 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewData> {
+public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramPreviewData> {
 
-	private static final String TAG = ScratchProjectAdapter.class.getSimpleName();
+	private static final String TAG = ScratchProgramAdapter.class.getSimpleName();
 
 	private boolean showDetails;
 	private int selectMode;
-	private Set<Integer> checkedProjects = new TreeSet<>();
-	private OnScratchProjectEditListener onScratchProjectEditListener;
+	private Set<Integer> checkedPrograms = new TreeSet<>();
+	private OnScratchProgramEditListener onScratchProgramEditListener;
 	private WebImageLoader webImageLoader;
 
 	private static class ViewHolder {
 		private RelativeLayout background;
 		private CheckBox checkbox;
-		private TextView projectName;
+		private TextView programName;
 		private ImageView image;
 		private TextView detailsText;
-		private View projectDetails;
+		private View programDetails;
 	}
 
 	private static LayoutInflater inflater;
 
-	public ScratchProjectAdapter(Context context, int resource, int textViewResourceId,
-			List<ScratchProjectPreviewData> objects, ExecutorService executorService) {
+	public ScratchProgramAdapter(Context context, int resource, int textViewResourceId,
+			List<ScratchProgramPreviewData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		showDetails = true;
@@ -84,8 +82,8 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 		);
 	}
 
-	public void setOnScratchProjectEditListener(OnScratchProjectEditListener listener) {
-		onScratchProjectEditListener = listener;
+	public void setOnScratchProgramEditListener(OnScratchProgramEditListener listener) {
+		onScratchProgramEditListener = listener;
 	}
 
 	public void setShowDetails(boolean showDetails) {
@@ -104,68 +102,63 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 		return selectMode;
 	}
 
-	public Set<Integer> getCheckedProjects() {
-		return checkedProjects;
+	public Set<Integer> getCheckedPrograms() {
+		return checkedPrograms;
 	}
 
-	public int getAmountOfCheckedProjects() {
-		return checkedProjects.size();
+	public int getAmountOfCheckedPrograms() {
+		return checkedPrograms.size();
 	}
 
-	public void addCheckedProject(int position) {
-		checkedProjects.add(position);
+	public void addCheckedProgram(int position) {
+		checkedPrograms.add(position);
 	}
 
-	public void clearCheckedProjects() {
-		checkedProjects.clear();
+	public void clearCheckedPrograms() {
+		checkedPrograms.clear();
 	}
 
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent) {
-		View projectView = convertView;
+		View programView = convertView;
 		final ViewHolder holder;
-		if (projectView == null) {
-			projectView = inflater.inflate(R.layout.fragment_scratch_project_list_item, parent, false);
+		if (programView == null) {
+			programView = inflater.inflate(R.layout.fragment_scratch_project_list_item, parent, false);
 			holder = new ViewHolder();
-			holder.background = (RelativeLayout) projectView.findViewById(R.id.scratch_projects_list_item_background);
-			holder.checkbox = (CheckBox) projectView.findViewById(R.id.scratch_project_checkbox);
-			holder.projectName = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_title);
-			holder.image = (ImageView) projectView.findViewById(R.id.scratch_projects_list_item_image);
-			holder.detailsText = (TextView) projectView.findViewById(R.id.scratch_projects_list_item_details_text);
-			holder.projectDetails = projectView.findViewById(R.id.scratch_projects_list_item_details);
-			projectView.setTag(holder);
+			holder.background = (RelativeLayout) programView.findViewById(R.id.scratch_projects_list_item_background);
+			holder.checkbox = (CheckBox) programView.findViewById(R.id.scratch_project_checkbox);
+			holder.programName = (TextView) programView.findViewById(R.id.scratch_projects_list_item_title);
+			holder.image = (ImageView) programView.findViewById(R.id.scratch_projects_list_item_image);
+			holder.detailsText = (TextView) programView.findViewById(R.id.scratch_projects_list_item_details_text);
+			holder.programDetails = programView.findViewById(R.id.scratch_projects_list_item_details);
+			programView.setTag(holder);
 		} else {
-			holder = (ViewHolder) projectView.getTag();
+			holder = (ViewHolder) programView.getTag();
 		}
 
 		// ------------------------------------------------------------
-		ScratchProjectPreviewData projectData = getItem(position);
-
-		// set name of project:
-		holder.projectName.setText(projectData.getTitle());
-
-		// set size of project:
-		holder.detailsText.setText(projectData.getContent().replace(" ... ", " - "));
+		ScratchProgramPreviewData programData = getItem(position);
+		holder.programName.setText(programData.getTitle());
+		holder.detailsText.setText(programData.getContent().replace(" ... ", " - "));
 		holder.detailsText.setSingleLine(false);
 
-		// set project image (threaded):
-		WebImage httpImageMetadata = projectData.getProjectImage();
+		WebImage httpImageMetadata = programData.getProgramImage();
 		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
 			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
 			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
 			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
 					holder.image, width, height);
 		} else {
-			// clear old image of other project if this is a reused view element
+			// clear old image of other program if this is a reused view element
 			holder.image.setImageBitmap(null);
 		}
 
 		if (showDetails) {
-			holder.projectDetails.setVisibility(View.VISIBLE);
-			holder.projectName.setSingleLine(true);
+			holder.programDetails.setVisibility(View.VISIBLE);
+			holder.programName.setSingleLine(true);
 		} else {
-			holder.projectDetails.setVisibility(View.GONE);
-			holder.projectName.setSingleLine(false);
+			holder.programDetails.setVisibility(View.GONE);
+			holder.programName.setSingleLine(false);
 		}
 
 		holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -173,16 +166,16 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (isChecked) {
 					if (selectMode == ListView.CHOICE_MODE_SINGLE) {
-						clearCheckedProjects();
+						clearCheckedPrograms();
 					}
-					checkedProjects.add(position);
+					checkedPrograms.add(position);
 				} else {
-					checkedProjects.remove(position);
+					checkedPrograms.remove(position);
 				}
 				notifyDataSetChanged();
 
-				if (onScratchProjectEditListener != null) {
-					onScratchProjectEditListener.onProjectChecked();
+				if (onScratchProgramEditListener != null) {
+					onScratchProgramEditListener.onProgramChecked();
 				}
 			}
 		});
@@ -202,13 +195,13 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 			public void onClick(View v) {
 				if (selectMode != ListView.CHOICE_MODE_NONE) {
 					holder.checkbox.setChecked(!holder.checkbox.isChecked());
-				} else if (onScratchProjectEditListener != null) {
-					onScratchProjectEditListener.onProjectEdit(position);
+				} else if (onScratchProgramEditListener != null) {
+					onScratchProgramEditListener.onProgramEdit(position);
 				}
 			}
 		});
 
-		if (checkedProjects.contains(position)) {
+		if (checkedPrograms.contains(position)) {
 			holder.checkbox.setChecked(true);
 		} else {
 			holder.checkbox.setChecked(false);
@@ -220,14 +213,14 @@ public class ScratchProjectAdapter extends ArrayAdapter<ScratchProjectPreviewDat
 			holder.checkbox.setVisibility(View.GONE);
 			holder.checkbox.setChecked(false);
 			holder.background.setBackgroundResource(R.drawable.button_background_selector);
-			clearCheckedProjects();
+			clearCheckedPrograms();
 		}
-		return projectView;
+		return programView;
 	}
 
-	public interface OnScratchProjectEditListener {
-		void onProjectChecked();
+	public interface OnScratchProgramEditListener {
+		void onProgramChecked();
 
-		void onProjectEdit(int position);
+		void onProgramEdit(int position);
 	}
 }

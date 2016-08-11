@@ -23,11 +23,9 @@
 
 package org.catrobat.catroid.uitest.ui.activity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListAdapter;
@@ -38,12 +36,12 @@ import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectData;
-import org.catrobat.catroid.common.ScratchProjectData.ScratchRemixProjectData;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramData;
+import org.catrobat.catroid.common.ScratchProgramData.ScratchRemixProjectData;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
-import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
-import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
+import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
+import org.catrobat.catroid.ui.ScratchProgramDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
 import org.catrobat.catroid.utils.Utils;
@@ -66,40 +64,40 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentationTestCase<ScratchProjectDetailsActivity> {
+public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentationTestCase<ScratchProgramDetailsActivity> {
 	private static final String TAG = ScratchProjectDetailsActivityTest.class.getSimpleName();
 
-	private ScratchProjectPreviewData projectPreviewData;
-	private ScratchProjectData projectData;
+	private ScratchProgramPreviewData projectPreviewData;
+	private ScratchProgramData projectData;
 	private ScratchRemixProjectData remixedProjectData;
 
-	private ScratchProjectDataFetcher fetcherMock;
+	private ScratchDataFetcher fetcherMock;
 
 	public ScratchProjectDetailsActivityTest()
 			throws InterruptedIOException, WebconnectionException, WebScratchProgramException
 	{
-		super(ScratchProjectDetailsActivity.class);
+		super(ScratchProgramDetailsActivity.class);
 
 		List<String> tags = new ArrayList<String>() {{
 				add("animations");
 				add("castle");
 		}};
 		long projectID = 10205819;
-		projectData = new ScratchProjectData(projectID, "Dancin' in the Castle", "jschombs",
+		projectData = new ScratchProgramData(projectID, "Dancin' in the Castle", "jschombs",
 				"Click the flag to run the stack. Click the space bar to change it up!", "First project on Scratch! "
 				+ "This was great.", 1_723_123, 37_239, 11, new Date(), new Date(), tags,
-				ScratchProjectData.VisibilityState.PUBLIC);
+				ScratchProgramData.VisibilityState.PUBLIC);
 
 		Uri uri = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10211023_144x108.png?v=1368486334.0");
 		remixedProjectData = new ScratchRemixProjectData(10211023, "Dancin' in the Castle remake",
 				"Amanda69", new WebImage(uri, 150, 150));
 		projectData.addRemixProject(remixedProjectData);
-		projectPreviewData = new ScratchProjectPreviewData(projectID, projectData.getTitle(), "May 13, 2013 ... Click "
+		projectPreviewData = new ScratchProgramPreviewData(projectID, projectData.getTitle(), "May 13, 2013 ... Click "
 				+ "the flag to run the stack.");
 
 		// mocks
-		fetcherMock = Mockito.mock(ScratchProjectDataFetcher.class);
-		when(fetcherMock.fetchScratchProjectDetails(any(Long.class))).thenReturn(projectData);
+		fetcherMock = Mockito.mock(ScratchDataFetcher.class);
+		when(fetcherMock.fetchScratchProgramDetails(any(Long.class))).thenReturn(projectData);
 
 		final MessageListener messageListenerMock = Mockito.mock(MessageListener.class);
 		doAnswer(new Answer<Void>() {
@@ -107,15 +105,15 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 				assertNotNull("No arguments for addJobConsoleViewListener call given", invocation.getArguments());
 				assertEquals(invocation.getArguments().length, 2);
 				assertEquals(invocation.getArguments()[0], projectPreviewData.getId());
-				assertTrue(invocation.getArguments()[1] instanceof ScratchProjectDetailsActivity);
+				assertTrue(invocation.getArguments()[1] instanceof ScratchProgramDetailsActivity);
 				return null;
 			}
-		}).when(messageListenerMock).addJobConsoleViewListener(any(Long.class), any(ScratchProjectDetailsActivity.class));
+		}).when(messageListenerMock).addJobConsoleViewListener(any(Long.class), any(ScratchProgramDetailsActivity.class));
 
 		// dependency injection
-		ScratchProjectDetailsActivity.setDataFetcher(fetcherMock);
-		ScratchProjectDetailsActivity.setMessageListener(messageListenerMock);
-		ScratchProjectDetailsActivity.setExecutorService(Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE));
+		ScratchProgramDetailsActivity.setDataFetcher(fetcherMock);
+		ScratchProgramDetailsActivity.setMessageListener(messageListenerMock);
+		ScratchProgramDetailsActivity.setExecutorService(Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE));
 
 		/*
 		final Object[] convertMethodParams = { null, null };
@@ -128,7 +126,7 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 				return null;
 			}
 		}).when(clientMock).convertProject(any(Long.class), any(String.class));
-		ScratchProjectDetailsActivity.setConverterClient(clientMock);
+		ScratchProgramDetailsActivity.setConverterClient(clientMock);
 				assertTrue(convertMethodParams[0] instanceof Long);
 				assertTrue(convertMethodParams[1] instanceof String);
 				assertEquals(convertMethodParams[0], projectData.getId());
@@ -137,7 +135,7 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 	}
 
 	@Override
-	public ScratchProjectDetailsActivity getActivity() {
+	public ScratchProgramDetailsActivity getActivity() {
 		Intent intent = new Intent();
 		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) projectPreviewData);
 		setActivityIntent(intent);
@@ -287,7 +285,7 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 	}
 
 	public void testClickOnConvertButtonShouldDisableButton() {
-		final ScratchProjectDetailsActivity activity = getActivity();
+		final ScratchProgramDetailsActivity activity = getActivity();
 		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
 		assertTrue("Convert button not clickable!", solo.getButton(solo.getString(R.string.convert)).isClickable());
 		assertTrue("Convert button not enabled!", convertButton.isEnabled());

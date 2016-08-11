@@ -23,36 +23,18 @@
 
 package org.catrobat.catroid.ui.scratchconverter;
 
-import android.app.Activity;
-import android.content.ContextWrapper;
+import android.support.annotation.NonNull;
 
-import com.google.android.gms.common.images.WebImage;
-
-import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 
-public class ScratchConverterContextWrapper extends ContextWrapper {
-
-	private static final String TAG = ScratchConverterContextWrapper.class.getSimpleName();
-	//private static final Lock lock = new ReentrantLock();
-
-	private final Activity activity;
-	private final Client converterClient;
-
-	public ScratchConverterContextWrapper(Activity activity, Client converterClient) {
-		super(activity);
-		this.activity = activity;
-		this.converterClient = converterClient;
-	}
-
-	public void convertProgram(final long jobID, final String programTitle, final WebImage programImage,
-			final boolean verbose, final boolean force) {
-
-		// TODO: make sure NOT running on UI-thread!!
-		final Job job = new Job(jobID, programTitle, programImage);
-
-		//lock.lock();
-		converterClient.convertJob(job, verbose, force);
-	}
-
+public interface JobViewListener {
+	void onJobScheduled(Job job);
+	void onJobReady(Job job);
+	void onJobStarted(Job job);
+	void onJobProgress(Job job, double progress);
+	void onJobOutput(Job job, @NonNull String[] lines);
+	void onJobFinished(Job job);
+	void onJobFailed(Job job);
+	void onJobCanceled(Job job);
+	void onJobDownloadReady(Job job);
 }

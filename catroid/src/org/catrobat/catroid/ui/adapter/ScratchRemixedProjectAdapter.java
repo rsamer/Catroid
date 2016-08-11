@@ -36,17 +36,15 @@ import android.widget.TextView;
 import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.R;
-import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectData.ScratchRemixProjectData> {
+public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramData.ScratchRemixProjectData> {
 	private static final String TAG = ScratchRemixedProjectAdapter.class.getSimpleName();
 
 	private WebImageLoader webImageLoader;
@@ -63,7 +61,7 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectDat
 	private static LayoutInflater inflater;
 
 	public ScratchRemixedProjectAdapter(Context context, int resource, int textViewResourceId,
-			List<ScratchProjectData.ScratchRemixProjectData> objects, ExecutorService executorService) {
+			List<ScratchProgramData.ScratchRemixProjectData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		Log.d(TAG, "Number of remixes: " + objects.size());
@@ -96,13 +94,13 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProjectDat
 		}
 
 		// ------------------------------------------------------------
-		ScratchProjectData.ScratchRemixProjectData projectData = getItem(position);
+		ScratchProgramData.ScratchRemixProjectData projectData = getItem(position);
 
 		// set name of project:
 		holder.projectName.setText(projectData.getTitle());
 
 		// set details of project:
-		holder.detailsText.setText(getContext().getString(R.string.by) + " " + projectData.getOwner());
+		holder.detailsText.setText(getContext().getString(R.string.by_x, projectData.getOwner()));
 		holder.detailsText.setSingleLine(false);
 
 		// set project image (threaded):

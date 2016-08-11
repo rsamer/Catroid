@@ -21,20 +21,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.ui.scratchconverter;
+package org.catrobat.catroid.scratchconverter;
 
-import android.support.annotation.NonNull;
+import android.app.Activity;
 
-import org.catrobat.catroid.scratchconverter.protocol.Job;
+import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
+import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 
-public interface JobConsoleViewListener {
-	void onJobScheduled(Job job);
-	void onJobReady(Job job);
-	void onJobStarted(Job job);
-	void onJobProgress(Job job, double progress);
-	void onJobOutput(Job job, @NonNull String[] lines);
-	void onJobFinished(Job job);
-	void onJobFailed(Job job);
-	void onJobCanceled(Job job);
-	void onJobDownloadReady(Job job);
+public interface ConversionManager {
+	void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener);
+	void addGlobalJobConsoleViewListener(JobViewListener jobViewListener);
+	void addJobConsoleViewListener(long jobID, JobViewListener jobViewListener);
+	boolean removeJobConsoleViewListener(long jobID, JobViewListener jobViewListener);
+	void addDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
+	boolean isJobInProgress(long jobID);
+	void setCurrentActivity(Activity activity);
+	void removeDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
 }

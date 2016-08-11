@@ -26,7 +26,6 @@ package org.catrobat.catroid.ui;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
@@ -47,18 +46,18 @@ import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectData;
-import org.catrobat.catroid.common.ScratchProjectData.ScratchRemixProjectData;
-import org.catrobat.catroid.common.ScratchProjectData.VisibilityState;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramData;
+import org.catrobat.catroid.common.ScratchProgramData.ScratchRemixProjectData;
+import org.catrobat.catroid.common.ScratchProgramData.VisibilityState;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
+import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.ConversionManager;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
-import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
-import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask;
-import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectListTaskDelegate;
-import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
+import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask;
+import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter.ScratchRemixedProjectEditListener;
-import org.catrobat.catroid.ui.scratchconverter.JobConsoleViewListener;
+import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
 import org.catrobat.catroid.utils.Utils;
@@ -74,18 +73,19 @@ import uk.co.deanwild.flowtextview.FlowTextView;
 
 import static android.view.View.*;
 
-public class ScratchProjectDetailsActivity extends BaseActivity implements
-		ScratchProjectListTaskDelegate, ScratchRemixedProjectEditListener, JobConsoleViewListener {
+public class ScratchProgramDetailsActivity extends BaseActivity implements
+		FetchScratchProgramDetailsTask.ScratchProgramListTaskDelegate, ScratchRemixedProjectEditListener,
+		JobViewListener, Client.DownloadFinishedCallback {
 
-	private static final String TAG = ScratchProjectDetailsActivity.class.getSimpleName();
-	private static ScratchProjectDataFetcher dataFetcher = ServerCalls.getInstance();
-	private static MessageListener messageListener = null;
+	private static final String TAG = ScratchProgramDetailsActivity.class.getSimpleName();
+	private static ScratchDataFetcher dataFetcher = ServerCalls.getInstance();
+	private static ConversionManager conversionManager = null;
 	private static ExecutorService executorService = null;
 
 	private int imageWidth;
 	private int imageHeight;
 
-	private ScratchProjectPreviewData projectData;
+	private ScratchProgramPreviewData projectData;
 	private TextView titleTextView;
 	private TextView ownerTextView;
 	private ImageView imageView;
@@ -107,15 +107,15 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	private ScrollView mainScrollView;
 	private RelativeLayout detailsLayout;
 	private TextView remixesLabelView;
-	private FetchScratchProjectDetailsTask fetchDetailsTask = new FetchScratchProjectDetailsTask();
+	private FetchScratchProgramDetailsTask fetchDetailsTask = new FetchScratchProgramDetailsTask();
 
 	// dependency-injection for testing with mock object
-	public static void setDataFetcher(final ScratchProjectDataFetcher fetcher) {
+	public static void setDataFetcher(final ScratchDataFetcher fetcher) {
 		dataFetcher = fetcher;
 	}
 
-	public static void setMessageListener(final MessageListener listener) {
-		messageListener = listener;
+	public static void setConversionManager(final ConversionManager manager) {
+		conversionManager = manager;
 	}
 
 	public static void setExecutorService(final ExecutorService service) {
@@ -156,12 +156,19 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		detailsLayout = (RelativeLayout) findViewById(R.id.scratch_project_details_layout);
 		remixesLabelView = (TextView) findViewById(R.id.scratch_project_remixes_label);
 
-		messageListener.addJobConsoleViewListener(projectData.getId(), this);
+		if (conversionManager.isJobInProgress(projectData.getId())) {
+			onJobInProgress();
+		} else {
+			onJobNotInProgress();
+		}
+
+		conversionManager.addJobConsoleViewListener(projectData.getId(), this);
+		conversionManager.addDownloadFinishedCallback(this);
 
 		convertButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				disableConvertButton();
+				onJobInProgress();
 
 				Intent intent = new Intent();
 				intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) projectData);
@@ -173,6 +180,22 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
+	protected void onStart() {
+		super.onStart();
+		conversionManager.setCurrentActivity(this);
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		Log.d(TAG, "Destroyed " + TAG);
+		conversionManager.removeJobConsoleViewListener(projectData.getId(), this);
+		conversionManager.removeDownloadFinishedCallback(this);
+		fetchDetailsTask.cancel(true);
+		progressDialog.dismiss();
+	}
+
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == Constants.INTENT_REQUEST_CODE_CONVERT && resultCode == RESULT_OK) {
 			setResult(RESULT_OK, intent);
@@ -181,15 +204,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		super.onActivityResult(requestCode, resultCode, intent);
 	}
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		messageListener.removeJobConsoleViewListener(projectData.getId(), this);
-		fetchDetailsTask.cancel(true);
-		progressDialog.dismiss();
-	}
-
-	private void loadData(ScratchProjectPreviewData scratchProjectData) {
+	private void loadData(ScratchProgramPreviewData scratchProjectData) {
+		Preconditions.checkArgument(scratchProjectData != null);
 		Log.i(TAG, scratchProjectData.getTitle());
 		instructionsFlowTextView.setText("-");
 		notesAndCreditsLabelView.setVisibility(GONE);
@@ -199,23 +215,21 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		remixedProjectsListView.setVisibility(GONE);
 		detailsLayout.setVisibility(GONE);
 		visibilityWarningTextView.setVisibility(GONE);
-
-		// TODO: use LRU cache!
+		convertButton.setVisibility(GONE);
 
 		if (scratchRemixedProjectAdapter != null) {
 			scratchRemixedProjectAdapter.clear();
 		}
 
-		if (scratchProjectData != null) {
-			titleTextView.setText(scratchProjectData.getTitle());
-
-			if (scratchProjectData.getProjectImage() != null && scratchProjectData.getProjectImage().getUrl() != null) {
-				webImageLoader.fetchAndShowImage(
-						scratchProjectData.getProjectImage().getUrl().toString(),
-						imageView, imageWidth, imageHeight
-				);
-			}
+		titleTextView.setText(scratchProjectData.getTitle());
+		if (scratchProjectData.getProgramImage() != null && scratchProjectData.getProgramImage().getUrl() != null) {
+			webImageLoader.fetchAndShowImage(
+					scratchProjectData.getProgramImage().getUrl().toString(),
+					imageView, imageWidth, imageHeight
+			);
 		}
+
+		// TODO: use HTTP cache for request!
 		fetchDetailsTask.setContext(this).setDelegate(this).setFetcher(dataFetcher);
 		fetchDetailsTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, scratchProjectData.getId());
 	}
@@ -239,19 +253,19 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		ScratchRemixProjectData remixData = scratchRemixedProjectAdapter.getItem(position);
 		Log.d(TAG, "Project ID of clicked item is: " + remixData.getId());
 
-		ScratchProjectPreviewData prevData = new ScratchProjectPreviewData(remixData.getId(), remixData.getTitle(), null);
-		prevData.setProjectImage(remixData.getProjectImage());
-		Intent intent = new Intent(this, ScratchProjectDetailsActivity.class);
+		ScratchProgramPreviewData prevData = new ScratchProgramPreviewData(remixData.getId(), remixData.getTitle(), null);
+		prevData.setProgramImage(remixData.getProjectImage());
+		Intent intent = new Intent(this, ScratchProgramDetailsActivity.class);
 		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) prevData);
 		startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);
 	}
 
-	private void enableConvertButton() {
+	private void onJobNotInProgress() {
 		convertButton.setText(R.string.convert);
 		convertButton.setEnabled(true);
 	}
 
-	private void disableConvertButton() {
+	private void onJobInProgress() {
 		convertButton.setEnabled(false);
 		convertButton.setText(R.string.converting);
 	}
@@ -262,8 +276,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	//----------------------------------------------------------------------------------------------
 	@Override
 	public void onPreExecute() {
-		Log.i(TAG, "onPreExecute for FetchScratchProjectsTask called");
-		final ScratchProjectDetailsActivity activity = this;
+		Log.i(TAG, "onPreExecute for FetchScratchProgramsTask called");
+		final ScratchProgramDetailsActivity activity = this;
 		progressDialog = new ProgressDialog(activity);
 		progressDialog.setCancelable(false);
 		progressDialog.getWindow().setGravity(Gravity.CENTER);
@@ -272,8 +286,8 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
-	public void onPostExecute(final ScratchProjectData projectData) {
-		Log.i(TAG, "onPostExecute for FetchScratchProjectsTask called");
+	public void onPostExecute(final ScratchProgramData projectData) {
+		Log.i(TAG, "onPostExecute for FetchScratchProgramsTask called");
 		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
 			throw new AssertionError("You should not change the UI from any thread except UI thread!");
 		}
@@ -285,7 +299,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		}
 
 		titleTextView.setText(projectData.getTitle());
-		ownerTextView.setText(getString(R.string.by) + " " + projectData.getOwner());
+		ownerTextView.setText(getString(R.string.by_x, projectData.getOwner()));
 		String instructionsText = projectData.getInstructions().replace("\n\n", "\n");
 		instructionsText = (instructionsText.length() > 0) ? instructionsText : "--";
 		Log.d(TAG, "Instructions: " + instructionsText);
@@ -309,7 +323,7 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		StringBuilder tagList = new StringBuilder();
 		int index = 0;
 		for (String tag : projectData.getTags()) {
-			tagList.append((index++ > 0 ? ", " : "") + tag);
+			tagList.append(index++ > 0 ? ", " : "").append(tag);
 		}
 		if (tagList.length() > 0) {
 			tagsTextView.setText(tagList);
@@ -317,17 +331,17 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 		}
 		final String sharedDateString = Utils.formatDate(projectData.getSharedDate(), Locale.getDefault());
 		final String modifiedDateString = Utils.formatDate(projectData.getModifiedDate(), Locale.getDefault());
-		Log.d(TAG, "Shared: " + sharedDateString);
-		Log.d(TAG, "Modified: " + modifiedDateString);
-		sharedTextView.setText(getString(R.string.shared) + ": " + sharedDateString);
-		modifiedTextView.setText(getString(R.string.modified) + ": " + modifiedDateString);
+		sharedTextView.setText(getString(R.string.shared_at_x, sharedDateString));
+		modifiedTextView.setText(getString(R.string.modified_at_x, modifiedDateString));
 		detailsLayout.setVisibility(VISIBLE);
-		if (projectData.getVisibilityState() != VisibilityState.PUBLIC) {
+		VisibilityState visibilityState = projectData.getVisibilityState();
+
+		if (visibilityState != VisibilityState.PUBLIC) {
 			visibilityWarningTextView.setVisibility(VISIBLE);
-			convertButton.setEnabled(false);
+			convertButton.setVisibility(GONE);
 		} else {
 			visibilityWarningTextView.setVisibility(GONE);
-			enableConvertButton();
+			convertButton.setVisibility(VISIBLE);
 		}
 
 		if (projectData.getRemixes() != null && projectData.getRemixes().size() > 0) {
@@ -345,12 +359,12 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	}
 
 	//----------------------------------------------------------------------------------------------
-	// JobConsoleViewListener Events
+	// JobViewListener Events
 	//----------------------------------------------------------------------------------------------
 	@Override
 	public void onJobScheduled(Job job) {
 		if (job.getJobID() == projectData.getId()) {
-			disableConvertButton();
+			onJobInProgress();
 		}
 	}
 
@@ -372,21 +386,45 @@ public class ScratchProjectDetailsActivity extends BaseActivity implements
 	@Override
 	public void onJobFailed(Job job) {
 		if (job.getJobID() == projectData.getId()) {
-			enableConvertButton();
+			onJobNotInProgress();
 		}
 	}
 
 	@Override
 	public void onJobCanceled(Job job) {
 		if (job.getJobID() == projectData.getId()) {
-			enableConvertButton();
+			onJobNotInProgress();
 		}
 	}
 
 	@Override
-	public void onJobDownloadReady(Job job) {
-		if (job.getJobID() == projectData.getId()) {
-			enableConvertButton();
+	public void onJobDownloadReady(Job job) {}
+
+	@Override
+	public void onDownloadFinished(String catrobatProgramName, String url) {
+		// Note: this callback-method is not called on UI-thread
+		final long jobID = Utils.extractScratchJobIDFromURL(url);
+		if (jobID == projectData.getId()) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onJobNotInProgress();
+				}
+			});
+		}
+	}
+
+	@Override
+	public void onUserCanceledDownload(String url) {
+		// Note: this callback-method is not called on UI-thread
+		final long jobID = Utils.extractScratchJobIDFromURL(url);
+		if (jobID == projectData.getId()) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onJobNotInProgress();
+				}
+			});
 		}
 	}
 }

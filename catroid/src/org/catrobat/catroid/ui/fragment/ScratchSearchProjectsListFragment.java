@@ -52,14 +52,14 @@ import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
-import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
-import org.catrobat.catroid.transfers.FetchScratchProjectsTask;
+import org.catrobat.catroid.scratchconverter.ConversionManager;
+import org.catrobat.catroid.transfers.FetchScratchProgramsTask;
 import org.catrobat.catroid.ui.CapitalizedTextView;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
-import org.catrobat.catroid.ui.ScratchProjectDetailsActivity;
-import org.catrobat.catroid.ui.adapter.ScratchProjectAdapter;
+import org.catrobat.catroid.ui.ScratchProgramDetailsActivity;
+import org.catrobat.catroid.ui.adapter.ScratchProgramAdapter;
 import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
@@ -69,15 +69,15 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class ScratchSearchProjectsListFragment extends Fragment
-		implements FetchScratchProjectsTask.ScratchProjectListTaskDelegate,
-		ScratchProjectAdapter.OnScratchProjectEditListener {
+		implements FetchScratchProgramsTask.ScratchProgramListTaskDelegate,
+		ScratchProgramAdapter.OnScratchProgramEditListener {
 
 	private static final String BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA = "scratch_project_data";
 	private static final String SHARED_PREFERENCE_NAME = "showDetailsScratchProjects";
 	private static final String TAG = ScratchSearchProjectsListFragment.class.getSimpleName();
-	private static MessageListener messageListener = null;
-	private static ExecutorService executorService = null;
 
+	private ExecutorService executorService;
+	private ConversionManager conversionManager;
 	private ScratchConverterActivity activity;
 	private String convertActionModeTitle;
 	private static String singleItemAppendixConvertActionMode;
@@ -87,18 +87,18 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private ImageButton audioButton;
 	private ListView searchResultsListView;
 	private ProgressDialog progressDialog;
-	private List<ScratchProjectPreviewData> scratchProjectList;
-	private ScratchProjectPreviewData scratchProjectToEdit;
+	private List<ScratchProgramPreviewData> scratchProjectList;
+	private ScratchProgramPreviewData scratchProjectToEdit;
 	private ExpiringLruMemoryObjectCache<ScratchSearchResult> scratchSearchResultCache;
-	private ScratchProjectAdapter scratchProjectAdapter;
+	private ScratchProgramAdapter scratchProgramAdapter;
 	private ActionMode actionMode;
 	private View selectAllActionModeButton;
-	private FetchScratchProjectsTask currentTask = null;
+	private FetchScratchProgramsTask currentTask = null;
 	private boolean selectAll = true;
 
 	// dependency-injection for testing with mock object
-	public static void setMessageListener(final MessageListener listener) {
-		messageListener = listener;
+	public void setConversionManager(final ConversionManager manager) {
+		conversionManager = manager;
 	}
 
 	public void setSearchResultsListViewMargin(int left, int top, int right, int bottom) {
@@ -107,7 +107,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		searchResultsListView.setLayoutParams(params);
 	}
 
-	public static void setExecutorService(final ExecutorService service) {
+	public void setExecutorService(final ExecutorService service) {
 		executorService = service;
 	}
 
@@ -140,7 +140,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 		@Override
 		public void onDestroyActionMode(ActionMode mode) {
-			if (scratchProjectAdapter.getAmountOfCheckedProjects() == 0) {
+			if (scratchProgramAdapter.getAmountOfCheckedPrograms() == 0) {
 				clearCheckedProjectsAndEnableButtons();
 			} else {
 				convertCheckedProjects();
@@ -207,7 +207,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		searchTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
-				if (hasFocus == false && activity.isSlideUpPanelEmpty() == false) {
+				if (!hasFocus && !activity.isSlideUpPanelEmpty()) {
 					activity.showSlideUpPanelBar(150);
 				} else {
 					activity.hideSlideUpPanelBar();
@@ -266,7 +266,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 		if (currentTask != null) {
 			currentTask.cancel(true);
 		}
-		currentTask = new FetchScratchProjectsTask();
+		currentTask = new FetchScratchProgramsTask();
 		currentTask.setDelegate(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, text);
 	}
 
@@ -274,7 +274,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		if (savedInstanceState != null) {
-			scratchProjectToEdit = (ScratchProjectPreviewData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
+			scratchProjectToEdit = (ScratchProgramPreviewData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
 		}
 		initAdapter();
 		searchView.setFocusable(false);
@@ -284,7 +284,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private void fetchDefaultProjects() {
 		Log.d(TAG, "Fetching default scratch projects");
 		searchView.setQuery("", false);
-		new FetchScratchProjectsTask().setDelegate(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+		new FetchScratchProgramsTask().setDelegate(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 	}
 
 	@Override
@@ -294,43 +294,43 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	public boolean getShowDetails() {
-		return scratchProjectAdapter.getShowDetails();
+		return scratchProgramAdapter.getShowDetails();
 	}
 
 	public void setShowDetails(boolean showDetails) {
-		scratchProjectAdapter.setShowDetails(showDetails);
-		scratchProjectAdapter.notifyDataSetChanged();
+		scratchProgramAdapter.setShowDetails(showDetails);
+		scratchProgramAdapter.notifyDataSetChanged();
 	}
 
 	public int getSelectMode() {
-		return scratchProjectAdapter.getSelectMode();
+		return scratchProgramAdapter.getSelectMode();
 	}
 
 	public void setSelectMode(int selectMode) {
-		scratchProjectAdapter.setSelectMode(selectMode);
-		scratchProjectAdapter.notifyDataSetChanged();
+		scratchProgramAdapter.setSelectMode(selectMode);
+		scratchProgramAdapter.notifyDataSetChanged();
 	}
 
 	private void initAdapter() {
 		if (scratchProjectList == null) {
 			scratchProjectList = new ArrayList<>();
 		}
-		scratchProjectAdapter = new ScratchProjectAdapter(activity,
+		scratchProgramAdapter = new ScratchProgramAdapter(activity,
 				R.layout.fragment_scratch_project_list_item,
 				R.id.scratch_projects_list_item_title,
 				scratchProjectList,
 				executorService);
-		searchResultsListView.setAdapter(scratchProjectAdapter);
+		searchResultsListView.setAdapter(scratchProgramAdapter);
 		initClickListener();
 	}
 
 	private void initClickListener() {
-		scratchProjectAdapter.setOnScratchProjectEditListener(this);
+		scratchProgramAdapter.setOnScratchProgramEditListener(this);
 	}
 
 	@Override
-	public void onProjectChecked() {
-		if (scratchProjectAdapter.getSelectMode() == ListView.CHOICE_MODE_SINGLE || actionMode == null) {
+	public void onProgramChecked() {
+		if (scratchProgramAdapter.getSelectMode() == ListView.CHOICE_MODE_SINGLE || actionMode == null) {
 			return;
 		}
 
@@ -338,7 +338,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	private void updateActionModeTitle() {
-		int numberOfSelectedItems = scratchProjectAdapter.getAmountOfCheckedProjects();
+		int numberOfSelectedItems = scratchProgramAdapter.getAmountOfCheckedPrograms();
 		if (numberOfSelectedItems == 0) {
 			actionMode.setTitle(convertActionModeTitle);
 		} else {
@@ -363,11 +363,13 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	@Override
-	public void onProjectEdit(int position) {
-		ScratchProjectDetailsActivity.setMessageListener(messageListener);
-		ScratchProjectDetailsActivity.setExecutorService(executorService);
-		Intent intent = new Intent(activity, ScratchProjectDetailsActivity.class);
-		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) scratchProjectAdapter.getItem(position));
+	public void onProgramEdit(int position) {
+		Preconditions.checkState(conversionManager != null);
+		Preconditions.checkState(executorService != null);
+		ScratchProgramDetailsActivity.setConversionManager(conversionManager);
+		ScratchProgramDetailsActivity.setExecutorService(executorService);
+		Intent intent = new Intent(activity, ScratchProgramDetailsActivity.class);
+		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) scratchProgramAdapter.getItem(position));
 		activity.startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);
 	}
 
@@ -379,9 +381,9 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	private void convertCheckedProjects() {
 		int numConverted = 0;
-		ArrayList<ScratchProjectPreviewData> projectsToConvert = new ArrayList<>();
-		for (int position : scratchProjectAdapter.getCheckedProjects()) {
-			scratchProjectToEdit = (ScratchProjectPreviewData) searchResultsListView.getItemAtPosition(position - numConverted);
+		ArrayList<ScratchProgramPreviewData> projectsToConvert = new ArrayList<>();
+		for (int position : scratchProgramAdapter.getCheckedPrograms()) {
+			scratchProjectToEdit = (ScratchProgramPreviewData) searchResultsListView.getItemAtPosition(position - numConverted);
 			projectsToConvert.add(scratchProjectToEdit);
 			Log.d(TAG, "Converting project '" + scratchProjectToEdit.getTitle() + "'");
 			numConverted++;
@@ -392,7 +394,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	private void clearCheckedProjectsAndEnableButtons() {
 		setSelectMode(ListView.CHOICE_MODE_NONE);
-		scratchProjectAdapter.clearCheckedProjects();
+		scratchProgramAdapter.clearCheckedPrograms();
 		actionMode = null;
 		searchView.setVisibility(View.VISIBLE);
 		audioButton.setVisibility(View.VISIBLE);
@@ -412,16 +414,16 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			public void onClick(View view) {
 				if (selectAll) {
 					for (int position = 0; position < scratchProjectList.size(); position++) {
-						scratchProjectAdapter.addCheckedProject(position);
+						scratchProgramAdapter.addCheckedProgram(position);
 					}
-					scratchProjectAdapter.notifyDataSetChanged();
-					onProjectChecked();
+					scratchProgramAdapter.notifyDataSetChanged();
+					onProgramChecked();
 					selectAll = false;
 					selectAllView.setText(R.string.deselect_all);
 				} else {
-					scratchProjectAdapter.clearCheckedProjects();
-					scratchProjectAdapter.notifyDataSetChanged();
-					onProjectChecked();
+					scratchProgramAdapter.clearCheckedPrograms();
+					scratchProgramAdapter.notifyDataSetChanged();
+					onProgramChecked();
 					selectAll = true;
 					selectAllView.setText(R.string.select_all);
 				}
@@ -434,7 +436,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	//----------------------------------------------------------------------------------------------
 	@Override
 	public void onPreExecute() {
-		Log.i(TAG, "onPreExecute for FetchScratchProjectsTask called");
+		Log.i(TAG, "onPreExecute for FetchScratchProgramsTask called");
 		final ScratchSearchProjectsListFragment fragment = this;
 		activity.runOnUiThread(new Runnable() {
 			@Override
@@ -448,9 +450,9 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	@Override
 	public void onPostExecute(final ScratchSearchResult result) {
-		Log.i(TAG, "onPostExecute for FetchScratchProjectsTask called");
+		Log.i(TAG, "onPostExecute for FetchScratchProgramsTask called");
 		Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
-		Preconditions.checkNotNull(scratchProjectAdapter, "Scratch project adapter cannot be null!");
+		Preconditions.checkNotNull(scratchProgramAdapter, "Scratch project adapter cannot be null!");
 
 		final ScratchSearchProjectsListFragment fragment = this;
 		activity.runOnUiThread(new Runnable() {
@@ -464,12 +466,12 @@ public class ScratchSearchProjectsListFragment extends Fragment
 				if (result.getQuery() != null) {
 					fragment.scratchSearchResultCache.put(result.getQuery(), result);
 				}
-				fragment.scratchProjectAdapter.clear();
-				for (ScratchProjectPreviewData projectData : result.getProjectList()) {
-					fragment.scratchProjectAdapter.add(projectData);
+				fragment.scratchProgramAdapter.clear();
+				for (ScratchProgramPreviewData projectData : result.getProjectList()) {
+					fragment.scratchProgramAdapter.add(projectData);
 					Log.d(TAG, projectData.getTitle());
 				}
-				fragment.scratchProjectAdapter.notifyDataSetChanged();
+				fragment.scratchProgramAdapter.notifyDataSetChanged();
 				fragment.searchResultsListView.setVisibility(View.VISIBLE);
 			}
 		});
