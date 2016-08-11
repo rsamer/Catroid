@@ -122,8 +122,12 @@ public class BaseActivity extends Activity {
 				startActivity(settingsIntent);
 				break;
 			case R.id.menu_scratch_converter:
-				Intent scratchConverterIntent = new Intent(this, ScratchConverterActivity.class);
-				startActivity(scratchConverterIntent);
+				if (Utils.isNetworkAvailable(this)) {
+					final Intent scratchConverterIntent = new Intent(this, ScratchConverterActivity.class);
+					startActivity(scratchConverterIntent);
+				} else {
+					ToastUtil.showError(this, R.string.error_internet_connection);
+				}
 				break;
 			case R.id.menu_rate_app:
 				launchMarket();
