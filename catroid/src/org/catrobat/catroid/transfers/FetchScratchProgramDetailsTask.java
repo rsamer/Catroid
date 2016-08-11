@@ -26,14 +26,12 @@ package org.catrobat.catroid.transfers;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
-import org.catrobat.catroid.common.ScratchProjectData;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.web.ServerCalls;
@@ -42,42 +40,42 @@ import org.catrobat.catroid.web.WebconnectionException;
 
 import java.io.InterruptedIOException;
 
-public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, ScratchProjectData> {
+public class FetchScratchProgramDetailsTask extends AsyncTask<Long, Void, ScratchProgramData> {
 
-	public interface ScratchProjectListTaskDelegate {
+	public interface ScratchProgramListTaskDelegate {
 		void onPreExecute();
-		void onPostExecute(ScratchProjectData projectData);
+		void onPostExecute(ScratchProgramData projectData);
 	}
 
-	public interface ScratchProjectDataFetcher {
-		ScratchProjectData fetchScratchProjectDetails(final long projectID)
-				throws WebconnectionException, WebScratchProgramException, InterruptedIOException;
-		ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException, InterruptedIOException;
-		ScratchSearchResult scratchSearch(final String query, final ServerCalls.ScratchSearchSortType sortType,
-				final int numberOfItems, final int page) throws WebconnectionException, InterruptedIOException;
-	}
-
-	private static final String TAG = FetchScratchProjectDetailsTask.class.getSimpleName();
+	private static final String TAG = FetchScratchProgramDetailsTask.class.getSimpleName();
 	private static final int MAX_NUM_OF_RETRIES = 2;
 	private static final int MIN_TIMEOUT = 1_000; // in ms
 
 	private Context context;
 	private Handler handler;
-	private ScratchProjectListTaskDelegate delegate = null;
-	private ScratchProjectDataFetcher fetcher = null;
+	private ScratchProgramListTaskDelegate delegate = null;
+	private ScratchDataFetcher fetcher = null;
 
-	public FetchScratchProjectDetailsTask setContext(final Context context) {
+	public interface ScratchDataFetcher {
+		ScratchProgramData fetchScratchProgramDetails(final long programID)
+				throws WebconnectionException, WebScratchProgramException, InterruptedIOException;
+		ScratchSearchResult fetchDefaultScratchPrograms() throws WebconnectionException, InterruptedIOException;
+		ScratchSearchResult scratchSearch(final String query, final ServerCalls.ScratchSearchSortType sortType,
+				final int numberOfItems, final int page) throws WebconnectionException, InterruptedIOException;
+	}
+
+	public FetchScratchProgramDetailsTask setContext(final Context context) {
 		this.context = context;
 		this.handler = new Handler(context.getMainLooper());
 		return this;
 	}
 
-	public FetchScratchProjectDetailsTask setDelegate(ScratchProjectListTaskDelegate delegate) {
+	public FetchScratchProgramDetailsTask setDelegate(ScratchProgramListTaskDelegate delegate) {
 		this.delegate = delegate;
 		return this;
 	}
 
-	public FetchScratchProjectDetailsTask setFetcher(ScratchProjectDataFetcher fetcher) {
+	public FetchScratchProgramDetailsTask setFetcher(ScratchDataFetcher fetcher) {
 		this.fetcher = fetcher;
 		return this;
 	}
@@ -91,7 +89,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 	}
 
 	@Override
-	protected ScratchProjectData doInBackground(Long... params) {
+	protected ScratchProgramData doInBackground(Long... params) {
 		Preconditions.checkArgument(params.length == 1, "No project ID given!");
 		final long projectID = params[0];
 		Preconditions.checkArgument(projectID > 0, "Invalid project ID given!");
@@ -103,7 +101,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 		}
 	}
 
-	public ScratchProjectData fetchProjectData(final long projectID) throws InterruptedIOException {
+	public ScratchProgramData fetchProjectData(final long projectID) throws InterruptedIOException {
 		// exponential backoff
 		int delay;
 		for (int attempt = 0; attempt <= MAX_NUM_OF_RETRIES; attempt++) {
@@ -113,7 +111,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 			}
 
 			try {
-				return fetcher.fetchScratchProjectDetails(projectID);
+				return fetcher.fetchScratchProgramDetails(projectID);
 			} catch (WebScratchProgramException e) {
 				String userErrorMessage = context.getString(R.string.error_scratch_program_not_accessible_any_more);
 				if (e.getStatusCode() == WebScratchProgramException.ERROR_PROGRAM_NOT_ACCESSIBLE) {
@@ -150,7 +148,7 @@ public class FetchScratchProjectDetailsTask extends AsyncTask<Long, Void, Scratc
 	}
 
 	@Override
-	protected void onPostExecute(ScratchProjectData projectData) {
+	protected void onPostExecute(ScratchProgramData projectData) {
 		super.onPostExecute(projectData);
 		if (delegate != null && !isCancelled()) {
 			delegate.onPostExecute(projectData);

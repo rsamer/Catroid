@@ -47,12 +47,12 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectData;
-import org.catrobat.catroid.common.ScratchProjectData.VisibilityState;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramData;
+import org.catrobat.catroid.common.ScratchProgramData.VisibilityState;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.transfers.ProjectUploadService;
-import org.catrobat.catroid.transfers.FetchScratchProjectDetailsTask.ScratchProjectDataFetcher;
+import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
 import org.catrobat.catroid.utils.Utils;
 import org.json.JSONArray;
@@ -80,7 +80,7 @@ import okio.Okio;
 
 //web status codes are on: https://github.com/Catrobat/Catroweb/blob/master/statusCodes.php
 
-public final class ServerCalls implements ScratchProjectDataFetcher {
+public final class ServerCalls implements ScratchDataFetcher {
 
 	public static final String BASE_URL_TEST_HTTPS = "https://catroid-test.catrob.at/pocketcode/";
 	public static final String TEST_FILE_UPLOAD_URL_HTTP = BASE_URL_TEST_HTTPS + "api/upload/upload.json";
@@ -187,18 +187,17 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 		return INSTANCE;
 	}
 
-	public ScratchProjectData fetchScratchProjectDetails(final long projectID)
+	public ScratchProgramData fetchScratchProgramDetails(final long programID)
 			throws WebconnectionException, WebScratchProgramException, InterruptedIOException {
 
 		final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
 		try {
-			final String url = Constants.SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL + projectID;
+			final String url = Constants.SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL + programID;
 
 			Log.d(TAG, "URL to use: " + url);
 			resultString = getRequestInterruptable(url);
 			Log.d(TAG, "Result string: " + resultString);
-			System.out.print("URL:" + url);
 
 			final JSONObject jsonObject = new JSONObject(resultString);
 			if (jsonObject.length() == 0) {
@@ -233,7 +232,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 
 			final VisibilityState visibilityState = VisibilityState.valueOf(jsonObject.getInt("visibility"));
 
-			ScratchProjectData projectData = new ScratchProjectData(projectID, title, owner, instructions,
+			ScratchProgramData projectData = new ScratchProgramData(programID, title, owner, instructions,
 					notesAndCredits, views, favorites, loves, modifiedDate, sharedDate, tags, visibilityState);
 
 			JSONArray remixes = jsonProjectData.getJSONArray("remixes");
@@ -245,7 +244,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 				String imageUrl = remixJson.getString("image"); // TODO: replace 144x108 by...
 				imageUrl = imageUrl.replace("200x200", "150x150");
 				WebImage webImage = new WebImage(Uri.parse(imageUrl), 150, 150);
-				projectData.addRemixProject(new ScratchProjectData.ScratchRemixProjectData(remixId, remixTitle,
+				projectData.addRemixProject(new ScratchProgramData.ScratchRemixProjectData(remixId, remixTitle,
 						remixOwner, webImage));
 			}
 			return projectData;
@@ -259,15 +258,14 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 		}
 	}
 
-	public ScratchSearchResult fetchDefaultScratchProjects() throws WebconnectionException, InterruptedIOException {
+	public ScratchSearchResult fetchDefaultScratchPrograms() throws WebconnectionException, InterruptedIOException {
 		try {
 			final String url = Constants.SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL;
 
-			ArrayList<ScratchProjectPreviewData> projectList = new ArrayList<>();
+			ArrayList<ScratchProgramPreviewData> projectList = new ArrayList<>();
 			Log.d(TAG, "URL to use: " + url);
 			resultString = getRequestInterruptable(url);
 			Log.d(TAG, "Result string: " + resultString);
-			System.out.print("URL:" + url);
 
 			final JSONObject jsonObject = new JSONObject(resultString);
 			final JSONArray results = jsonObject.getJSONArray("results");
@@ -278,12 +276,12 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 				String title = projectJson.getString("title");
 				String content = projectJson.getString("content");
 
-				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(projectID, title, content);
+				ScratchProgramPreviewData projectData = new ScratchProgramPreviewData(projectID, title, content);
 				final String projectImageUrl = projectJson.getString("imageurl");
 				int width = Integer.parseInt(projectJson.getString("imagewidth"));
 				int height = Integer.parseInt(projectJson.getString("imageheight"));
 				WebImage webImage = new WebImage(Uri.parse(projectImageUrl), width, height);
-				projectData.setProjectImage(webImage);
+				projectData.setProgramImage(webImage);
 				projectList.add(projectData);
 			}
 			return new ScratchSearchResult(projectList, null, 0, resultString.length());
@@ -306,7 +304,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 		Preconditions.checkArgument(page >= 0, "Parameter page must be greater or equal than 0");
 
 		try {
-			ArrayList<ScratchProjectPreviewData> projectList = new ArrayList<>();
+			ArrayList<ScratchProgramPreviewData> projectList = new ArrayList<>();
 			int currentPageIndex = 0;
 			int totalNumberOfResults = 0;
 			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
@@ -341,7 +339,6 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 			Log.d(TAG, "URL to use: " + url);
 			resultString = getRequestInterruptable(url);
 			Log.d(TAG, "Result string: " + resultString);
-			System.out.print("URL:" + url);
 
 			JSONObject jsonObject = new JSONObject(resultString);
 			JSONObject cursor = jsonObject.getJSONObject("cursor");
@@ -379,12 +376,12 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 				JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
 				JSONObject metatags = richSnippet.getJSONObject("metatags");
 
-				ScratchProjectPreviewData projectData = new ScratchProjectPreviewData(id, title, content);
+				ScratchProgramPreviewData projectData = new ScratchProgramPreviewData(id, title, content);
 				if (metatags.has("ogImage")) {
 					String projectImageUrl = metatags.getString("ogImage");
 					// TODO: extract size from URL!
 					projectImageUrl = projectImageUrl.replace("200x200", "150x150");
-					projectData.setProjectImage(new WebImage(Uri.parse(projectImageUrl), 150, 150));
+					projectData.setProgramImage(new WebImage(Uri.parse(projectImageUrl), 150, 150));
 				}
 				projectList.add(projectData);
 			}
@@ -692,7 +689,7 @@ public final class ServerCalls implements ScratchProjectDataFetcher {
 			// do not use default client for NON-HTTPS requests!
 			if (url.startsWith("http://")) {
 				httpClient = new OkHttpClient();
-				// allow HTTP instead of HTTPS! TODO: not best solution...
+				// allows HTTP instead of HTTPS!
 				httpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT));
 			}
 

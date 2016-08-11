@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ScratchProjectData implements Serializable {
+public class ScratchProgramData implements Serializable {
 
 	public enum VisibilityState {
 		// NOTE: do not change values!
@@ -110,7 +110,7 @@ public class ScratchProjectData implements Serializable {
 	private VisibilityState visibiltyState;
 	private List<ScratchRemixProjectData> remixes;
 
-	public ScratchProjectData(long id, String title, String owner, String instructions, String notesAndCredits,
+	public ScratchProgramData(long id, String title, String owner, String instructions, String notesAndCredits,
 			int views, int favorites, int loves, Date modifiedDate, Date sharedDate, List<String> tags,
 			VisibilityState visibilityState)
 	{

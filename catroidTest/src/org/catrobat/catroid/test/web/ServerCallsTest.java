@@ -36,7 +36,7 @@ import com.facebook.HttpMethod;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProjectPreviewData;
+import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.test.utils.TestUtils;
 import org.catrobat.catroid.transfers.DeleteTestUserTask;
@@ -93,10 +93,10 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 	public void testScratchSearchWithEmptyQueryParam() {
 		try {
 			ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch("", ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 0);
-			ArrayList<ScratchProjectPreviewData> projectList = searchResult.getProjectList();
+			ArrayList<ScratchProgramPreviewData> projectList = searchResult.getProjectList();
 
 			assertNotNull("Invalid search result", projectList);
-			for (ScratchProjectPreviewData project : projectList) {
+			for (ScratchProgramPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
 			}
@@ -116,10 +116,10 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 	public void testScratchSearchWithQueryParam() {
 		try {
 			ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch("test", ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 0);
-			ArrayList<ScratchProjectPreviewData> projectList = searchResult.getProjectList();
+			ArrayList<ScratchProgramPreviewData> projectList = searchResult.getProjectList();
 
 			assertNotNull("Invalid search result", projectList);
-			for (ScratchProjectPreviewData project : projectList) {
+			for (ScratchProgramPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
 			}
@@ -139,10 +139,10 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 	public void testScratchSearchNumberOfItemsParam() {
 		try {
 			ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch("test", ServerCalls.ScratchSearchSortType.RELEVANCE, 10, 0);
-			ArrayList<ScratchProjectPreviewData> projectList = searchResult.getProjectList();
+			ArrayList<ScratchProgramPreviewData> projectList = searchResult.getProjectList();
 
 			assertNotNull("Invalid search result", projectList);
-			for (ScratchProjectPreviewData project : projectList) {
+			for (ScratchProgramPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
 			}
@@ -162,10 +162,10 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 	public void testScratchSearchNextPage() {
 		try {
 			ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch("test", ServerCalls.ScratchSearchSortType.RELEVANCE, 20, 1);
-			ArrayList<ScratchProjectPreviewData> projectList = searchResult.getProjectList();
+			ArrayList<ScratchProgramPreviewData> projectList = searchResult.getProjectList();
 
 			assertNotNull("Invalid search result", projectList);
-			for (ScratchProjectPreviewData project : projectList) {
+			for (ScratchProgramPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
 			}
@@ -185,10 +185,10 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 	public void testScratchSearchAndSortByDate() {
 		try {
 			ScratchSearchResult searchResult = ServerCalls.getInstance().scratchSearch("test", ServerCalls.ScratchSearchSortType.DATE, 20, 0);
-			ArrayList<ScratchProjectPreviewData> projectList = searchResult.getProjectList();
+			ArrayList<ScratchProgramPreviewData> projectList = searchResult.getProjectList();
 
 			assertNotNull("Invalid search result", projectList);
-			for (ScratchProjectPreviewData project : projectList) {
+			for (ScratchProgramPreviewData project : projectList) {
 				assertNotNull(project.getTitle());
 				assertNotNull(project.getContent());
 			}

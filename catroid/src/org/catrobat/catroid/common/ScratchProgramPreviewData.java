@@ -29,27 +29,27 @@ import com.google.android.gms.common.images.WebImage;
 
 import java.io.Serializable;
 
-public class ScratchProjectPreviewData implements Parcelable, Serializable {
+public class ScratchProgramPreviewData implements Parcelable, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private long id;
 	private String title;
 	private String content;
-	private WebImage projectImage;
+	private WebImage programImage;
 
-	public ScratchProjectPreviewData(long id, String title, String content) {
+	public ScratchProgramPreviewData(long id, String title, String content) {
 		this.id = id;
 		this.title = title;
 		this.content = content;
-		this.projectImage = null;
+		this.programImage = null;
 	}
 
-	private ScratchProjectPreviewData(Parcel in) {
+	private ScratchProgramPreviewData(Parcel in) {
 		this.id = in.readLong();
 		this.title = in.readString();
 		this.content = in.readString();
-		this.projectImage = in.readParcelable(WebImage.class.getClassLoader());
+		this.programImage = in.readParcelable(WebImage.class.getClassLoader());
 	}
 
 	public long getId() { return id; }
@@ -58,9 +58,9 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
 
 	public String getContent() { return content; }
 
-	public WebImage getProjectImage() { return projectImage; }
+	public WebImage getProgramImage() { return programImage; }
 
-	public void setProjectImage(WebImage projectImage) { this.projectImage = projectImage; }
+	public void setProgramImage(WebImage programImage) { this.programImage = programImage; }
 
 	@Override
 	public int describeContents() { return 0; }
@@ -70,18 +70,18 @@ public class ScratchProjectPreviewData implements Parcelable, Serializable {
 		dest.writeLong(id);
 		dest.writeString(title);
 		dest.writeString(content);
-		dest.writeParcelable(projectImage, flags);
+		dest.writeParcelable(programImage, flags);
 	}
 
-	public static final Parcelable.Creator<ScratchProjectPreviewData> CREATOR = new Parcelable.Creator<ScratchProjectPreviewData>() {
+	public static final Parcelable.Creator<ScratchProgramPreviewData> CREATOR = new Parcelable.Creator<ScratchProgramPreviewData>() {
 		@Override
-		public ScratchProjectPreviewData createFromParcel(Parcel source) {
-			return new ScratchProjectPreviewData(source);
+		public ScratchProgramPreviewData createFromParcel(Parcel source) {
+			return new ScratchProgramPreviewData(source);
 		}
 
 		@Override
-		public ScratchProjectPreviewData[] newArray(int size) {
-			return new ScratchProjectPreviewData[size];
+		public ScratchProgramPreviewData[] newArray(int size) {
+			return new ScratchProgramPreviewData[size];
 		}
 	};
 }

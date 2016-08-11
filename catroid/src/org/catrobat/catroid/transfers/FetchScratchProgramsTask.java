@@ -34,20 +34,20 @@ import org.catrobat.catroid.web.WebconnectionException;
 
 import java.io.InterruptedIOException;
 
-public class FetchScratchProjectsTask extends AsyncTask<String, Void, ScratchSearchResult> {
+public class FetchScratchProgramsTask extends AsyncTask<String, Void, ScratchSearchResult> {
 
-	private static final String TAG = FetchScratchProjectsTask.class.getSimpleName();
+	private static final String TAG = FetchScratchProgramsTask.class.getSimpleName();
 	private static final int MAX_NUM_OF_RETRIES = 2;
 	private static final int MIN_TIMEOUT = 1_000; // in ms
 
-	public interface ScratchProjectListTaskDelegate {
+	public interface ScratchProgramListTaskDelegate {
 		void onPreExecute();
 		void onPostExecute(ScratchSearchResult result);
 	}
 
-	private ScratchProjectListTaskDelegate delegate = null;
+	private ScratchProgramListTaskDelegate delegate = null;
 
-	public FetchScratchProjectsTask setDelegate(ScratchProjectListTaskDelegate delegate) {
+	public FetchScratchProgramsTask setDelegate(ScratchProgramListTaskDelegate delegate) {
 		this.delegate = delegate;
 		return this;
 	}
@@ -64,14 +64,14 @@ public class FetchScratchProjectsTask extends AsyncTask<String, Void, ScratchSea
 	protected ScratchSearchResult doInBackground(String... params) {
 		Preconditions.checkArgument(params.length <= 2, "Invalid number of parameters!");
 		try {
-			return fetchProjectList(params.length > 0 ? params[0] : null);
+			return fetchProgramList(params.length > 0 ? params[0] : null);
 		} catch (InterruptedIOException exception) {
 			Log.i(TAG, "Task has been cancelled in the meanwhile!");
 			return null;
 		}
 	}
 
-	public ScratchSearchResult fetchProjectList(String query) throws InterruptedIOException {
+	public ScratchSearchResult fetchProgramList(String query) throws InterruptedIOException {
 		// exponential backoff
 		int delay;
 		for (int attempt = 0; attempt <= MAX_NUM_OF_RETRIES; attempt++) {
@@ -83,11 +83,11 @@ public class FetchScratchProjectsTask extends AsyncTask<String, Void, ScratchSea
 					ServerCalls.ScratchSearchSortType sortType = ServerCalls.ScratchSearchSortType.RELEVANCE;
 					return ServerCalls.getInstance().scratchSearch(query, sortType, 20, 0);
 				}
-				return ServerCalls.getInstance().fetchDefaultScratchProjects();
+				return ServerCalls.getInstance().fetchDefaultScratchPrograms();
 			} catch (WebconnectionException e) {
 				Log.d(TAG, e.getLocalizedMessage() + "\n" + e.getStackTrace());
 				delay = MIN_TIMEOUT + (int) (MIN_TIMEOUT * Math.random() * (attempt + 1));
-				Log.i(TAG, "Retry #" + (attempt + 1) + " to fetch scratch project list scheduled in "
+				Log.i(TAG, "Retry #" + (attempt + 1) + " to fetch scratch program list scheduled in "
 						+ delay + " ms due to " + e.getLocalizedMessage());
 				try {
 					Thread.sleep(delay);
