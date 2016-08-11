@@ -23,9 +23,9 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.command;
 
-public class RetrieveJobsInfoCommand extends Command {
-	public RetrieveJobsInfoCommand(final long clientID) {
-		super(Type.RETRIEVE_JOBS_INFO);
+public class RetrieveInfoCommand extends Command {
+	public RetrieveInfoCommand(final long clientID) {
+		super(Type.RETRIEVE_INFO);
 		addArgument(ArgumentType.CLIENT_ID, clientID);
 	}
 }
