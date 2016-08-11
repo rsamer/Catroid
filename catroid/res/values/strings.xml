@@ -131,7 +131,11 @@
     <string name="error_scratch_program_data_not_available">Whoops! Information not available, please try later</string>
     <string name="error_scratch_program_conversion_failed">Whoops! Failed to convert Scratch program, please try again
         later</string>
+    <string name="error_specific_scratch_program_conversion_failed_x">Whoops! Failed to convert "%1$s", please try
+    <string name="error_scratch_converter_outdated_pocketcode_version">Your Pocket Code app is outdated. Our Scratch
+        converter only supports the latest Pocket Code version. Please update it on the Google Play Store!</string>
     <string name="connection_established">Connection to server established!</string>
+        again later</string>
     <string name="search_failed">Search failed, please retry later!</string>
     <string name="connection_closed">Connection to server closed!</string>
     <string name="connection_failed">Connection to server failed, please retry later!</string>
@@ -155,14 +159,14 @@
     <string name="list_view_section_title_converted_programs">Converted programs</string>
     <string name="status">Status</string>
     <string name="title">Title</string>
-    <string name="by">by</string>
+    <string name="by_x">by %1$s</string>
     <string name="by_author">by Author</string>
     <string name="warning_program_visibility">WARNING:\nThis seems to be a private program. Converting it may
         fail!</string>
     <string name="instructions">Instructions</string>
     <string name="notes_and_credits">Notes and Credits</string>
-    <string name="shared">Shared</string>
-    <string name="modified">Modified</string>
+    <string name="shared_at_x">Shared: %1$s</string>
+    <string name="modified_at_x">Modified: %1$s</string>
     <string name="remixes">Remixes</string>
     <!--  -->
 

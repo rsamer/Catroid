@@ -25,6 +25,7 @@ package org.catrobat.catroid.scratchconverter;
 
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
 
@@ -34,10 +35,11 @@ public interface Client {
 	long INVALID_CLIENT_ID = -1;
 
 	MessageListener getMessageListener();
+	void setConvertCallback(ConvertCallback convertCallback);
 	boolean isClosed();
 	boolean isAuthenticated();
 	void connectAndAuthenticate(ConnectAuthCallback connectAuthCallback);
-	void retrieveJobsInfo();
+	void retrieveInfo();
 	void convertJob(Job job, boolean verbose, boolean force);
 	void close();
 
@@ -50,36 +52,22 @@ public interface Client {
 	}
 
 	interface ConvertCallback {
+		void onInfo(float supportedCatrobatLanguageVersion, Job[] jobs);
+		void onJobScheduled(Job job);
 		void onConversionReady(Job job);
 		void onConversionStart(Job job);
+		void onJobProgress(Job job, double progress);
+		void onJobOutput(Job job, String[] lines);
 		void onConversionFinished(Job job);
-		void onDownloadReady(Job job, DownloadFinishedListener downloadFinishedListener, String downloadURL,
+		void onDownloadReady(Job job, DownloadFinishedCallback downloadFinishedCallback, String downloadURL,
 				Date cachedDate);
-		void onConversionFailure(Job job, ClientException ex);
+		void onConversionFailure(@Nullable Job job, ClientException ex);
+		void onError(String errorMessage);
 	}
 
-	interface DownloadFinishedListener {
+	interface DownloadFinishedCallback {
 		void onDownloadFinished(String catrobatProgramName, String url);
 		void onUserCanceledDownload(String url);
-	}
-
-	// convenient callback base class
-	class SimpleConvertCallback implements ConvertCallback {
-		@Override
-		public void onConversionReady(Job job) {}
-
-		@Override
-		public void onConversionStart(Job job) {}
-
-		@Override
-		public void onConversionFinished(Job job) {}
-
-		@Override
-		public void onDownloadReady(Job job, DownloadFinishedListener downloadFinishedListener, String downloadURL,
-				Date cachedDate) {}
-
-		@Override
-		public void onConversionFailure(Job job, ClientException ex) {}
 	}
 
 }

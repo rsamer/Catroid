@@ -27,5 +27,5 @@ import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 
 public interface BaseMessageHandler {
-	void onBaseMessage(BaseMessage baseMessage, BaseInfoViewListener[] viewListeners);
+	void onBaseMessage(BaseMessage baseMessage);
 }

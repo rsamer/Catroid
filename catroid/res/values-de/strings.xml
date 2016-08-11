@@ -121,6 +121,11 @@
     derzeit leider nicht abgerufen werden. Bitte probiere es etwas später noch einmal!</string>
   <string name="error_scratch_program_conversion_failed">Hoppla! Konvertierung des Scratch Programms
       fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
+  <string name="error_specific_scratch_program_conversion_failed_x">Hoppla! Konvertierung von "%1$s" fehlgeschlagen.
+      Bitte probiere es etwas später noch einmal!</string>
+  <string name="error_scratch_converter_outdated_pocketcode_version">Deine Pocket Code App ist nicht mehr aktuell.
+        Unser Scratch Konverter unterstützt nur die aktuellste Pocket Code Version. Bitte lade die aktuelle Pocket Code
+    Version im Google Play Store herunter!</string>
   <string name="connection_established">Verbindung zum Server hergestellt!</string>
   <string name="search_failed">Suche fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
   <string name="connection_closed">Verbindung zum Server getrennt!</string>
@@ -145,14 +150,14 @@
   <string name="list_view_section_title_converted_programs">Fertig konvertierte Programme</string>
   <string name="status">Status</string>
   <string name="title">Titel</string>
-  <string name="by">von</string>
+  <string name="by_x">von %1$s</string>
   <string name="by_author">von User</string>
   <string name="warning_program_visibility">ACHTUNG:\nDieses Programm ist privat. Konvertierung ist zwar möglich,
     könnte aber möglicherweise fehlschlagen!</string>
   <string name="instructions">Anleitung</string>
   <string name="notes_and_credits">Anmerkungen und Danksagungen</string>
-  <string name="shared">Veröffentlicht</string>
-  <string name="modified">Zuletzt verändert</string>
+  <string name="shared_at_x">Veröffentlicht: %1$s</string>
+  <string name="modified_at_x">Zuletzt verändert: %1$s</string>
   <string name="remixes">Remixe</string>
 
   <!-- New Object Dialog -->

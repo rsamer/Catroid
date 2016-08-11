@@ -23,8 +23,6 @@
 
 package org.catrobat.catroid.scratchconverter;
 
-import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
@@ -39,15 +37,13 @@ import org.catrobat.catroid.scratchconverter.protocol.JobHandler;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
 import org.catrobat.catroid.scratchconverter.protocol.command.Command;
-import org.catrobat.catroid.scratchconverter.protocol.command.RetrieveJobsInfoCommand;
+import org.catrobat.catroid.scratchconverter.protocol.command.RetrieveInfoCommand;
 import org.catrobat.catroid.scratchconverter.protocol.command.ScheduleJobCommand;
 import org.catrobat.catroid.scratchconverter.protocol.command.SetClientIDCommand;
-import org.catrobat.catroid.scratchconverter.protocol.message.Message;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ClientIDMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ErrorMessage;
-import org.catrobat.catroid.scratchconverter.protocol.message.base.JobsInfoMessage;
-import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
+import org.catrobat.catroid.scratchconverter.protocol.message.base.InfoMessage;
 
 final public class WebSocketClient implements Client, BaseMessageHandler {
 
@@ -58,8 +54,6 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 	private static final String TAG = WebSocketClient.class.getSimpleName();
 
-	private final Context context;
-	private final Handler handler;
 	private Client.State state;
 	private long clientID;
 	private WebSocketMessageListener messageListener;
@@ -68,18 +62,14 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	private ConnectAuthCallback connectAuthCallback;
 	private ConvertCallback convertCallback;
 
-	public WebSocketClient(final Context context, final long clientID, final WebSocketMessageListener messageListener,
-			final ConvertCallback convertCallback)
-	{
-		this.context = context;
-		this.handler = new Handler(context.getMainLooper());
+	public WebSocketClient(final long clientID, final WebSocketMessageListener messageListener) {
 		this.clientID = clientID;
 		this.state = State.NOT_CONNECTED;
 		messageListener.setBaseMessageHandler(this);
 		this.messageListener = messageListener;
 		this.webSocket = null;
 		this.connectAuthCallback = null;
-		this.convertCallback = convertCallback;
+		this.convertCallback = null;
 	}
 
 	public MessageListener getMessageListener() {
@@ -96,8 +86,12 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		return state == State.CONNECTED_AUTHENTICATED;
 	}
 
-	public void setAsyncHttpClient(AsyncHttpClient asyncHttpClient) {
+	public void setAsyncHttpClient(final AsyncHttpClient asyncHttpClient) {
 		this.asyncHttpClient = asyncHttpClient;
+	}
+
+	public void setConvertCallback(final ConvertCallback callback) {
+		convertCallback = callback;
 	}
 
 	private void connect(final ConnectCallback connectCallback) {
@@ -183,15 +177,14 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
-	public void retrieveJobsInfo() {
+	public void retrieveInfo() {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
-		sendCommand(new RetrieveJobsInfoCommand(clientID));
+		sendCommand(new RetrieveInfoCommand(clientID));
 	}
 
 	@Override
-	public void convertJob(final Job job, final boolean verbose, final boolean force)
-	{
+	public void convertJob(final Job job, final boolean verbose, final boolean force) {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
@@ -209,22 +202,25 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			jobHandler.setCallback(convertCallback);
 		} else {
 			Log.d(TAG, "Creating new JobHandler for jobID " + jobID);
-			jobHandler = new JobHandler(context, job, convertCallback);
+			jobHandler = new JobHandler(job, convertCallback);
 			messageListener.addJobHandler(jobHandler);
 		}
 
-		jobHandler.onJobScheduled(messageListener.getJobConsoleViewListeners(jobID));
+		jobHandler.onJobScheduled();
 		sendCommand(new ScheduleJobCommand(jobID, clientID, force, verbose));
 	}
 
 	@Override
-	public void onBaseMessage(BaseMessage baseMessage, final BaseInfoViewListener[] viewListeners) {
-		// case: JobsInfoMessage
-		if (baseMessage instanceof JobsInfoMessage) {
-			final Job[] jobs = (Job[])baseMessage.getArgument(Message.ArgumentType.JOBS_INFO);
+	public void onBaseMessage(BaseMessage baseMessage) {
+		// case: InfoMessage
+		if (baseMessage instanceof InfoMessage) {
+			final InfoMessage infoMessage = (InfoMessage) baseMessage;
+			convertCallback.onInfo(infoMessage.getCatrobatLanguageVersion(), infoMessage.getJobList());
+
+			final Job[] jobs = infoMessage.getJobList();
 			for (Job job : jobs) {
 				if (messageListener.getJobHandler(job.getJobID()) == null) {
-					JobHandler jobHandler = new JobHandler(context, job, convertCallback);
+					JobHandler jobHandler = new JobHandler(job, convertCallback);
 					// TODO: combine JobHandler and Job states !!!
 					JobHandler.State state = JobHandler.State.UNSCHEDULED;
 					switch (job.getState()) {
@@ -245,42 +241,22 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 					messageListener.addJobHandler(jobHandler);
 				}
 			}
-
-			if (viewListeners != null) {
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						for (BaseInfoViewListener viewListener : viewListeners) {
-							viewListener.onJobsInfo(jobs);
-						}
-					}
-				});
-			}
 			return;
 		}
 
 		// case: ErrorMessage
 		if (baseMessage instanceof ErrorMessage) {
-			final String errorMessage = (String)baseMessage.getArgument(Message.ArgumentType.MSG);
-			Log.e(TAG, errorMessage);
+			final ErrorMessage errorMessage = (ErrorMessage) baseMessage;
+			Log.e(TAG, errorMessage.getMessage());
 
 			if (state == State.CONNECTED) {
 				Preconditions.checkState(connectAuthCallback != null);
-				connectAuthCallback.onAuthenticationFailure(new ClientException(errorMessage));
+				connectAuthCallback.onAuthenticationFailure(new ClientException(errorMessage.getMessage()));
+				convertCallback.onError(errorMessage.getMessage());
 			} else if (state == State.CONNECTED_AUTHENTICATED) {
-				// TODO: determine how to get job??? -> introduce custom JobErrorMessage!
-				convertCallback.onConversionFailure(null, new ClientException(errorMessage));
-			}
-
-			if (viewListeners != null) {
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						for (BaseInfoViewListener viewListener : viewListeners) {
-							viewListener.onError(errorMessage);
-						}
-					}
-				});
+				convertCallback.onConversionFailure(null, new ClientException(errorMessage.getMessage()));
+			} else {
+				convertCallback.onError(errorMessage.getMessage());
 			}
 			return;
 		}
@@ -288,12 +264,15 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		// case: ClientIDMessage & RenewClientIDMessage
 		if (baseMessage instanceof ClientIDMessage) {
 			Preconditions.checkState(state == State.CONNECTED);
+
+			final ClientIDMessage clientIDMessage = (ClientIDMessage) baseMessage;
 			long oldClientID = clientID;
-			clientID = (long)baseMessage.getArgument(Message.ArgumentType.CLIENT_ID);
+			clientID = clientIDMessage.getClientID();
 
 			if (clientID != oldClientID) {
 				Log.d(TAG, "New Client ID: " + clientID);
 			}
+
 			state = State.CONNECTED_AUTHENTICATED;
 			connectAuthCallback.onSuccess(clientID);
 			return;
@@ -311,10 +290,6 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		final String dataToSend = command.toJson().toString();
 		Log.d(TAG, "Sending: " + dataToSend);
 		webSocket.send(dataToSend);
-	}
-
-	private void runOnUiThread(Runnable r) {
-		handler.post(r);
 	}
 
 }

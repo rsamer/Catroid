@@ -30,7 +30,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="org.catrobat.catroid.ui.ScratchProjectDetailsActivity">
+    tools:context=".ui.ScratchProgramDetailsActivity">
 
     <TextView
         android:id="@+id/scratch_project_title"
@@ -221,7 +221,7 @@
                 android:layout_below="@+id/scratch_project_tags_text"
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="20dp"
-                android:text="@string/shared" />
+                android:text="@string/shared_at_x" />
 
             <TextView
                 android:id="@+id/scratch_project_modified_text"
@@ -232,7 +232,7 @@
                 android:layout_below="@+id/scratch_project_tags_text"
                 android:layout_alignParentLeft="true"
                 android:layout_marginTop="20dp"
-                android:text="@string/modified" />
+                android:text="@string/modified_at_x" />
 
             <TextView
                 android:id="@+id/scratch_project_remixes_label"

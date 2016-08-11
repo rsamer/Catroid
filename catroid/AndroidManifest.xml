@@ -192,7 +192,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.ScratchProjectDetailsActivity"
+            android:name=".ui.ScratchProgramDetailsActivity"
             android:noHistory="false"
             android:screenOrientation="portrait" />
         <activity
