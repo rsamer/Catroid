@@ -39,16 +39,17 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
+import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramData.ScratchRemixProjectData> {
-	private static final String TAG = ScratchRemixedProjectAdapter.class.getSimpleName();
+public class ScratchRemixedProgramAdapter extends ArrayAdapter<ScratchProgramData> {
+	private static final String TAG = ScratchRemixedProgramAdapter.class.getSimpleName();
 
 	private WebImageLoader webImageLoader;
-	private ScratchRemixedProjectEditListener scratchRemixedProjectEditListener;
+	private ScratchRemixedProgramEditListener scratchRemixedProgramEditListener;
 
 	private static class ViewHolder {
 		private RelativeLayout background;
@@ -60,8 +61,8 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramDat
 
 	private static LayoutInflater inflater;
 
-	public ScratchRemixedProjectAdapter(Context context, int resource, int textViewResourceId,
-			List<ScratchProgramData.ScratchRemixProjectData> objects, ExecutorService executorService) {
+	public ScratchRemixedProgramAdapter(Context context, int resource, int textViewResourceId,
+			List<ScratchProgramData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		Log.d(TAG, "Number of remixes: " + objects.size());
@@ -72,8 +73,8 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramDat
 		);
 	}
 
-	public void setScratchRemixedProjectEditListener(ScratchRemixedProjectEditListener listener) {
-		scratchRemixedProjectEditListener = listener;
+	public void setScratchRemixedProgramEditListener(ScratchRemixedProgramEditListener listener) {
+		scratchRemixedProgramEditListener = listener;
 	}
 
 	@Override
@@ -93,25 +94,24 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramDat
 			holder = (ViewHolder) projectView.getTag();
 		}
 
-		// ------------------------------------------------------------
-		ScratchProgramData.ScratchRemixProjectData projectData = getItem(position);
-
-		// set name of project:
-		holder.projectName.setText(projectData.getTitle());
-
-		// set details of project:
-		holder.detailsText.setText(getContext().getString(R.string.by_x, projectData.getOwner()));
+		final ScratchProgramData programData = getItem(position);
+		holder.projectName.setText(programData.getTitle());
+		holder.detailsText.setText(getContext().getString(R.string.by_x, programData.getOwner()));
 		holder.detailsText.setSingleLine(false);
 
-		// set project image (threaded):
-		WebImage httpImageMetadata = projectData.getProjectImage();
+		WebImage httpImageMetadata = programData.getImage();
 		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
-			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
-			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
-					holder.image, width, height);
+			final int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
+			final int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
+			final String originalImageURL = httpImageMetadata.getUrl().toString();
+
+			// load image but only thumnail!
+			// in order to download only thumbnail version of the original image
+			// we have to reduce the image size in the URL
+			final String thumbnailImageURL = Utils.changeSizeOfScratchImageURL(originalImageURL, height);
+			webImageLoader.fetchAndShowImage(thumbnailImageURL, holder.image, width, height);
 		} else {
-			// clear old image of other project if this is a reused view element
+			// clear old image of other program if this is a reused view element
 			holder.image.setImageBitmap(null);
 		}
 
@@ -120,8 +120,8 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramDat
 		holder.background.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (scratchRemixedProjectEditListener != null) {
-					scratchRemixedProjectEditListener.onProjectEdit(position);
+				if (scratchRemixedProgramEditListener != null) {
+					scratchRemixedProgramEditListener.onProjectEdit(position);
 				}
 			}
 		});
@@ -130,7 +130,7 @@ public class ScratchRemixedProjectAdapter extends ArrayAdapter<ScratchProgramDat
 		return projectView;
 	}
 
-	public interface ScratchRemixedProjectEditListener {
+	public interface ScratchRemixedProgramEditListener {
 		void onProjectEdit(int position);
 	}
 

@@ -54,6 +54,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.facebook.AccessToken;
+import com.google.android.gms.common.images.WebImage;
 import com.google.common.base.Splitter;
 
 import org.catrobat.catroid.ProjectManager;
@@ -166,8 +167,7 @@ public final class Utils {
 
 	public static String extractParameterFromURL(final String url, final String parameterKey) {
 		final String query = url.split("\\?")[1];
-		final Map<String, String> queryParamsMap = Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query);
-		return queryParamsMap.get(parameterKey);
+		return Splitter.on('&').trimResults().withKeyValueSeparator("=").split(query).get(parameterKey);
 	}
 
 	public static long extractScratchJobIDFromURL(final String url) {
@@ -182,6 +182,42 @@ public final class Utils {
 
 		final long jobID = Long.parseLong(jobIDString);
 		return jobID > 0 ? jobID : Constants.INVALID_SCRATCH_PROGRAM_ID;
+	}
+
+	public static int[] extractImageSizeFromScratchImageURL(final String url) {
+		// example: https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png -> [480, 360]
+		int[] defaultSize = new int[] { Constants.SCRATCH_IMAGE_DEFAULT_WIDTH, Constants.SCRATCH_IMAGE_DEFAULT_HEIGHT };
+
+		String[] urlStringParts = url.split("_");
+		if (urlStringParts.length == 0) {
+			return defaultSize;
+		}
+
+		final String[] sizeParts = urlStringParts[urlStringParts.length - 1].replace(".png", "").split("x");
+		if (sizeParts.length != 2) {
+			return defaultSize;
+		}
+
+		try {
+			int width = Integer.parseInt(sizeParts[0]);
+			int height = Integer.parseInt(sizeParts[1]);
+			return new int[] { width, height };
+
+		} catch (NumberFormatException ex) {
+			return new int[] { Constants.SCRATCH_IMAGE_DEFAULT_WIDTH, Constants.SCRATCH_IMAGE_DEFAULT_HEIGHT };
+		}
+	}
+
+	public static String changeSizeOfScratchImageURL(final String url, int newHeight) {
+		// example: https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png
+		//    ->    https://cdn2.scratch.mit.edu/get_image/project/10205819_240x180.png
+		final int[] imageSize = extractImageSizeFromScratchImageURL(url);
+		final int width = imageSize[0];
+		final int height = imageSize[1];
+		final int newWidth = Math.round(((float) width)/((float) height) * newHeight);
+
+		return url.replace(width + "x", Integer.toString(newWidth) + "x")
+				.replace("x" + height, "x" + Integer.toString(newHeight));
 	}
 
 	public static String humanFriendlyFormattedShortNumber(final int number) {

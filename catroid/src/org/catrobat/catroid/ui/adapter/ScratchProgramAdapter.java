@@ -37,10 +37,11 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.images.WebImage;
 
-import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.R;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
+import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.List;
@@ -48,9 +49,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
-public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramPreviewData> {
-
-	private static final String TAG = ScratchProgramAdapter.class.getSimpleName();
+public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramData> {
 
 	private boolean showDetails;
 	private int selectMode;
@@ -70,7 +69,7 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramPreviewDat
 	private static LayoutInflater inflater;
 
 	public ScratchProgramAdapter(Context context, int resource, int textViewResourceId,
-			List<ScratchProgramPreviewData> objects, ExecutorService executorService) {
+			List<ScratchProgramData> objects, ExecutorService executorService) {
 		super(context, resource, textViewResourceId, objects);
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		showDetails = true;
@@ -137,17 +136,22 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramPreviewDat
 		}
 
 		// ------------------------------------------------------------
-		ScratchProgramPreviewData programData = getItem(position);
+		ScratchProgramData programData = getItem(position);
 		holder.programName.setText(programData.getTitle());
-		holder.detailsText.setText(programData.getContent().replace(" ... ", " - "));
+		holder.detailsText.setText(getContext().getString(R.string.by_x, programData.getOwner()));
 		holder.detailsText.setSingleLine(false);
 
-		WebImage httpImageMetadata = programData.getProgramImage();
+		WebImage httpImageMetadata = programData.getImage();
 		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
-			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
-			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
-					holder.image, width, height);
+			final int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
+			final int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
+			final String originalImageURL = httpImageMetadata.getUrl().toString();
+
+			// load image but only thumnail!
+			// in order to download only thumbnail version of the original image
+			// we have to reduce the image size in the URL
+			final String thumbnailImageURL = Utils.changeSizeOfScratchImageURL(originalImageURL, height);
+			webImageLoader.fetchAndShowImage(thumbnailImageURL, holder.image, width, height);
 		} else {
 			// clear old image of other program if this is a reused view element
 			holder.image.setImageBitmap(null);
@@ -183,10 +187,7 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramPreviewDat
 		holder.background.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View view) {
-				if (selectMode != ListView.CHOICE_MODE_NONE) {
-					return true;
-				}
-				return false;
+				return selectMode != ListView.CHOICE_MODE_NONE;
 			}
 		});
 

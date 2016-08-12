@@ -98,12 +98,11 @@
 
                 <ImageView
                     android:id="@+id/scratch_project_image_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="@dimen/scratch_project_image_width"
+                    android:layout_height="@dimen/scratch_project_image_height"
                     android:layout_alignParentRight="true"
                     android:layout_alignParentTop="true"
-                    android:layout_marginLeft="@dimen/scratch_project_image_margin_right"
-                    android:src="@drawable/ic_launcher" />
+                    android:layout_marginLeft="@dimen/scratch_project_image_margin_right" />
 
                 <TextView
                     android:id="@+id/scratch_project_instructions_label"

@@ -37,7 +37,6 @@ import android.widget.TextView;
 import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.R;
-import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
@@ -46,10 +45,9 @@ import org.catrobat.catroid.utils.WebImageLoader;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ScratchJobAdapter extends ArrayAdapter<Job> {
-	private static final String TAG = ScratchRemixedProjectAdapter.class.getSimpleName();
+	private static final String TAG = ScratchRemixedProgramAdapter.class.getSimpleName();
 
 	private WebImageLoader webImageLoader;
 	private ScratchJobEditListener scratchJobEditListener;
@@ -118,10 +116,15 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 		// set project image (threaded):
 		WebImage httpImageMetadata = job.getImage();
 		if (httpImageMetadata != null && httpImageMetadata.getUrl() != null) {
-			int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
-			int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(httpImageMetadata.getUrl().toString(),
-					holder.image, width, height);
+			final int width = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
+			final int height = getContext().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
+			final String originalImageURL = httpImageMetadata.getUrl().toString();
+
+			// load image but only thumnail!
+			// in order to download only thumbnail version of the original image
+			// we have to reduce the image size in the URL
+			final String thumbnailImageURL = Utils.changeSizeOfScratchImageURL(originalImageURL, height);
+			webImageLoader.fetchAndShowImage(thumbnailImageURL, holder.image, width, height);
 		} else {
 			// clear old image of other project if this is a reused view element
 			holder.image.setImageBitmap(null);

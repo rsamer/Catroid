@@ -32,19 +32,19 @@ import java.util.Map;
 abstract public class Command {
 
 	public enum Type {
-		SET_CLIENT_ID("set_client_ID"),
-		RETRIEVE_INFO("retrieve_info"),
-		SCHEDULE_JOB("schedule_job");
+		AUTHENTICATE(0),
+		RETRIEVE_INFO(1),
+		SCHEDULE_JOB(2),
+		CANCEL_DOWNLOAD(3);
 
-		private final String rawValue;
+		private final int typeID;
 
-		Type(final String rawValue) {
-			this.rawValue = rawValue;
+		Type(final int typeID) {
+			this.typeID = typeID;
 		}
 
-		@Override
-		public String toString() {
-			return rawValue;
+		public int getTypeID() {
+			return typeID;
 		}
 	}
 
@@ -80,7 +80,7 @@ abstract public class Command {
 			args.put(entry.getKey().toString(), entry.getValue());
 		}
 		final Map<String, Object> payloadMap = new HashMap<String, Object>() {{
-				put("cmd", type.toString());
+				put("cmd", type.getTypeID());
 				put("args", args);
 		}};
 		return new JSONObject(payloadMap);

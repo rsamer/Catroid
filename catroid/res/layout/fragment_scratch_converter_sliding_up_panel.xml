@@ -46,8 +46,8 @@
 
         <ImageView
             android:id="@+id/scratch_convert_icon"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/scratch_project_tiny_thumbnail_width"
+            android:layout_height="@dimen/scratch_project_tiny_thumbnail_height"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="14dp"
             android:src="@drawable/views_72x72"

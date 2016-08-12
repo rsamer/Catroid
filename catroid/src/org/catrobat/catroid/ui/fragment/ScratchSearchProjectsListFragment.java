@@ -52,7 +52,7 @@ import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProgramPreviewData;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.scratchconverter.ConversionManager;
 import org.catrobat.catroid.transfers.FetchScratchProgramsTask;
@@ -87,8 +87,8 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	private ImageButton audioButton;
 	private ListView searchResultsListView;
 	private ProgressDialog progressDialog;
-	private List<ScratchProgramPreviewData> scratchProjectList;
-	private ScratchProgramPreviewData scratchProjectToEdit;
+	private List<ScratchProgramData> scratchProgramDataList;
+	private ScratchProgramData scratchProgramToEdit;
 	private ExpiringLruMemoryObjectCache<ScratchSearchResult> scratchSearchResultCache;
 	private ScratchProgramAdapter scratchProgramAdapter;
 	private ActionMode actionMode;
@@ -243,7 +243,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 				return false;
 			}
 		});
-		// TODO: >> powered by "https://www.google.com/uds/css/small-logo.png" Custom Search << (grey)
 		rootView.clearFocus();
 		return rootView;
 	}
@@ -274,7 +273,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		if (savedInstanceState != null) {
-			scratchProjectToEdit = (ScratchProgramPreviewData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
+			scratchProgramToEdit = (ScratchProgramData) savedInstanceState.getSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA);
 		}
 		initAdapter();
 		searchView.setFocusable(false);
@@ -289,7 +288,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
-		outState.putSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA, scratchProjectToEdit);
+		outState.putSerializable(BUNDLE_ARGUMENTS_SCRATCH_PROJECT_DATA, scratchProgramToEdit);
 		super.onSaveInstanceState(outState);
 	}
 
@@ -312,13 +311,13 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	private void initAdapter() {
-		if (scratchProjectList == null) {
-			scratchProjectList = new ArrayList<>();
+		if (scratchProgramDataList == null) {
+			scratchProgramDataList = new ArrayList<>();
 		}
 		scratchProgramAdapter = new ScratchProgramAdapter(activity,
 				R.layout.fragment_scratch_project_list_item,
 				R.id.scratch_projects_list_item_title,
-				scratchProjectList,
+				scratchProgramDataList,
 				executorService);
 		searchResultsListView.setAdapter(scratchProgramAdapter);
 		initClickListener();
@@ -381,11 +380,11 @@ public class ScratchSearchProjectsListFragment extends Fragment
 
 	private void convertCheckedProjects() {
 		int numConverted = 0;
-		ArrayList<ScratchProgramPreviewData> projectsToConvert = new ArrayList<>();
+		ArrayList<ScratchProgramData> projectsToConvert = new ArrayList<>();
 		for (int position : scratchProgramAdapter.getCheckedPrograms()) {
-			scratchProjectToEdit = (ScratchProgramPreviewData) searchResultsListView.getItemAtPosition(position - numConverted);
-			projectsToConvert.add(scratchProjectToEdit);
-			Log.d(TAG, "Converting project '" + scratchProjectToEdit.getTitle() + "'");
+			scratchProgramToEdit = (ScratchProgramData) searchResultsListView.getItemAtPosition(position - numConverted);
+			projectsToConvert.add(scratchProgramToEdit);
+			Log.d(TAG, "Converting project '" + scratchProgramToEdit.getTitle() + "'");
 			numConverted++;
 		}
 		initAdapter();
@@ -413,7 +412,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			@Override
 			public void onClick(View view) {
 				if (selectAll) {
-					for (int position = 0; position < scratchProjectList.size(); position++) {
+					for (int position = 0; position < scratchProgramDataList.size(); position++) {
 						scratchProgramAdapter.addCheckedProgram(position);
 					}
 					scratchProgramAdapter.notifyDataSetChanged();
@@ -442,7 +441,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			@Override
 			public void run() {
 				Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
-				fragment.progressDialog.setMessage(activity.getResources().getString(R.string.search_progress));
+				//fragment.progressDialog.setMessage(activity.getResources().getString(R.string.search_progress));
 				//fragment.progressDialog.show();
 			}
 		});
@@ -459,7 +458,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 			@Override
 			public void run() {
 				fragment.progressDialog.hide();
-				if (result == null || result.getProjectList() == null) {
+				if (result == null || result.getProgramDataList() == null) {
 					ToastUtil.showError(activity, R.string.search_failed);
 					return;
 				}
@@ -467,7 +466,7 @@ public class ScratchSearchProjectsListFragment extends Fragment
 					fragment.scratchSearchResultCache.put(result.getQuery(), result);
 				}
 				fragment.scratchProgramAdapter.clear();
-				for (ScratchProgramPreviewData projectData : result.getProjectList()) {
+				for (ScratchProgramData projectData : result.getProgramDataList()) {
 					fragment.scratchProgramAdapter.add(projectData);
 					Log.d(TAG, projectData.getTitle());
 				}

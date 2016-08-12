@@ -164,11 +164,18 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	}
 
 	private void setIconImageView(final WebImage webImage) {
-		convertIconImageView.setImageBitmap(null);
 		if (webImage != null && webImage.getUrl() != null) {
-			int width = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_width);
-			int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_thumbnail_height);
-			webImageLoader.fetchAndShowImage(webImage.getUrl().toString(), convertIconImageView, width, height);
+			final int width = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_tiny_thumbnail_width);
+			final int height = getActivity().getResources().getDimensionPixelSize(R.dimen.scratch_project_tiny_thumbnail_height);
+			final String originalImageURL = webImage.getUrl().toString();
+
+			// load image but only thumnail!
+			// in order to download only thumbnail version of the original image
+			// we have to reduce the image size in the URL
+			final String thumbnailImageURL = Utils.changeSizeOfScratchImageURL(originalImageURL, height);
+			webImageLoader.fetchAndShowImage(thumbnailImageURL, convertIconImageView, width, height);
+		} else {
+			convertIconImageView.setImageBitmap(null);
 		}
 	}
 
@@ -240,10 +247,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		int finishedJobs = 0;
 		WebImage webImage = null;
 		for (Job job : jobs) {
-			if (job.getImage() != null && job.getImage().getUrl() != null) {
-				webImage = job.getImage();
-			}
 			if (job.getState() == Job.State.FINISHED) {
+				if (webImage == null && job.getImage() != null && job.getImage().getUrl() != null) {
+					webImage = job.getImage();
+				}
 				finishedJobs++;
 			}
 		}
