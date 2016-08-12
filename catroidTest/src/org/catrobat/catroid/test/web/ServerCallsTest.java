@@ -102,7 +102,7 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			}
 
 			assertNotNull("No search result returned", searchResult);
-			assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+			assertTrue("Wrong page number", searchResult.getPageNumber() == 0);
 			assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
 			assertTrue("Invalid number of projects", searchResult.getProjectList().size() <= 20);
 		} catch (InterruptedIOException e) {
@@ -125,7 +125,7 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			}
 
 			assertNotNull("No search result returned", searchResult);
-			assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+			assertTrue("Wrong page number", searchResult.getPageNumber() == 0);
 			assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
 			assertTrue("Invalid number of projects", searchResult.getProjectList().size() <= 20);
 		} catch (InterruptedIOException e) {
@@ -148,7 +148,7 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			}
 
 			assertNotNull("No search result returned", searchResult);
-			assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+			assertTrue("Wrong page number", searchResult.getPageNumber() == 0);
 			assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
 			assertTrue("Invalid number of projects", searchResult.getProjectList().size() <= 10);
 		} catch (InterruptedIOException e) {
@@ -171,7 +171,7 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			}
 
 			assertNotNull("No search result returned", searchResult);
-			assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 1);
+			assertTrue("Wrong page number", searchResult.getPageNumber() == 1);
 			assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
 			assertTrue("Invalid number of projects", searchResult.getProjectList().size() <= 20);
 		} catch (InterruptedIOException e) {
@@ -194,7 +194,7 @@ public class ServerCallsTest extends InstrumentationTestCase implements DeleteTe
 			}
 
 			assertNotNull("No search result returned", searchResult);
-			assertTrue("Wrong page number", searchResult.getCurrentPageIndex() == 0);
+			assertTrue("Wrong page number", searchResult.getPageNumber() == 0);
 			assertTrue("No projects found!", searchResult.getProjectList().size() > 0);
 			assertTrue("Invalid number of projects", searchResult.getProjectList().size() <= 20);
 		} catch (InterruptedIOException e) {

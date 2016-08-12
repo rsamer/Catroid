@@ -36,13 +36,12 @@ import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScratchProgramData.ScratchRemixProjectData;
 import org.catrobat.catroid.common.ScratchProgramPreviewData;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
 import org.catrobat.catroid.ui.ScratchProgramDetailsActivity;
-import org.catrobat.catroid.ui.adapter.ScratchRemixedProjectAdapter;
+import org.catrobat.catroid.ui.adapter.ScratchRemixedProgramAdapter;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.web.WebScratchProgramException;
@@ -268,7 +267,7 @@ public class ScratchProjectDetailsActivityTest extends BaseActivityInstrumentati
 		ListAdapter listAdapter = ((ListView) remixesListView).getAdapter();
 		assertNotNull("ListView has no adapter!", listAdapter);
 		assertTrue("Wrong number of remixes!", listAdapter.getCount() == 1);
-		ScratchRemixedProjectAdapter remixedProjectAdapter = (ScratchRemixedProjectAdapter) listAdapter;
+		ScratchRemixedProgramAdapter remixedProjectAdapter = (ScratchRemixedProgramAdapter) listAdapter;
 
 		// remixed project
 		ScratchRemixProjectData expectedRemixedProjectData = remixedProjectData;

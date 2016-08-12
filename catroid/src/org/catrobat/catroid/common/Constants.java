@@ -148,14 +148,18 @@ public final class Constants {
 	public static final long INVALID_SCRATCH_PROGRAM_ID = 0;
 	public static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
 	public static final String SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME = "scratchconverter.clientID";
-	public static final String SCRATCH_PROJECT_BASE_URL_HTTPS = "https://scratch.mit.edu/projects/";
-	public static final String SCRATCH_SEARCH_BASE_URL = "https://www.googleapis.com/customsearch/";
-	public static final String SCRATCH_SEARCH_URL = SCRATCH_SEARCH_BASE_URL + "v1element";
 	public static final String SCRATCH_CONVERTER_HOST = "scratch2.catrob.at";
+	//public static final String SCRATCH_PROJECT_BASE_URL_HTTPS = "https://scratch.mit.edu/projects/";
+	//public static final String SCRATCH_SEARCH_BASE_URL = "https://www.googleapis.com/customsearch/";
+	//public static final String SCRATCH_SEARCH_URL = SCRATCH_SEARCH_BASE_URL + "v1element";
+	public static final String SCRATCH_SEARCH_URL = "https://api.scratch.mit.edu/search/projects";
 	public static final String SCRATCH_CONVERTER_WEB_SOCKET = "ws://" + SCRATCH_CONVERTER_HOST + "/convertersocket";
 	public static final String SCRATCH_CONVERTER_BASE_URL = "http://" + SCRATCH_CONVERTER_HOST + "/"; // TODO: https??
 	public static final String SCRATCH_CONVERTER_API_BASE_URL = SCRATCH_CONVERTER_BASE_URL + "api/v1/";
 	public static final String SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL = SCRATCH_CONVERTER_API_BASE_URL + "projects/";
+	public static final int SCRATCH_IMAGE_DEFAULT_WIDTH = 150;
+	public static final int SCRATCH_IMAGE_DEFAULT_HEIGHT = 150;
+	public static final String DATE_FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
 	public static final long DISK_IMAGE_CACHE_EXPIRE_TIME = 10 * 24 * 60 * 60 * 1_000;           // 10 days (in ms)
 	public static final long DISK_IMAGE_CACHE_MAX_SIZE = 20 * 1_024 * 1_024;                     // 20MB (in bytes)

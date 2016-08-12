@@ -23,143 +23,219 @@
 
 package org.catrobat.catroid.common;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.android.gms.common.images.WebImage;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class ScratchProgramData implements Serializable {
-
-	public enum VisibilityState {
-		// NOTE: do not change values!
-		UNKNOWN(0),
-		PRIVATE(1),
-		PUBLIC(2);
-
-		private int visibilityState;
-
-		private static Map<Integer, VisibilityState> map = new HashMap<>();
-
-		static {
-			for (VisibilityState legEnum : VisibilityState.values()) {
-				map.put(legEnum.visibilityState, legEnum);
-			}
-		}
-
-		VisibilityState(final int visibilityState) {
-			this.visibilityState = visibilityState;
-		}
-
-		public static VisibilityState valueOf(int visibilityState) {
-			return map.get(visibilityState);
-		}
-
-	}
-
-	public static class ScratchRemixProjectData implements Serializable {
-		private static final long serialVersionUID = 1L;
-
-		private long id;
-
-		private String title;
-
-		public String getTitle() {
-			return title;
-		}
-
-		public String getOwner() {
-			return owner;
-		}
-
-		public WebImage getProjectImage() {
-			return projectImage;
-		}
-
-		public long getId() {
-			return id;
-		}
-
-		private String owner;
-		private WebImage projectImage;
-
-		public ScratchRemixProjectData(long id, String title, String owner, WebImage projectImage) {
-			this.id = id;
-			this.title = title;
-			this.owner = owner;
-			this.projectImage = projectImage;
-		}
-	}
+public class ScratchProgramData implements Serializable, Parcelable {
 
 	private static final long serialVersionUID = 1L;
 
 	private long id;
 	private String title;
 	private String owner;
+	private WebImage image;
 	private String instructions;
 	private String notesAndCredits;
 	private int views;
 	private int favorites;
 	private int loves;
+	private Date createdDate;
 	private Date modifiedDate;
 	private Date sharedDate;
 	private List<String> tags;
-	private VisibilityState visibiltyState;
-	private List<ScratchRemixProjectData> remixes;
+	private ScratchVisibilityState visibilityState;
+	private List<ScratchProgramData> remixes;
 
-	public ScratchProgramData(long id, String title, String owner, String instructions, String notesAndCredits,
-			int views, int favorites, int loves, Date modifiedDate, Date sharedDate, List<String> tags,
-			VisibilityState visibilityState)
-	{
+	public ScratchProgramData(long id, String title, String owner, WebImage image) {
 		this.id = id;
 		this.title = title;
 		this.owner = owner;
-		this.instructions = instructions;
-		this.notesAndCredits = notesAndCredits;
-		this.views = views;
-		this.favorites = favorites;
-		this.loves = loves;
-		this.modifiedDate = modifiedDate;
-		this.sharedDate = sharedDate;
-		this.tags = tags;
-		this.visibiltyState = visibilityState;
+		this.image = image;
+		this.instructions = null;
+		this.notesAndCredits = null;
+		this.views = 0;
+		this.favorites = 0;
+		this.loves = 0;
+		this.createdDate = null;
+		this.modifiedDate = null;
+		this.sharedDate = null;
+		this.tags = new ArrayList<>();
+		this.visibilityState = null;
 		this.remixes = new ArrayList<>();
 	}
 
-	public long getId() { return id; }
+	private ScratchProgramData(Parcel in) {
+		this.id = in.readLong();
+		this.title = in.readString();
+		this.owner = in.readString();
+		this.image = in.readParcelable(WebImage.class.getClassLoader());
+		this.instructions = in.readString();
+		this.notesAndCredits = in.readString();
+		this.views = in.readInt();
+		this.favorites = in.readInt();
+		this.loves = in.readInt();
+		long createdDateTime = in.readLong();
+		this.createdDate = createdDateTime == -1 ? null : new Date(createdDateTime);
+		long modifiedDateTime = in.readLong();
+		this.modifiedDate = modifiedDateTime == -1 ? null : new Date(modifiedDateTime);
+		long sharedDateTime = in.readLong();
+		this.sharedDate = sharedDateTime == -1 ? null : new Date(sharedDateTime);
+		this.tags = new ArrayList<>();
+		in.readStringList(this.tags);
+		this.visibilityState = in.readParcelable(ScratchVisibilityState.class.getClassLoader());
+		this.remixes = new ArrayList<>();
+		in.readTypedList(remixes, CREATOR);
+	}
 
-	public String getTitle() { return title; }
+	public long getId() {
+		return id;
+	}
 
-	public String getOwner() { return owner; }
+	public String getTitle() {
+		return title;
+	}
 
-	public String getInstructions() { return instructions; }
+	public String getOwner() {
+		return owner;
+	}
 
-	public String getNotesAndCredits() { return notesAndCredits; }
+	public WebImage getImage() {
+		return image;
+	}
 
-	public void addRemixProject(ScratchRemixProjectData remixProjectData) {
+	public void setImage(WebImage image) {
+		this.image = image;
+	}
+
+	public String getInstructions() {
+		return instructions;
+	}
+
+	public void setInstructions(String instructions) {
+		this.instructions = instructions;
+	}
+
+	public String getNotesAndCredits() {
+		return notesAndCredits;
+	}
+
+	public void setNotesAndCredits(String notesAndCredits) {
+		this.notesAndCredits = notesAndCredits;
+	}
+
+	public void addRemixProject(ScratchProgramData remixProjectData) {
 		remixes.add(remixProjectData);
 	}
 
-	public int getViews() { return views; }
-
-	public int getFavorites() { return favorites; }
-
-	public int getLoves() { return loves; }
-
-	public Date getModifiedDate() { return modifiedDate; }
-
-	public Date getSharedDate() { return sharedDate; }
-
-	public List<String> getTags() { return tags; }
-
-	public VisibilityState getVisibilityState() {
-		return visibiltyState;
+	public int getViews() {
+		return views;
 	}
 
-	public List<ScratchRemixProjectData> getRemixes() {
+	public void setViews(int views) {
+		this.views = views;
+	}
+
+	public int getFavorites() {
+		return favorites;
+	}
+
+	public void setFavorites(int favorites) {
+		this.favorites = favorites;
+	}
+
+	public int getLoves() {
+		return loves;
+	}
+
+	public void setLoves(int loves) {
+		this.loves = loves;
+	}
+
+	public Date getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(Date createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public Date getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(Date modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
+
+	public Date getSharedDate() {
+		return sharedDate;
+	}
+
+	public void setSharedDate(Date sharedDate) {
+		this.sharedDate = sharedDate;
+	}
+
+	public List<String> getTags() {
+		return tags;
+	}
+
+	public void addTag(String tagName) {
+		tags.add(tagName);
+	}
+
+	public ScratchVisibilityState getVisibilityState() {
+		return visibilityState;
+	}
+
+	public void setVisibilityState(ScratchVisibilityState visibilityState) {
+		this.visibilityState = visibilityState;
+	}
+
+	public List<ScratchProgramData> getRemixes() {
 		return remixes;
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeLong(id);
+		dest.writeString(title);
+		dest.writeString(owner);
+		dest.writeParcelable(image, flags);
+		dest.writeString(instructions);
+		dest.writeString(notesAndCredits);
+		dest.writeLong(views);
+		dest.writeLong(favorites);
+		dest.writeLong(loves);
+		dest.writeLong(createdDate != null ? createdDate.getTime() : -1);
+		dest.writeLong(modifiedDate != null ? modifiedDate.getTime() : -1);
+		dest.writeLong(sharedDate != null ? sharedDate.getTime() : -1);
+		dest.writeStringList(tags);
+		dest.writeParcelable(visibilityState, flags);
+		dest.writeTypedList(remixes);
+	}
+
+	public static final Parcelable.Creator<ScratchProgramData> CREATOR = new Parcelable.Creator<ScratchProgramData>() {
+		@Override
+		public ScratchProgramData createFromParcel(Parcel source) {
+			return new ScratchProgramData(source);
+		}
+
+		@Override
+		public ScratchProgramData[] newArray(int size) {
+			return new ScratchProgramData[size];
+		}
+	};
+
 }

@@ -80,8 +80,7 @@ public class FetchScratchProgramsTask extends AsyncTask<String, Void, ScratchSea
 			}
 			try {
 				if (query != null) {
-					ServerCalls.ScratchSearchSortType sortType = ServerCalls.ScratchSearchSortType.RELEVANCE;
-					return ServerCalls.getInstance().scratchSearch(query, sortType, 20, 0);
+					return ServerCalls.getInstance().scratchSearch(query, 20, 0);
 				}
 				return ServerCalls.getInstance().fetchDefaultScratchPrograms();
 			} catch (WebconnectionException e) {

@@ -60,8 +60,8 @@ public class FetchScratchProgramDetailsTask extends AsyncTask<Long, Void, Scratc
 		ScratchProgramData fetchScratchProgramDetails(final long programID)
 				throws WebconnectionException, WebScratchProgramException, InterruptedIOException;
 		ScratchSearchResult fetchDefaultScratchPrograms() throws WebconnectionException, InterruptedIOException;
-		ScratchSearchResult scratchSearch(final String query, final ServerCalls.ScratchSearchSortType sortType,
-				final int numberOfItems, final int page) throws WebconnectionException, InterruptedIOException;
+		ScratchSearchResult scratchSearch(final String query, final int numberOfItems, final int pageNumber)
+				throws WebconnectionException, InterruptedIOException;
 	}
 
 	public FetchScratchProgramDetailsTask setContext(final Context context) {
