@@ -109,8 +109,7 @@ public class WebImageLoader {
 			Log.d(TAG, "Memory cache hit for: " + url);
 			imageView.setImageBitmap(bitmap);
 		} else {
-			imageView.setImageBitmap(null);//.setImageResource(PLACEHOLDER_IMAGE_RESOURCE);
-			// enqueue image
+			imageView.setImageBitmap(null);
 			executorService.submit(new ImageLoader(new ImageToLoad(url, imageView), width, height));
 		}
 	}

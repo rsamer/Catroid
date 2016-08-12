@@ -40,8 +40,9 @@ import android.view.View;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
-import org.catrobat.catroid.common.ScratchProgramPreviewData;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.ConversionManager;
 import org.catrobat.catroid.scratchconverter.WebSocketClient;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
@@ -62,7 +63,7 @@ public class ScratchConverterActivity extends BaseActivity {
 	private ScratchSearchProjectsListFragment searchProjectsListFragment;
 	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
 	private SlidingUpPanelLayout slidingLayout;
-	private ScratchConversionManager conversionManager;
+	private ConversionManager conversionManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -85,7 +86,7 @@ public class ScratchConverterActivity extends BaseActivity {
 
 		final WebSocketMessageListener messageListener = new WebSocketMessageListener();
 		final Client client = new WebSocketClient(clientID, messageListener);
-		conversionManager = new ScratchConversionManager(this, client);
+		conversionManager = new ScratchConversionManager(this, client, false);
 		conversionManager.addDownloadFinishedCallback(converterSlidingUpPanelFragment);
 		conversionManager.setCurrentActivity(this);
 		conversionManager.addBaseInfoViewListener(converterSlidingUpPanelFragment);
@@ -151,12 +152,11 @@ public class ScratchConverterActivity extends BaseActivity {
 		getActionBar().setTitle(spanTitle);
 	}
 
-	public void convertProjects(List<ScratchProgramPreviewData> projectList) {
+	public void convertProjects(List<ScratchProgramData> projectList) {
 		Log.i(TAG, "Converting projects:");
-		for (final ScratchProgramPreviewData programData : projectList) {
+		for (final ScratchProgramData programData : projectList) {
 			Log.i(TAG, programData.getTitle());
-			conversionManager.convertProgram(programData.getId(), programData.getTitle(), programData.getProgramImage(),
-					false, false);
+			conversionManager.convertProgram(programData.getId(), programData.getTitle(), programData.getImage(), false);
 		}
 		ToastUtil.showSuccess(this, R.string.scratch_conversion_started);
 	}
@@ -243,8 +243,8 @@ public class ScratchConverterActivity extends BaseActivity {
 				super.onActivityResult(requestCode, resultCode, data);
 				return;
 			}
-			final ScratchProgramPreviewData projectData = data.getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
-			final List<ScratchProgramPreviewData> projectList = new ArrayList<>();
+			final ScratchProgramData projectData = data.getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
+			final List<ScratchProgramData> projectList = new ArrayList<>();
 			projectList.add(projectData);
 			convertProjects(projectList);
 		}

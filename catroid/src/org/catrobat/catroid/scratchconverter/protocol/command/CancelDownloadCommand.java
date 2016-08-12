@@ -21,25 +21,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.catrobat.catroid.scratchconverter;
+package org.catrobat.catroid.scratchconverter.protocol.command;
 
-import android.app.Activity;
-
-import com.google.android.gms.common.images.WebImage;
-
-import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
-import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
-
-public interface ConversionManager {
-	void connectAndAuthenticate();
-	void shutdown();
-	void convertProgram(final long jobID, final String title, final WebImage image, final boolean force);
-	void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener);
-	void addGlobalJobConsoleViewListener(JobViewListener jobViewListener);
-	void addJobConsoleViewListener(long jobID, JobViewListener jobViewListener);
-	boolean removeJobConsoleViewListener(long jobID, JobViewListener jobViewListener);
-	void addDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
-	boolean isJobInProgress(long jobID);
-	void setCurrentActivity(Activity activity);
-	void removeDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
+public class CancelDownloadCommand extends Command {
+	public CancelDownloadCommand(final long jobID) {
+		super(Command.Type.CANCEL_DOWNLOAD);
+		addArgument(Command.ArgumentType.JOB_ID, jobID);
+	}
 }

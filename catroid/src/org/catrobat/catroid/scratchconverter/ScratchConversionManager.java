@@ -47,6 +47,7 @@ import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 import org.catrobat.catroid.utils.DownloadUtil;
 import org.catrobat.catroid.utils.ToastUtil;
+import org.catrobat.catroid.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -64,15 +65,18 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	private ScratchConverterActivity converterActivity;
 	private Activity currentActivity;
 	private final Client client;
+	private final boolean verbose;
 	private Set<Client.DownloadFinishedCallback> delegateCallbackSet;
 	private Map<Long, Set<JobViewListener>> jobConsoleViewListeners;
 	private Set<JobViewListener> globalJobViewListeners;
 	private Set<BaseInfoViewListener> baseInfoViewListeners;
 
 	@SuppressLint("UseSparseArrays")
-	public ScratchConversionManager(final ScratchConverterActivity converterActivity, final Client client) {
+	public ScratchConversionManager(final ScratchConverterActivity converterActivity, final Client client,
+			final boolean verbose) {
 		this.converterActivity = converterActivity;
 		this.client = client;
+		this.verbose = verbose;
 		this.delegateCallbackSet = new HashSet<>();
 		client.setConvertCallback(this);
 		this.jobConsoleViewListeners = Collections.synchronizedMap(new HashMap<Long, Set<JobViewListener>>());
@@ -107,11 +111,8 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 		}
 	}
 
-	public void convertProgram(final long jobID, final String programTitle, final WebImage programImage,
-			final boolean verbose, final boolean force) {
-
-		// TODO: make sure NOT running on UI-thread!!
-		client.convertJob(new Job(jobID, programTitle, programImage), verbose, force);
+	public void convertProgram(final long jobID, final String title, final WebImage image, final boolean force) {
+		client.convertProgram(jobID, title, image, verbose, force);
 	}
 
 	private void closeAllActivities() {
@@ -182,6 +183,49 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 		});
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	// ConversionManager interface
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener) {
+		baseInfoViewListeners.add(baseInfoViewListener);
+	}
+
+	@Override
+	public void addGlobalJobConsoleViewListener(JobViewListener jobViewListener) {
+		globalJobViewListeners.add(jobViewListener);
+	}
+
+	@Override
+	public void addJobConsoleViewListener(long jobID, JobViewListener jobViewListener) {
+		Set<JobViewListener> listeners = jobConsoleViewListeners.get(jobID);
+		if (listeners == null) {
+			listeners = new HashSet<>();
+		}
+		listeners.add(jobViewListener);
+		jobConsoleViewListeners.put(jobID, listeners);
+	}
+
+	@Override
+	public boolean removeJobConsoleViewListener(long jobID, JobViewListener jobViewListener) {
+		Set<JobViewListener> listeners = jobConsoleViewListeners.get(jobID);
+		return listeners != null && listeners.remove(jobViewListener);
+	}
+
+	@NonNull
+	private JobViewListener[] getJobConsoleViewListeners(long jobID) {
+		final Set<JobViewListener> mergedListenersList = new HashSet<>();
+		final Set<JobViewListener> listenersList = jobConsoleViewListeners.get(jobID);
+		if (listenersList != null) {
+			mergedListenersList.addAll(listenersList);
+		}
+		mergedListenersList.addAll(globalJobViewListeners);
+		return mergedListenersList.toArray(new JobViewListener[mergedListenersList.size()]);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// ConvertCallback
+	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	public void onInfo(final float supportedCatrobatLanguageVersion, final Job[] jobs) {
 		final ScratchConversionManager conversionManager = this;
@@ -232,46 +276,6 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 		});
 	}
 
-	@Override
-	public void addBaseInfoViewListener(BaseInfoViewListener baseInfoViewListener) {
-		baseInfoViewListeners.add(baseInfoViewListener);
-	}
-
-	@Override
-	public void addGlobalJobConsoleViewListener(JobViewListener jobViewListener) {
-		globalJobViewListeners.add(jobViewListener);
-	}
-
-	@Override
-	public void addJobConsoleViewListener(long jobID, JobViewListener jobViewListener) {
-		Set<JobViewListener> listeners = jobConsoleViewListeners.get(jobID);
-		if (listeners == null) {
-			listeners = new HashSet<>();
-		}
-		listeners.add(jobViewListener);
-		jobConsoleViewListeners.put(jobID, listeners);
-	}
-
-	@Override
-	public boolean removeJobConsoleViewListener(long jobID, JobViewListener jobViewListener) {
-		Set<JobViewListener> listeners = jobConsoleViewListeners.get(jobID);
-		return listeners != null && listeners.remove(jobViewListener);
-	}
-
-	@NonNull
-	private JobViewListener[] getJobConsoleViewListeners(long jobID) {
-		final Set<JobViewListener> mergedListenersList = new HashSet<>();
-		final Set<JobViewListener> listenersList = jobConsoleViewListeners.get(jobID);
-		if (listenersList != null) {
-			mergedListenersList.addAll(listenersList);
-		}
-		mergedListenersList.addAll(globalJobViewListeners);
-		return mergedListenersList.toArray(new JobViewListener[mergedListenersList.size()]);
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	// ConvertCallback
-	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	public void onConversionReady(final Job job) {
 		Log.i(TAG, "Conversion ready!");
@@ -339,7 +343,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 						@Override
 						public void onReconvertProgram() {
-							client.convertJob(job, false, true);
+							client.convertProgram(job.getJobID(), job.getTitle(), job.getImage(), false, true);
 						}
 
 						@Override
@@ -441,6 +445,9 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 	@Override
 	public void onUserCanceledDownload(String url) {
+		final long jobID = Utils.extractScratchJobIDFromURL(url);
+		client.cancelDownload(jobID);
+
 		for (final Client.DownloadFinishedCallback callback : delegateCallbackSet) {
 			callback.onUserCanceledDownload(url);
 		}
