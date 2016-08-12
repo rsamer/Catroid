@@ -25,6 +25,7 @@ package org.catrobat.catroid.scratchconverter;
 
 import android.util.Log;
 
+import com.google.android.gms.common.images.WebImage;
 import com.google.common.base.Preconditions;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
@@ -36,10 +37,11 @@ import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.JobHandler;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
+import org.catrobat.catroid.scratchconverter.protocol.command.CancelDownloadCommand;
 import org.catrobat.catroid.scratchconverter.protocol.command.Command;
 import org.catrobat.catroid.scratchconverter.protocol.command.RetrieveInfoCommand;
 import org.catrobat.catroid.scratchconverter.protocol.command.ScheduleJobCommand;
-import org.catrobat.catroid.scratchconverter.protocol.command.SetClientIDCommand;
+import org.catrobat.catroid.scratchconverter.protocol.command.AuthenticateCommand;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ClientIDMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ErrorMessage;
@@ -141,7 +143,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	private void authenticate() {
 		Preconditions.checkState(state == State.CONNECTED);
 		Preconditions.checkState(webSocket != null);
-		sendCommand(new SetClientIDCommand(clientID));
+		sendCommand(new AuthenticateCommand(clientID));
 	}
 
 	public void connectAndAuthenticate(final ConnectAuthCallback connectAuthCallback) {
@@ -180,22 +182,23 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	public void retrieveInfo() {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
-		sendCommand(new RetrieveInfoCommand(clientID));
+		sendCommand(new RetrieveInfoCommand());
 	}
 
 	@Override
-	public void convertJob(final Job job, final boolean verbose, final boolean force) {
+	public void convertProgram(final long jobID, final String title, final WebImage image,
+			final boolean verbose, final boolean force) {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
 		Preconditions.checkState(webSocket != null);
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 
-		final long jobID = job.getJobID();
 		Log.i(TAG, "Scheduling new job with ID: " + jobID);
 
 		JobHandler jobHandler = messageListener.getJobHandler(jobID);
+		final Job job = new Job(jobID, title, image);
 		if (jobHandler != null) {
 			Log.d(TAG, "JobHandler for jobID " + jobID + " already exists!");
-			if (force == false && jobHandler.getCurrentState().isInProgress()) {
+			if (!force && jobHandler.getCurrentState().isInProgress()) {
 				convertCallback.onConversionFailure(job, new ClientException("Job in progress!"));
 				return;
 			}
@@ -207,7 +210,12 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		}
 
 		jobHandler.onJobScheduled();
-		sendCommand(new ScheduleJobCommand(jobID, clientID, force, verbose));
+		sendCommand(new ScheduleJobCommand(jobID, force, verbose));
+	}
+
+	@Override
+	public void cancelDownload(final long jobID) {
+		sendCommand(new CancelDownloadCommand(jobID));
 	}
 
 	@Override

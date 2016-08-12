@@ -23,6 +23,8 @@
 
 package org.catrobat.catroid.scratchconverter;
 
+import com.google.android.gms.common.images.WebImage;
+
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +42,8 @@ public interface Client {
 	boolean isAuthenticated();
 	void connectAndAuthenticate(ConnectAuthCallback connectAuthCallback);
 	void retrieveInfo();
-	void convertJob(Job job, boolean verbose, boolean force);
+	void convertProgram(long jobID, String title, WebImage image, boolean verbose, boolean force);
+	void cancelDownload(long jobID);
 	void close();
 
 	// callbacks

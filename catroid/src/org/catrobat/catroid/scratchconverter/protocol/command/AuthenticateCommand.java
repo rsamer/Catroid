@@ -23,9 +23,9 @@
 
 package org.catrobat.catroid.scratchconverter.protocol.command;
 
-public class SetClientIDCommand extends Command {
-	public SetClientIDCommand(final long clientID) {
-		super(Type.SET_CLIENT_ID);
+public class AuthenticateCommand extends Command {
+	public AuthenticateCommand(final long clientID) {
+		super(Type.AUTHENTICATE);
 		addArgument(ArgumentType.CLIENT_ID, clientID);
 	}
 }
