@@ -153,6 +153,9 @@ public final class DownloadUtil {
 		final String programNameKey = programName.toLowerCase(Locale.getDefault());
 		programDownloadQueue.add(programNameKey);
 		if (callbacks != null) {
+			for (DownloadFinishedCallback callback : callbacks) {
+				callback.onDownloadStarted(url);
+			}
 			programDownloadCallbackMap.put(programNameKey, callbacks);
 		}
 		Intent downloadIntent = new Intent(context, ProjectDownloadService.class);

@@ -198,7 +198,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		final Job job = new Job(jobID, title, image);
 		if (jobHandler != null) {
 			Log.d(TAG, "JobHandler for jobID " + jobID + " already exists!");
-			if (!force && jobHandler.getCurrentState().isInProgress()) {
+			if (!force && jobHandler.getJob().getState().isInProgress()) {
 				convertCallback.onConversionFailure(job, new ClientException("Job in progress!"));
 				return;
 			}
@@ -206,7 +206,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		} else {
 			Log.d(TAG, "Creating new JobHandler for jobID " + jobID);
 			jobHandler = new JobHandler(job, convertCallback);
-			messageListener.addJobHandler(jobHandler);
+			messageListener.setJobHandlerForJobID(jobHandler);
 		}
 
 		jobHandler.onJobScheduled();
@@ -227,26 +227,15 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 			final Job[] jobs = infoMessage.getJobList();
 			for (Job job : jobs) {
-				if (messageListener.getJobHandler(job.getJobID()) == null) {
-					JobHandler jobHandler = new JobHandler(job, convertCallback);
-					// TODO: combine JobHandler and Job states !!!
-					JobHandler.State state = JobHandler.State.UNSCHEDULED;
-					switch (job.getState()) {
-						case READY:
-							state = JobHandler.State.READY;
-							break;
-						case RUNNING:
-							state = JobHandler.State.RUNNING;
-							break;
-						case FAILED:
-							state = JobHandler.State.FAILED;
-							break;
-						case FINISHED:
-							state = JobHandler.State.UNSCHEDULED;
-							break;
-					}
-					jobHandler.setState(state);
-					messageListener.addJobHandler(jobHandler);
+				JobHandler jobHandler = messageListener.getJobHandler(job.getJobID());
+				if (jobHandler == null) {
+					jobHandler = new JobHandler(job, convertCallback);
+				}
+				messageListener.setJobHandlerForJobID(jobHandler);
+
+				if (!job.isAlreadyDownloaded() && job.getDownloadURL() != null) {
+					Log.i(TAG, "Downloading missed converted project...");
+					convertCallback.onConversionFinished(job, jobHandler, job.getDownloadURL(), null);
 				}
 			}
 			return;

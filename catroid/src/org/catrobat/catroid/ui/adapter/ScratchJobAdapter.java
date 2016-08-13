@@ -57,6 +57,7 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 		private TextView title;
 		private ImageView image;
 		private TextView status;
+		public RelativeLayout progressLayout;
 		private ProgressBar progressBar;
 		private TextView progress;
 	}
@@ -90,6 +91,7 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 			holder.title = (TextView) projectView.findViewById(R.id.scratch_job_list_item_title);
 			holder.image = (ImageView) projectView.findViewById(R.id.scratch_job_list_item_image);
 			holder.status = (TextView) projectView.findViewById(R.id.scratch_job_list_item_status);
+			holder.progressLayout = (RelativeLayout) projectView.findViewById(R.id.scratch_job_list_item_progress_layout);
 			holder.progressBar = (ProgressBar) projectView.findViewById(R.id.scratch_job_list_item_progress_bar);
 			holder.progress = (TextView) projectView.findViewById(R.id.scratch_job_list_item_progress_text);
 			projectView.setTag(holder);
@@ -107,11 +109,16 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 		// set status of project:
 		holder.status.setText(job.getState().toString());
 
-		// update progress state of project:
-		final Double progress = new Double(job.getProgress());
+		if (job.getState() == Job.State.FINISHED || job.getState() == Job.State.FAILED) {
+			holder.progressLayout.setVisibility(View.GONE);
+		} else {
+			// update progress state of project:
+			final Double progress = new Double(job.getProgress());
 //		holder.progress.setText(Double.toString(Utils.round(progress, 2)) + "%");
-		holder.progress.setText(progress.intValue() + "%");
-		holder.progressBar.setProgress(progress.intValue());
+			holder.progress.setText(progress.intValue() + "%");
+			holder.progressBar.setProgress(progress.intValue());
+			holder.progressLayout.setVisibility(View.VISIBLE);
+		}
 
 		// set project image (threaded):
 		WebImage httpImageMetadata = job.getImage();

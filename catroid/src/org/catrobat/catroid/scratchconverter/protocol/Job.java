@@ -37,7 +37,8 @@ import java.util.Map;
 public class Job {
 
 	public enum State {
-		INITIALIZED(-1),
+		UNSCHEDULED(-2),
+		SCHEDULED(-1),
 		READY(0),
 		RUNNING(1),
 		FINISHED(2),
@@ -60,6 +61,11 @@ public class Job {
 		public static State valueOf(int state) {
 			return map.get(state);
 		}
+
+		public boolean isInProgress() {
+			return this == SCHEDULED || this == READY || this == RUNNING;
+		}
+
 	}
 
 	private State state;
@@ -68,14 +74,16 @@ public class Job {
 	private WebImage image;
 	private double progress;
 	private boolean alreadyDownloaded;
+	private boolean downloading;
 	private String downloadURL;
 
 	public Job(long jobID, String title, WebImage image) {
-		this.state = State.INITIALIZED;
+		this.state = State.UNSCHEDULED;
 		this.jobID = jobID;
 		this.title = title;
 		this.image = image;
 		this.progress = 0.0;
+		this.downloading = false;
 		this.alreadyDownloaded = false;
 		this.downloadURL = null;
 	}
@@ -128,6 +136,14 @@ public class Job {
 
 	public void setImage(WebImage image) {
 		this.image = image;
+	}
+
+	public void setDownloading(boolean downloading) {
+		this.downloading = downloading;
+	}
+
+	public boolean isDownloading() {
+		return downloading;
 	}
 
 	public boolean isAlreadyDownloaded() {

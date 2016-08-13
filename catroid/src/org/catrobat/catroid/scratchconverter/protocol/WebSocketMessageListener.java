@@ -58,7 +58,7 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		this.baseMessageHandler = baseMessageHandler;
 	}
 
-	public void addJobHandler(JobHandler handler) {
+	public void setJobHandlerForJobID(JobHandler handler) {
 		jobHandlers.put(handler.getJobID(), handler);
 	}
 
@@ -68,7 +68,7 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		if (jobHandler == null) {
 			return false;
 		}
-		return jobHandler.getCurrentState().isInProgress();
+		return jobHandler.getJob().getState().isInProgress();
 	}
 
 	@Override

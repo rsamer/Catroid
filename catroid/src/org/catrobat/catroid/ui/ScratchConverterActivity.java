@@ -79,7 +79,6 @@ public class ScratchConverterActivity extends BaseActivity {
 				R.id.fragment_scratch_converter_sliding_up_panel);
 		converterSlidingUpPanelFragment.setExecutorService(sharedExecutorService);
 
-
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,
 				Client.INVALID_CLIENT_ID);
@@ -117,15 +116,6 @@ public class ScratchConverterActivity extends BaseActivity {
 		hideSlideUpPanelBar();
 
 		conversionManager.connectAndAuthenticate();
-		// TODO: remove this later...
-		/*
-		final Handler handler = new Handler();
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-			}
-		}, 500);
-		*/
 		Log.i(TAG, "Scratch Converter Activity created");
 	}
 

@@ -227,15 +227,14 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	public void onInfo(final float supportedCatrobatLanguageVersion, final Job[] jobs) {
-		final ScratchConversionManager conversionManager = this;
 		currentActivity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				Log.i(TAG, "Supported Catrobat Language version: " + supportedCatrobatLanguageVersion);
+
 				for (BaseInfoViewListener viewListener : baseInfoViewListeners) {
 					viewListener.onJobsInfo(jobs);
 				}
-
-				Log.i(TAG, "Supported Catrobat Language version: " + supportedCatrobatLanguageVersion);
 
 				if (Constants.CURRENT_CATROBAT_LANGUAGE_VERSION <= supportedCatrobatLanguageVersion) {
 					AlertDialog.Builder builder = new CustomAlertDialogBuilder(currentActivity);
@@ -244,20 +243,6 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 					builder.setNeutralButton(R.string.close, null);
 					Dialog errorDialog = builder.create();
 					errorDialog.show();
-					//return;
-				}
-
-				final Client.DownloadFinishedCallback[] callbacks;
-				callbacks = new Client.DownloadFinishedCallback[] { conversionManager };
-				for (Job job : jobs) {
-					if (job.isAlreadyDownloaded() || job.getDownloadURL() == null) {
-						continue;
-					}
-					Log.i(TAG, "Downloading missed converted project...");
-					for (JobViewListener viewListener : getJobConsoleViewListeners(job.getJobID())) {
-						viewListener.onJobDownloadReady(job);
-					}
-					downloadProgram(job.getDownloadURL(), callbacks);
 				}
 			}
 		});
@@ -304,27 +289,15 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	}
 
 	@Override
-	public void onConversionFinished(final Job job) {
-		Log.i(TAG, "Conversion finished!");
-		currentActivity.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				for (JobViewListener viewListener : getJobConsoleViewListeners(job.getJobID())) {
-					viewListener.onJobFinished(job);
-				}
-			}
-		});
-	}
-
-	@Override
-	public void onDownloadReady(final Job job, final Client.DownloadFinishedCallback downloadFinishedCallback,
+	public void onConversionFinished(final Job job, final Client.DownloadFinishedCallback downloadFinishedCallback,
 			final String downloadURL, final Date cachedUTCDate) {
+		Log.i(TAG, "Conversion finished!");
 		final ScratchConversionManager conversionManager = this;
 		currentActivity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				for (JobViewListener viewListener : getJobConsoleViewListeners(job.getJobID())) {
-					viewListener.onJobDownloadReady(job);
+					viewListener.onJobFinished(job);
 				}
 
 				final Client.DownloadFinishedCallback[] callbacks;
@@ -342,14 +315,14 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 						@Override
 						public void onReconvertProgram() {
-							client.convertProgram(job.getJobID(), job.getTitle(), job.getImage(), false, true);
+							client.convertProgram(job.getJobID(), job.getTitle(), job.getImage(), verbose, true);
 						}
 
 						@Override
-						public void onCancel() {
+						public void onUserCanceledConversion() {
 							client.getMessageListener().onUserCanceledConversion(job.getJobID());
 							for (final JobViewListener viewListener : getJobConsoleViewListeners(job.getJobID())) {
-								viewListener.onJobCanceled(job);
+								viewListener.onUserCanceledJob(job);
 							}
 						}
 					});
@@ -429,6 +402,19 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	// -----------------------------------------------------------------------------------------------------------------
 	// DownloadFinishedCallback
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public void onDownloadStarted(final String url) {
+		// Note: this callback-method may not be called on UI-thread
+		currentActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				for (final Client.DownloadFinishedCallback callback : delegateCallbackSet) {
+					callback.onDownloadStarted(url);
+				}
+			}
+		});
+	}
+
 	@Override
 	public void onDownloadFinished(final String catrobatProgramName, final String url) {
 		// Note: this callback-method is not called on UI-thread

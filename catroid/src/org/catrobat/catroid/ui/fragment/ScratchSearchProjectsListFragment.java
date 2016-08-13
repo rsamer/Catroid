@@ -252,7 +252,6 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	public void search(final String text) {
-		// TODO: consider pagination for cache!
 		ScratchSearchResult cachedResult = scratchSearchResultCache.get(text);
 		if (cachedResult != null) {
 			Log.d(TAG, "Cache hit!");

@@ -407,40 +407,33 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
-	public void onJobCanceled(Job job) {
+	public void onUserCanceledJob(Job job) {
 		if (job.getJobID() == programData.getId()) {
 			onJobNotInProgress();
 		}
 	}
 
 	@Override
-	public void onJobDownloadReady(Job job) {}
+	public void onDownloadStarted(String url) {
+		final long jobID = Utils.extractScratchJobIDFromURL(url);
+		if (jobID == programData.getId()) {
+			convertButton.setText(R.string.status_downloading);
+		}
+	}
 
 	@Override
 	public void onDownloadFinished(String catrobatProgramName, String url) {
-		// Note: this callback-method is not called on UI-thread
 		final long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == programData.getId()) {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onJobNotInProgress();
-				}
-			});
+			onJobNotInProgress();
 		}
 	}
 
 	@Override
 	public void onUserCanceledDownload(String url) {
-		// Note: this callback-method is not called on UI-thread
 		final long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == programData.getId()) {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onJobNotInProgress();
-				}
-			});
+			onJobNotInProgress();
 		}
 	}
 }
