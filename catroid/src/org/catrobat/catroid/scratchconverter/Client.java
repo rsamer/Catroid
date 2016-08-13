@@ -61,14 +61,14 @@ public interface Client {
 		void onConversionStart(Job job);
 		void onJobProgress(Job job, double progress);
 		void onJobOutput(Job job, String[] lines);
-		void onConversionFinished(Job job);
-		void onDownloadReady(Job job, DownloadFinishedCallback downloadFinishedCallback, String downloadURL,
+		void onConversionFinished(Job job, DownloadFinishedCallback downloadFinishedCallback, String downloadURL,
 				Date cachedDate);
 		void onConversionFailure(@Nullable Job job, ClientException ex);
 		void onError(String errorMessage);
 	}
 
 	interface DownloadFinishedCallback {
+		void onDownloadStarted(String url);
 		void onDownloadFinished(String catrobatProgramName, String url);
 		void onUserCanceledDownload(String url);
 	}

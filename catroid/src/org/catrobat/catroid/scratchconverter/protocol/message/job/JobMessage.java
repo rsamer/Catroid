@@ -56,8 +56,7 @@ abstract public class JobMessage extends Message {
 		JOB_READY(3),
 		JOB_OUTPUT(4),
 		JOB_PROGRESS(5),
-		JOB_FINISHED(6),
-		JOB_DOWNLOAD(7);
+		JOB_FINISHED(6);
 
 		private int typeID;
 
@@ -117,20 +116,18 @@ abstract public class JobMessage extends Message {
 				return (T)new JobProgressMessage(jobID, progress);
 
 			case JOB_FINISHED:
-				return (T)new JobFinishedMessage(jobID);
-
-			case JOB_DOWNLOAD:
 				final String downloadURL = jsonData.getString(JSONDataKeys.URL.toString());
-				final String dateUTC = jsonData.getString(JSONDataKeys.CACHED_UTC_DATE.toString());
+				final String cachedUTCDateKey = JSONDataKeys.CACHED_UTC_DATE.toString();
+				final String dateUTC = jsonData.isNull(cachedUTCDateKey) ? null : jsonData.getString(cachedUTCDateKey);
 				final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 				Date cachedDate = null;
 				try {
-					cachedDate = dateFormat.parse(dateUTC);
+					cachedDate = dateUTC != null ? dateFormat.parse(dateUTC) : null;
 				} catch (ParseException e) {
 					Log.e(TAG, e.getLocalizedMessage());
 				}
-				return (T)new JobDownloadMessage(jobID, downloadURL, cachedDate);
+				return (T)new JobFinishedMessage(jobID, downloadURL, cachedDate);
 
 			default:
 				return null;

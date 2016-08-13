@@ -86,7 +86,8 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 			if (s == null) {
 				return;
 			}
-			Log.d(TAG, "Receiving: " + s);
+
+			Log.d(TAG, "Receiving new message: " + s);
 			JSONObject jsonMessage = new JSONObject(s);
 			if (jsonMessage.length() == 0) {
 				return;
@@ -101,7 +102,7 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 					break;
 
 				case JOB:
-					final JSONObject jsonData = jsonMessage.getJSONObject("data");
+					final JSONObject jsonData = jsonMessage.getJSONObject(JSONKeys.DATA.toString());
 					final long jobID = jsonData.getLong(JSONDataKeys.JOB_ID.toString());
 					JobHandler jobHandler = jobHandlers.get(jobID);
 					if (jobHandler != null) {
