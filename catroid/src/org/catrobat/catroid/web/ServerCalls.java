@@ -74,6 +74,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import okio.BufferedSink;
@@ -293,7 +294,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
 				put("limit", Integer.toString(numberOfItems));
 				put("offset", Integer.toString(pageNumber * numberOfItems));
-				put("language", "en"); // TODO: get language!
+				put("language", Locale.getDefault().getLanguage());
 				put("q", URLEncoder.encode(query, "UTF-8"));
 			}};
 
