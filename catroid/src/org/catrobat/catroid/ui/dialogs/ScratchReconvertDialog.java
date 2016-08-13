@@ -29,9 +29,11 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.RadioButton;
 
 import org.catrobat.catroid.R;
@@ -44,9 +46,10 @@ public class ScratchReconvertDialog extends DialogFragment {
 	public interface ReconvertDialogCallback {
 		void onDownloadExistingProgram();
 		void onReconvertProgram();
-		void onCancel();
+		void onUserCanceledConversion();
 	}
 
+	private static final String TAG = ScratchReconvertDialog.class.getSimpleName();
 	public static final String DIALOG_FRAGMENT_TAG = "scratch_reconvert_dialog";
 
 	protected RadioButton downloadExistingProgramRadioButton;
@@ -85,7 +88,7 @@ public class ScratchReconvertDialog extends DialogFragment {
 		final int hours = (int)TimeUnit.MILLISECONDS.toHours(timeDifferenceInMS);
 		final int days = (int)TimeUnit.MILLISECONDS.toDays(timeDifferenceInMS);
 
-		String quantityString = null;
+		String quantityString;
 		if (days > 0) {
 			quantityString = getResources().getQuantityString(R.plurals.days, days, days);
 		} else if (hours > 0) {
@@ -104,13 +107,61 @@ public class ScratchReconvertDialog extends DialogFragment {
 				}).setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						callback.onCancel();
+						Log.d(TAG, "User canceled dialog by pressing Cancel-button");
 						ToastUtil.showError(context, R.string.notification_reconvert_download_program_cancel);
+						if (callback != null) {
+							callback.onUserCanceledConversion();
+						}
 					}
 				}).create();
 
-		dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+		dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+			@Override
+			public void onShow(DialogInterface dialog) {
+				Button positiveButton = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE);
+				positiveButton.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						handleOkButton();
+					}
+				});
+			}
+		});
+
+		dialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+			@Override
+			public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+				if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+					boolean okButtonResult = handleOkButton();
+					if (okButtonResult) {
+						dismiss();
+					}
+					return okButtonResult;
+				} else if (keyCode == KeyEvent.KEYCODE_BACK) {
+					Log.d(TAG, "User canceled dialog by pressing Back-button");
+					ToastUtil.showError(context, R.string.notification_reconvert_download_program_cancel);
+					if (callback != null) {
+						callback.onUserCanceledConversion();
+					}
+					dismiss();
+					return true;
+				}
+
+				return false;
+			}
+		});
+
 		return dialog;
+	}
+
+	@Override
+	public void onCancel(DialogInterface dialog) {
+		super.onCancel(dialog);
+		Log.d(TAG, "User canceled dialog by clicking outside of the Dialog fragment");
+		ToastUtil.showError(context, R.string.notification_reconvert_download_program_cancel);
+		if (callback != null) {
+			callback.onUserCanceledConversion();
+		}
 	}
 
 	private boolean handleOkButton() {
