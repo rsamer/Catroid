@@ -149,9 +149,6 @@ public final class Constants {
 	public static final int WEBIMAGE_DOWNLOADER_POOL_SIZE = 5;
 	public static final String SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME = "scratchconverter.clientID";
 	public static final String SCRATCH_CONVERTER_HOST = "scratch2.catrob.at";
-	//public static final String SCRATCH_PROJECT_BASE_URL_HTTPS = "https://scratch.mit.edu/projects/";
-	//public static final String SCRATCH_SEARCH_BASE_URL = "https://www.googleapis.com/customsearch/";
-	//public static final String SCRATCH_SEARCH_URL = SCRATCH_SEARCH_BASE_URL + "v1element";
 	public static final String SCRATCH_SEARCH_URL = "https://api.scratch.mit.edu/search/projects";
 	public static final String SCRATCH_CONVERTER_WEB_SOCKET = "ws://" + SCRATCH_CONVERTER_HOST + "/convertersocket";
 	public static final String SCRATCH_CONVERTER_BASE_URL = "http://" + SCRATCH_CONVERTER_HOST + "/"; // TODO: https??
