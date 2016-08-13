@@ -578,7 +578,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 		OkHttpClient httpClient = okHttpClient;
 		if (url.startsWith("http://")) {
 			httpClient = new OkHttpClient();
-			// allow HTTP instead of HTTPS! TODO: not best solution...
+			// allow HTTP instead of HTTPS!
 			httpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT));
 		}
 
@@ -649,23 +649,6 @@ public final class ServerCalls implements ScratchDataFetcher {
 		}
 	}
 
-	// TODO: move to Util class...
-	@Nullable
-	public static byte[] convertInputStreamToByteArray(final InputStream inputStream) {
-		try {
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-			byte[] buffer = new byte[4096];
-			int len;
-			while ((len = inputStream.read(buffer)) > -1) {
-				byteArrayOutputStream.write(buffer, 0, len);
-			}
-			byteArrayOutputStream.flush();
-			return byteArrayOutputStream.toByteArray();
-		} catch (IOException e) {
-			return null;
-		}
-	}
-
 	@Nullable
 	public byte[] downloadFile(final String url) throws Throwable {
 		final int HTTP_TIMEOUT = 30_000;
@@ -682,7 +665,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 			if (inputStream == null) {
 				return null;
 			}
-			return convertInputStreamToByteArray(inputStream);
+			return Utils.convertInputStreamToByteArray(inputStream);
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 			throw exc;
