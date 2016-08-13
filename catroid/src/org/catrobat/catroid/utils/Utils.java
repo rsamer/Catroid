@@ -55,7 +55,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.facebook.AccessToken;
-import com.google.android.gms.common.images.WebImage;
 import com.google.common.base.Splitter;
 
 import org.catrobat.catroid.ProjectManager;
@@ -91,7 +90,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public final class Utils {
 

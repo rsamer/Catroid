@@ -58,7 +58,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -373,108 +372,6 @@ public final class ServerCalls implements ScratchDataFetcher {
 		}
 		return programDataList;
 	}
-
-	/*
-	public enum ScratchSearchSortType {RELEVANCE, DATE}
-
-	public ScratchSearchResult scratchSearch(final String query, final ScratchSearchSortType sortType,
-			final int numberOfItems, final int page)
-			throws WebconnectionException, InterruptedIOException {
-		Preconditions.checkNotNull(query, "Parameter query cannot be null!");
-		Preconditions.checkArgument(numberOfItems > 0, "Parameter numberOfItems must be greater than 0");
-		Preconditions.checkArgument(page >= 0, "Parameter page must be greater or equal than 0");
-
-		try {
-			ArrayList<ScratchProgramPreviewData> projectList = new ArrayList<>();
-			int currentPageIndex = 0;
-			int totalNumberOfResults = 0;
-			final HashMap<String, String> httpGetParams = new HashMap<String, String>() {{
-					put("key", "AIzaSyCVAXiUzRYsML1Pv6RwSG1gunmMikTzQqY");
-					put("rsz", "filtered_cse");
-					put("num", Integer.toString(numberOfItems));
-					put("hl", "en");
-					put("prettyPrint", "false");
-					put("source", "gcsc");
-					put("gss", ".com");
-					put("sig", "432dd570d1a386253361f581254f9ca1");
-					put("cx", "006344185922250120026:y4rdkv9uhp4");
-					put("q", URLEncoder.encode(query, "UTF-8") + "%20more%3Aprojects");
-					put("sort", sortType != ScratchSearchSortType.RELEVANCE ? "date" : "");
-					if (page > 0) {
-						put("start", Integer.toString(page * numberOfItems));
-					}
-					put("googlehost", "www.google.com");
-				}};
-
-			StringBuilder urlStringBuilder = new StringBuilder(Constants.SCRATCH_SEARCH_URL);
-			urlStringBuilder.append("?");
-			for (Map.Entry<String, String> entry : httpGetParams.entrySet()) {
-				urlStringBuilder.append(entry.getKey());
-				urlStringBuilder.append("=");
-				urlStringBuilder.append(entry.getValue());
-				urlStringBuilder.append("&");
-			}
-			urlStringBuilder.setLength(urlStringBuilder.length() - 1); // removes trailing "&" or "?" character
-
-			final String url = urlStringBuilder.toString();
-			Log.d(TAG, "URL to use: " + url);
-			resultString = getRequestInterruptable(url);
-			Log.d(TAG, "Result string: " + resultString);
-
-			JSONObject jsonObject = new JSONObject(resultString);
-			JSONObject cursor = jsonObject.getJSONObject("cursor");
-			currentPageIndex = cursor.getInt("currentPageIndex");
-			JSONArray results = jsonObject.getJSONArray("results");
-			JSONObject context = jsonObject.getJSONObject("context");
-			totalNumberOfResults = context.has("total_results")
-					? Integer.parseInt(context.getString("total_results"))
-					: results.length();
-
-			final String projectBaseUrlHttps = Constants.SCRATCH_PROJECT_BASE_URL_HTTPS;
-			final String projectBaseUrlHttp = projectBaseUrlHttps.replace("https://", "http://");
-
-			for (int i = 0; i < results.length(); ++i) {
-				JSONObject projectJson = results.getJSONObject(i);
-				String title = projectJson.getString("titleNoFormatting").replace(" on Scratch", "");
-				String content = projectJson.getString("contentNoFormatting");
-				String projectUrl = projectJson.getString("url");
-				boolean startsWithBaseUrl = projectUrl.startsWith(projectBaseUrlHttps) || projectUrl.startsWith(projectBaseUrlHttp);
-
-				// TODO: simplify this with regex
-				if ((!startsWithBaseUrl) || projectUrl.contains("/all") || projectUrl.contains("/studios")
-				|| projectUrl.contains("/remixes") || projectUrl.contains("/remixtree")) {
-					// ignore results that are no real projects (e.g. studios or remix-collections)
-					continue;
-				}
-
-				Log.d(TAG, "Project URL: " + projectUrl);
-				String[] urlParts = projectUrl.replace(Constants.SCRATCH_PROJECT_BASE_URL_HTTPS, "").split("/");
-				if (urlParts.length == 0) {
-					continue; // ignore projects that have no valid IDs
-				}
-				String idString = urlParts[0];
-				long id = Long.parseLong(idString);
-				JSONObject richSnippet = projectJson.getJSONObject("richSnippet");
-				JSONObject metatags = richSnippet.getJSONObject("metatags");
-
-				ScratchProgramPreviewData projectData = new ScratchProgramPreviewData(id, title, content);
-				if (metatags.has("ogImage")) {
-					String projectImageUrl = metatags.getString("ogImage");
-					// TODO: extract size from URL!
-					projectImageUrl = projectImageUrl.replace("200x200", "150x150");
-					projectData.setProgramImage(new WebImage(Uri.parse(projectImageUrl), 150, 150));
-				}
-				projectList.add(projectData);
-			}
-			return new ScratchSearchResult(projectList, query, currentPageIndex, totalNumberOfResults);
-		} catch (InterruptedIOException exception) {
-			Log.d(TAG, "OK! Request cancelled");
-			throw exception;
-		} catch (Exception exception) {
-			Log.e(TAG, Log.getStackTraceString(exception));
-			throw new WebconnectionException(WebconnectionException.ERROR_JSON, resultString);
-		}
-	} */
 
 	public void uploadProject(String projectName, String projectDescription, String zipFileString, String userEmail,
 			String language, String token, String username, ResultReceiver receiver, Integer notificationId,
