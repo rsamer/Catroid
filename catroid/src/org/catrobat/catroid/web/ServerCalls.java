@@ -212,6 +212,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 			final JSONObject jsonData = jsonObject.getJSONObject("projectData");
 			final String title = jsonData.getString("title");
 			final String owner = jsonData.getString("owner");
+			final String imageURL = jsonData.getString("image_url");
 			final String instructions = jsonData.isNull("instructions") ? null : jsonData.getString("instructions");
 			final String notesAndCredits = jsonData.isNull("notes_and_credits") ? null : jsonData.getString("notes_and_credits");
 			final String sharedDateString = jsonData.getString("shared_date");
@@ -224,7 +225,10 @@ public final class ServerCalls implements ScratchDataFetcher {
 			final ScratchVisibilityState visibilityState = ScratchVisibilityState.valueOf(jsonObject.getInt("visibility"));
 			final JSONArray jsonTags = jsonData.getJSONArray("tags");
 
-			final ScratchProgramData programData = new ScratchProgramData(programID, title, owner, null);
+			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
+			final WebImage image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[0]);
+
+			final ScratchProgramData programData = new ScratchProgramData(programID, title, owner, image);
 			programData.setInstructions(instructions);
 			programData.setNotesAndCredits(notesAndCredits);
 			programData.setModifiedDate(modifiedDate);
@@ -245,9 +249,9 @@ public final class ServerCalls implements ScratchDataFetcher {
 				String remixTitle = remixJson.getString("title");
 				String remixOwner = remixJson.getString("owner");
 
-				String imageURL = remixJson.getString("image");
-				final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
-				final WebImage remixImage = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[0]);
+				final String remixImageURL = remixJson.getString("image");
+				final int[] remixImageSize = Utils.extractImageSizeFromScratchImageURL(remixImageURL);
+				final WebImage remixImage = new WebImage(Uri.parse(remixImageURL), remixImageSize[0], remixImageSize[0]);
 
 				programData.addRemixProject(new ScratchProgramData(remixId, remixTitle, remixOwner, remixImage));
 			}
@@ -334,7 +338,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 			JSONObject scratchProgramJsonData = jsonArray.getJSONObject(i);
 			final long id = scratchProgramJsonData.getLong("id");
 			final String title = scratchProgramJsonData.getString("title");
-			final String description = scratchProgramJsonData.getString("description");
+			final String notesAndCredits = scratchProgramJsonData.getString("description");
 			final String instructions = scratchProgramJsonData.getString("instructions");
 			final String imageURL = scratchProgramJsonData.getString("image");
 
@@ -361,7 +365,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 
 			final ScratchProgramData programData = new ScratchProgramData(id, title, ownerUserName, image);
 			programData.setInstructions(instructions);
-			programData.setNotesAndCredits(description);
+			programData.setNotesAndCredits(notesAndCredits);
 			programData.setCreatedDate(createdDate);
 			programData.setModifiedDate(modifiedDate);
 			programData.setSharedDate(sharedDate);

@@ -225,7 +225,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 				}
 			}
 		}
-		if (found == false) {
+		if (!found) {
 			jobsList.add(job);
 		}
 
@@ -309,9 +309,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelStatusView.setVisibility(View.GONE);
 		convertProgressLayout.setVisibility(View.VISIBLE);
 		setIconImageView(job.getImage());
-		convertProgressBar.setProgress(new Double(progress).intValue());
+		final int progressInteger = Double.valueOf(progress).intValue();
+		convertProgressBar.setProgress(progressInteger);
 		//convertStatusProgressTextView.setText(String.format("%.1f", progress) + "%");
-		convertStatusProgressTextView.setText(new Double(progress).intValue() + "%");
+		convertStatusProgressTextView.setText(progressInteger + "%");
 		updateAdapterSingleJob(job);
 	}
 
@@ -427,17 +428,8 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		}
 
 		String catrobatProgramName = downloadedProgramsMap.get(job.getJobID());
-		// TODO: store mapping jobID -> catrobatProgram in User defaults...
-		/*
-		if (catrobatProgramName == null) {
-			Log.e(TAG, "No catrobat program found for jobID " + job.getJobID() + " in downloadedProgramsMap!");
-			return;
-		}*/
-		if (catrobatProgramName == null) {
-			catrobatProgramName = job.getTitle();
-		}
+		catrobatProgramName = catrobatProgramName == null ? job.getTitle() : catrobatProgramName;
 
-		// open Catrobat program
 		Intent intent = new Intent(getActivity(), ProjectActivity.class);
 		intent.putExtra(Constants.PROJECTNAME_TO_LOAD, catrobatProgramName);
 		intent.putExtra(Constants.PROJECT_OPENED_FROM_PROJECTS_LIST, true);
