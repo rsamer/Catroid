@@ -349,11 +349,15 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		if (programData.getSharedDate() != null) {
 			final String sharedDateString = Utils.formatDate(programData.getSharedDate(), Locale.getDefault());
 			sharedTextView.setText(getString(R.string.shared_at_x, sharedDateString));
+		} else {
+			sharedTextView.setVisibility(GONE);
 		}
 
 		if (programData.getModifiedDate() != null) {
 			final String modifiedDateString = Utils.formatDate(programData.getModifiedDate(), Locale.getDefault());
 			modifiedTextView.setText(getString(R.string.modified_at_x, modifiedDateString));
+		} else {
+			modifiedTextView.setVisibility(GONE);
 		}
 
 		detailsLayout.setVisibility(VISIBLE);

@@ -27,6 +27,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.preference.PreferenceManager;
@@ -39,7 +40,7 @@ import com.google.common.base.Preconditions;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
-import org.catrobat.catroid.ui.ScratchConverterActivity;
+import org.catrobat.catroid.ui.MainMenuActivity;
 import org.catrobat.catroid.ui.dialogs.CustomAlertDialogBuilder;
 import org.catrobat.catroid.ui.dialogs.ScratchReconvertDialog;
 import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
@@ -61,7 +62,6 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 	private static final String TAG = ScratchConversionManager.class.getSimpleName();
 
-	private ScratchConverterActivity converterActivity;
 	private Activity currentActivity;
 	private final Client client;
 	private final boolean verbose;
@@ -69,11 +69,11 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	private Map<Long, Set<JobViewListener>> jobConsoleViewListeners;
 	private Set<JobViewListener> globalJobViewListeners;
 	private Set<BaseInfoViewListener> baseInfoViewListeners;
+	private boolean shutdown;
 
 	@SuppressLint("UseSparseArrays")
-	public ScratchConversionManager(final ScratchConverterActivity converterActivity, final Client client,
-			final boolean verbose) {
-		this.converterActivity = converterActivity;
+	public ScratchConversionManager(final Activity rootActivity, final Client client, final boolean verbose) {
+		this.currentActivity = rootActivity;
 		this.client = client;
 		this.verbose = verbose;
 		this.delegateCallbackSet = new HashSet<>();
@@ -81,6 +81,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 		this.jobConsoleViewListeners = Collections.synchronizedMap(new HashMap<Long, Set<JobViewListener>>());
 		this.globalJobViewListeners = Collections.synchronizedSet(new HashSet<JobViewListener>());
 		this.baseInfoViewListeners = Collections.synchronizedSet(new HashSet<BaseInfoViewListener>());
+		this.shutdown = false;
 	}
 
 	public void setCurrentActivity(final Activity activity) {
@@ -105,6 +106,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	}
 
 	public void shutdown() {
+		shutdown = true;
 		if (!client.isClosed()) {
 			client.close();
 		}
@@ -115,9 +117,11 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	}
 
 	private void closeAllActivities() {
-		// TODO: close all activities!
-		currentActivity.finish();
-		converterActivity.finish();
+		if (!shutdown) {
+			Intent intent = new Intent(currentActivity.getApplicationContext(), MainMenuActivity.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			currentActivity.startActivity(intent);
+		}
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
