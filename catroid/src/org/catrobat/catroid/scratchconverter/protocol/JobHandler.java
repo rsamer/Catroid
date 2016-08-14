@@ -44,13 +44,17 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 
 	private static final String TAG = JobHandler.class.getSimpleName();
 
-	private Job job;
+	private final Job job;
 	private Client.ConvertCallback callback;
 
 	public JobHandler(final Job job, Client.ConvertCallback callback) {
 		Preconditions.checkArgument(job != null);
 		this.job = job;
 		this.callback = callback;
+	}
+
+	public boolean isInProgress() {
+		return job.isInProgress();
 	}
 
 	public void onJobScheduled() {
@@ -159,7 +163,8 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		Preconditions.checkState(job.getState() == State.SCHEDULED);
 
 		job.setState(Job.State.READY);
-		handleJobRunningMessage(new JobRunningMessage(jobAlreadyRunningMessage.getJobID()));
+		handleJobRunningMessage(new JobRunningMessage(jobAlreadyRunningMessage.getJobID(),
+				jobAlreadyRunningMessage.getJobTitle()));
 	}
 
 	private void handleJobRunningMessage(@NonNull final JobRunningMessage jobRunningMessage) {

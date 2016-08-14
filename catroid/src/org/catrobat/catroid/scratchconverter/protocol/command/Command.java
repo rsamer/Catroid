@@ -49,7 +49,10 @@ abstract public class Command {
 	}
 
 	public enum ArgumentType {
-		CLIENT_ID("clientID"), JOB_ID("jobID"), FORCE("force"), VERBOSE("verbose");
+		CLIENT_ID("clientID"),
+		JOB_ID("jobID"),
+		FORCE("force"),
+		VERBOSE("verbose");
 		private final String rawValue;
 
 		ArgumentType(final String rawValue) {

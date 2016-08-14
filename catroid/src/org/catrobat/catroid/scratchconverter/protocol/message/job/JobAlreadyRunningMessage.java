@@ -24,7 +24,16 @@
 package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
 public class JobAlreadyRunningMessage extends JobMessage {
-	public JobAlreadyRunningMessage(final long jobID) {
+
+	private final String jobTitle;
+
+	public JobAlreadyRunningMessage(final long jobID, final String jobTitle) {
 		super(jobID);
+		this.jobTitle = jobTitle;
 	}
+
+	public String getJobTitle() {
+		return jobTitle;
+	}
+
 }

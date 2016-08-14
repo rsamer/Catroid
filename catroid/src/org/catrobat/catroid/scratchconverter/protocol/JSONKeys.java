@@ -45,6 +45,7 @@ public enum JSONKeys {
 	public enum JSONDataKeys {
 		MSG("msg"),
 		JOB_ID("jobID"),
+		JOB_TITLE("jobTitle"),
 		LINES("lines"),
 		PROGRESS("progress"),
 		URL("url"),
