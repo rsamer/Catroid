@@ -127,6 +127,10 @@ public class Job {
 		return title;
 	}
 
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
 	public double getProgress() {
 		return progress;
 	}

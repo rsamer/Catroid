@@ -171,6 +171,7 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		Preconditions.checkArgument(getJob().getJobID() == jobRunningMessage.getJobID());
 		Preconditions.checkState(job.getState() == State.READY);
 
+		job.setTitle(jobRunningMessage.getJobTitle());
 		job.setState(Job.State.RUNNING);
 		callback.onConversionStart(job);
 	}

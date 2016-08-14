@@ -285,7 +285,16 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 	private void fetchDefaultProjects() {
 		Log.d(TAG, "Fetching default scratch projects");
 		searchView.setQuery("", false);
-		new SearchScratchProgramsTask().setDelegate(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+
+		if (currentSearchTask != null) {
+			currentSearchTask.cancel(true);
+		}
+
+		currentSearchTask = new SearchScratchProgramsTask();
+		currentSearchTask.setContext(activity);
+		currentSearchTask.setDelegate(this);
+		currentSearchTask.setFetcher(dataFetcher);
+		currentSearchTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
 	}
 
 	@Override
@@ -367,6 +376,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 	public void onProgramEdit(int position) {
 		Preconditions.checkState(conversionManager != null);
 		Preconditions.checkState(executorService != null);
+		ScratchProgramDetailsActivity.setDataFetcher(dataFetcher);
 		ScratchProgramDetailsActivity.setConversionManager(conversionManager);
 		ScratchProgramDetailsActivity.setExecutorService(executorService);
 		Intent intent = new Intent(activity, ScratchProgramDetailsActivity.class);

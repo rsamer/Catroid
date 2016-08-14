@@ -154,6 +154,8 @@ public final class Constants {
 	public static final String SCRATCH_CONVERTER_BASE_URL = "http://" + SCRATCH_CONVERTER_HOST + "/"; // TODO: https??
 	public static final String SCRATCH_CONVERTER_API_BASE_URL = SCRATCH_CONVERTER_BASE_URL + "api/v1/";
 	public static final String SCRATCH_CONVERTER_API_DEFAULT_PROJECTS_URL = SCRATCH_CONVERTER_API_BASE_URL + "projects/";
+	public static final int SCRATCH_HTTP_REQUEST_MIN_TIMEOUT = 1_000; // in ms
+	public static final int SCRATCH_HTTP_REQUEST_MAX_NUM_OF_RETRIES = 2;
 	public static final int SCRATCH_IMAGE_DEFAULT_WIDTH = 150;
 	public static final int SCRATCH_IMAGE_DEFAULT_HEIGHT = 150;
 	public static final String DATE_FORMAT_ISO_8601 = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";

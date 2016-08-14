@@ -78,8 +78,8 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		implements BaseInfoViewListener, JobViewListener, DownloadFinishedCallback, ScratchJobEditListener {
 
 	private static final String TAG = ScratchConverterSlidingUpPanelFragment.class.getSimpleName();
-	private static ExecutorService executorService = null;
 
+	private ExecutorService executorService;
 	private ImageView convertIconImageView;
 	private TextView convertPanelHeadlineView;
 	private TextView convertPanelStatusView;
@@ -98,7 +98,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	private ScratchJobAdapter convertedProgramsAdapter;
 	private List<Job> allJobs;
 
-	public static void setExecutorService(final ExecutorService service) {
+	public void setExecutorService(final ExecutorService service) {
 		executorService = service;
 	}
 

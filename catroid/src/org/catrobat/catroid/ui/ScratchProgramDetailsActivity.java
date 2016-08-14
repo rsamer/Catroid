@@ -28,7 +28,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Looper;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -52,18 +51,16 @@ import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.ConversionManager;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
 import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask;
-import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProgramAdapter;
 import org.catrobat.catroid.ui.adapter.ScratchRemixedProgramAdapter.ScratchRemixedProgramEditListener;
 import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 import org.catrobat.catroid.utils.ExpiringDiskCache;
 import org.catrobat.catroid.utils.ExpiringLruMemoryImageCache;
+import org.catrobat.catroid.utils.ToastUtil;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.utils.WebImageLoader;
-import org.catrobat.catroid.web.ServerCalls;
+import org.catrobat.catroid.web.ScratchDataFetcher;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -78,7 +75,8 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		JobViewListener, Client.DownloadFinishedCallback {
 
 	private static final String TAG = ScratchProgramDetailsActivity.class.getSimpleName();
-	private static ScratchDataFetcher dataFetcher = ServerCalls.getInstance();
+
+	private static ScratchDataFetcher dataFetcher = null;
 	private static ConversionManager conversionManager = null;
 	private static ExecutorService executorService = null;
 
@@ -104,7 +102,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	private ScrollView mainScrollView;
 	private RelativeLayout detailsLayout;
 	private TextView remixesLabelView;
-	private FetchScratchProgramDetailsTask fetchDetailsTask = new FetchScratchProgramDetailsTask();
+	private FetchScratchProgramDetailsTask fetchRemixesTask = new FetchScratchProgramDetailsTask();
 
 	// dependency-injection for testing with mock object
 	public static void setDataFetcher(final ScratchDataFetcher fetcher) {
@@ -184,7 +182,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		Log.d(TAG, "Destroyed " + TAG);
 		conversionManager.removeJobConsoleViewListener(programData.getId(), this);
 		conversionManager.removeDownloadFinishedCallback(this);
-		fetchDetailsTask.cancel(true);
+		fetchRemixesTask.cancel(true);
 		progressDialog.dismiss();
 	}
 
@@ -227,8 +225,10 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 			webImageLoader.fetchAndShowImage(thumbnailImageURL, imageView, width, height);
 		}
 
-		fetchDetailsTask.setContext(this).setDelegate(this).setFetcher(dataFetcher);
-		fetchDetailsTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, scratchProgramData.getId());
+		fetchRemixesTask.setContext(this)
+				        .setDelegate(this)
+				        .setFetcher(dataFetcher)
+                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, scratchProgramData.getId());
 	}
 
 	private void initRemixAdapter(List<ScratchProgramData> scratchRemixedProjectsData) {
@@ -265,13 +265,12 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		convertButton.setText(R.string.converting);
 	}
 
-
 	//----------------------------------------------------------------------------------------------
 	// Scratch Project Details Task Delegate Methods
 	//----------------------------------------------------------------------------------------------
 	@Override
 	public void onPreExecute() {
-		Log.i(TAG, "onPreExecute for FetchScratchProgramsTask called");
+		Log.d(TAG, "onPreExecute for FetchScratchProgramRemixesTask called");
 		final ScratchProgramDetailsActivity activity = this;
 		progressDialog = new ProgressDialog(activity);
 		progressDialog.setCancelable(false);
@@ -282,17 +281,13 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 
 	@Override
 	public void onPostExecute(final ScratchProgramData programData) {
-		Log.i(TAG, "onPostExecute for FetchScratchProgramsTask called");
-		if (! Looper.getMainLooper().equals(Looper.myLooper())) {
-			throw new AssertionError("You should not change the UI from any thread except UI thread!");
-		}
-
+		Log.d(TAG, "onPostExecute for FetchScratchProgramRemixesTask called");
 		Preconditions.checkNotNull(progressDialog, "No progress dialog set/initialized!");
 		progressDialog.dismiss();
 		if (programData == null) {
+			ToastUtil.showError(this, R.string.error_scratch_project_data_not_available);
 			return;
 		}
-
 		this.programData = programData;
 		updateViews();
 

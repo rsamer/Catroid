@@ -51,7 +51,6 @@ import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.common.ScratchVisibilityState;
 import org.catrobat.catroid.transfers.ProjectUploadService;
-import org.catrobat.catroid.transfers.FetchScratchProgramDetailsTask.ScratchDataFetcher;
 import org.catrobat.catroid.utils.StatusBarNotificationManager;
 import org.catrobat.catroid.utils.Utils;
 import org.json.JSONArray;
@@ -253,7 +252,7 @@ public final class ServerCalls implements ScratchDataFetcher {
 			programData.setFavorites(favorites);
 			programData.setVisibilityState(visibilityState);
 
-			for (int i = 0; i < jsonTags.length(); ++i) {
+			for (int i = 0; i < jsonTags.length(); i++) {
 				programData.addTag(jsonTags.getString(i));
 			}
 
@@ -271,11 +270,11 @@ public final class ServerCalls implements ScratchDataFetcher {
 					remixImage = new WebImage(Uri.parse(remixImageURL), remixImageSize[0], remixImageSize[1]);
 				}
 
-				programData.addRemixProject(new ScratchProgramData(remixId, remixTitle, remixOwner, remixImage));
+				programData.addRemixProgram(new ScratchProgramData(remixId, remixTitle, remixOwner, remixImage));
 			}
 			return programData;
 		} catch (WebScratchProgramException exception) {
-			throw  exception;
+			throw exception;
 		} catch (InterruptedIOException exception) {
 			Log.d(TAG, "OK! Request cancelled");
 			throw exception;

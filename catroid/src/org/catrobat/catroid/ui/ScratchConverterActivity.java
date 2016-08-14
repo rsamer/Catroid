@@ -50,6 +50,8 @@ import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.SearchScratchSearchProjectsListFragment;
 import org.catrobat.catroid.scratchconverter.ScratchConversionManager;
 import org.catrobat.catroid.utils.ToastUtil;
+import org.catrobat.catroid.web.ScratchDataFetcher;
+import org.catrobat.catroid.web.ServerCalls;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,10 +62,18 @@ public class ScratchConverterActivity extends BaseActivity {
 
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
+	// to avoid using singleton in fragment
+	private static ScratchDataFetcher dataFetcher = ServerCalls.getInstance();
+
 	private SearchScratchSearchProjectsListFragment searchProjectsListFragment;
 	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
 	private SlidingUpPanelLayout slidingLayout;
 	private ConversionManager conversionManager;
+
+	// dependency-injection for testing with mock object
+	public static void setDataFetcher(final ScratchDataFetcher fetcher) {
+		dataFetcher = fetcher;
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -71,13 +81,14 @@ public class ScratchConverterActivity extends BaseActivity {
 		setContentView(R.layout.activity_scratch_converter);
 		setUpActionBar();
 
-		final ExecutorService sharedExecutorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
+		final ExecutorService executorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
 		searchProjectsListFragment = (SearchScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_search_projects_list);
-		searchProjectsListFragment.setExecutorService(sharedExecutorService);
+		searchProjectsListFragment.setDataFetcher(dataFetcher);
+		searchProjectsListFragment.setExecutorService(executorService);
 		converterSlidingUpPanelFragment = (ScratchConverterSlidingUpPanelFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_converter_sliding_up_panel);
-		converterSlidingUpPanelFragment.setExecutorService(sharedExecutorService);
+		converterSlidingUpPanelFragment.setExecutorService(executorService);
 
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,
