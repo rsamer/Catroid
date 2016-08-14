@@ -143,8 +143,8 @@ public class ScratchConverterActivity extends BaseActivity {
 	}
 
 	public void convertProjects(List<ScratchProgramData> projectList) {
-		Log.i(TAG, "Converting projects:");
-		for (final ScratchProgramData programData : projectList) {
+		for (ScratchProgramData programData : projectList) {
+			Log.i(TAG, "Converting program: " + programData.getTitle());
 			conversionManager.convertProgram(programData.getId(), programData.getTitle(), programData.getImage(), false);
 		}
 		ToastUtil.showSuccess(this, R.string.scratch_conversion_started);

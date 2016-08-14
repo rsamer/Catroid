@@ -378,13 +378,11 @@ public class ScratchSearchProjectsListFragment extends Fragment
 	}
 
 	private void convertCheckedProjects() {
-		int numConverted = 0;
 		ArrayList<ScratchProgramData> projectsToConvert = new ArrayList<>();
 		for (int position : scratchProgramAdapter.getCheckedPrograms()) {
-			scratchProgramToEdit = (ScratchProgramData) searchResultsListView.getItemAtPosition(position - numConverted);
+			scratchProgramToEdit = (ScratchProgramData) searchResultsListView.getItemAtPosition(position);
 			projectsToConvert.add(scratchProgramToEdit);
 			Log.d(TAG, "Converting project '" + scratchProgramToEdit.getTitle() + "'");
-			numConverted++;
 		}
 		initAdapter();
 		activity.convertProjects(projectsToConvert);
