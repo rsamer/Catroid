@@ -134,8 +134,10 @@
     <string name="error_specific_scratch_program_conversion_failed_x">Whoops! Failed to convert "%1$s", please try
     <string name="error_scratch_converter_outdated_pocketcode_version">Your Pocket Code app is outdated. Our Scratch
         converter only supports the latest Pocket Code version. Please update it on the Google Play Store!</string>
-    <string name="error_scratch_program_not_exists">It seems that you have canceled the conversion or the download of
-        the Scratch program or you have renamed the program in the meanwhile!</string>
+    <string name="error_cannot_open_not_existing_scratch_program">Cannot open this Scratch program. It seems that you
+        have canceled the conversion/download of the Scratch program or you have renamed/deleted the program in the
+        meanwhile!</string>
+    <string name="error_cannot_open_failed_scratch_program">Cannot open Scratch program because the conversion failed!</string>
     <string name="connection_established">Connection to server established!</string>
         again later</string>
     <string name="search_failed">Search failed, please retry later!</string>

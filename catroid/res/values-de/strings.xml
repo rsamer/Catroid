@@ -126,8 +126,11 @@
   <string name="error_scratch_converter_outdated_pocketcode_version">Deine Pocket Code App ist nicht mehr aktuell.
         Unser Scratch Konverter unterstützt nur die aktuellste Pocket Code Version. Bitte lade die aktuelle Pocket Code
     Version im Google Play Store herunter!</string>
-  <string name="error_scratch_program_not_exists">Es scheint so als hättest du die Konvertierung oder den
-    Download dieses Scratch Programms abgebrochen oder das Programm in der Zwischenzeit umbenannt!</string>
+  <string name="error_cannot_open_not_existing_scratch_program">Dieses Scratch Programm kann nicht geöffnet werden. Es
+    scheint so als hättest du die Konvertierung/Download abgebrochen oder das Programm in der Zwischenzeit
+    gelöscht oder umbenannt!</string>
+  <string name="error_cannot_open_failed_scratch_program">Dieses Scratch Programm kann nicht geöffnet werden,
+    da die Konvertierung fehlgeschlagen ist!</string>
   <string name="connection_established">Verbindung zum Server hergestellt!</string>
   <string name="search_failed">Suche fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
   <string name="connection_closed">Verbindung zum Server getrennt!</string>
@@ -158,8 +161,8 @@
     könnte aber möglicherweise fehlschlagen!</string>
   <string name="instructions">Anleitung</string>
   <string name="notes_and_credits">Anmerkungen und Danksagungen</string>
-  <string name="shared_at_x">Veröffentlicht: %1$s</string>
-  <string name="modified_at_x">Zuletzt verändert: %1$s</string>
+  <string name="shared_at_x">Veröffentlicht:\n%1$s</string>
+  <string name="modified_at_x">Zuletzt verändert:\n%1$s</string>
   <string name="remixes">Remixe</string>
 
   <!-- New Object Dialog -->

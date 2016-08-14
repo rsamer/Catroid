@@ -419,13 +419,18 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			return;
 		}
 
+		if (job.getState() == Job.State.FAILED) {
+			ToastUtil.showError(getActivity(), R.string.error_cannot_open_failed_scratch_program);
+			return;
+		}
+
 		String catrobatProgramName = downloadedProgramsMap.get(job.getJobID());
 		catrobatProgramName = catrobatProgramName == null ? job.getTitle() : catrobatProgramName;
 
 		if (!StorageHandler.getInstance().projectExists(catrobatProgramName)) {
 			AlertDialog.Builder builder = new CustomAlertDialogBuilder(getActivity());
 			builder.setTitle(R.string.warning);
-			builder.setMessage(R.string.error_scratch_program_not_exists);
+			builder.setMessage(R.string.error_cannot_open_not_existing_scratch_program);
 			builder.setNeutralButton(R.string.close, null);
 			Dialog errorDialog = builder.create();
 			errorDialog.show();
