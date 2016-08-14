@@ -68,7 +68,7 @@
             android:id="@+id/fragment_scratch_search_projects_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            class="org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment"
+            class="org.catrobat.catroid.ui.fragment.SearchScratchSearchProjectsListFragment"
             tools:layout="@layout/fragment_scratch_search_projects_list" />
     </FrameLayout>
 

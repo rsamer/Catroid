@@ -130,8 +130,8 @@ public class ScratchProgramData implements Serializable, Parcelable {
 		this.notesAndCredits = notesAndCredits;
 	}
 
-	public void addRemixProject(ScratchProgramData remixProjectData) {
-		remixes.add(remixProjectData);
+	public void addRemixProgram(ScratchProgramData remixProgramData) {
+		remixes.add(remixProgramData);
 	}
 
 	public int getViews() {

@@ -47,7 +47,7 @@ import org.catrobat.catroid.scratchconverter.WebSocketClient;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
 import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
-import org.catrobat.catroid.ui.fragment.ScratchSearchProjectsListFragment;
+import org.catrobat.catroid.ui.fragment.SearchScratchSearchProjectsListFragment;
 import org.catrobat.catroid.scratchconverter.ScratchConversionManager;
 import org.catrobat.catroid.utils.ToastUtil;
 
@@ -60,7 +60,7 @@ public class ScratchConverterActivity extends BaseActivity {
 
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
-	private ScratchSearchProjectsListFragment searchProjectsListFragment;
+	private SearchScratchSearchProjectsListFragment searchProjectsListFragment;
 	private ScratchConverterSlidingUpPanelFragment converterSlidingUpPanelFragment;
 	private SlidingUpPanelLayout slidingLayout;
 	private ConversionManager conversionManager;
@@ -72,7 +72,7 @@ public class ScratchConverterActivity extends BaseActivity {
 		setUpActionBar();
 
 		final ExecutorService sharedExecutorService = Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE);
-		searchProjectsListFragment = (ScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
+		searchProjectsListFragment = (SearchScratchSearchProjectsListFragment)getFragmentManager().findFragmentById(
 				R.id.fragment_scratch_search_projects_list);
 		searchProjectsListFragment.setExecutorService(sharedExecutorService);
 		converterSlidingUpPanelFragment = (ScratchConverterSlidingUpPanelFragment)getFragmentManager().findFragmentById(
