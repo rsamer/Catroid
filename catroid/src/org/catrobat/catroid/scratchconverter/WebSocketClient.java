@@ -58,7 +58,8 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 	private Client.State state;
 	private long clientID;
-	private WebSocketMessageListener messageListener;
+	// TODO: use only MessageListener interface and extend MessageListener interface...
+	private final WebSocketMessageListener messageListener;
 	private AsyncHttpClient asyncHttpClient = AsyncHttpClient.getDefaultInstance();
 	private WebSocket webSocket;
 	private ConnectAuthCallback connectAuthCallback;
@@ -72,10 +73,6 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		this.webSocket = null;
 		this.connectAuthCallback = null;
 		this.convertCallback = null;
-	}
-
-	public MessageListener getMessageListener() {
-		return messageListener;
 	}
 
 	@Override
@@ -186,6 +183,11 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
+	public boolean isJobInProgress(long jobID) {
+		return messageListener.isJobInProgress(jobID);
+	}
+
+	@Override
 	public void convertProgram(final long jobID, final String title, final WebImage image,
 			final boolean verbose, final boolean force) {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
@@ -194,11 +196,12 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 		Log.i(TAG, "Scheduling new job with ID: " + jobID);
 
+		// TODO: consider Law of Demeter... implement wrappers!
 		JobHandler jobHandler = messageListener.getJobHandler(jobID);
 		final Job job = new Job(jobID, title, image);
 		if (jobHandler != null) {
 			Log.d(TAG, "JobHandler for jobID " + jobID + " already exists!");
-			if (!force && jobHandler.getJob().getState().isInProgress()) {
+			if (!force && jobHandler.isInProgress()) {
 				convertCallback.onConversionFailure(job, new ClientException("Job in progress!"));
 				return;
 			}
@@ -219,6 +222,11 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
+	public void onUserCanceledConversion(long jobID) {
+		messageListener.onUserCanceledConversion(jobID);
+	}
+
+	@Override
 	public void onBaseMessage(BaseMessage baseMessage) {
 		// case: InfoMessage
 		if (baseMessage instanceof InfoMessage) {
@@ -233,7 +241,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 				}
 				messageListener.setJobHandlerForJobID(jobHandler);
 
-				if (!job.isAlreadyDownloaded() && job.getDownloadURL() != null) {
+				if (job.getState() == Job.State.FINISHED && !job.isAlreadyDownloaded() && job.getDownloadURL() != null) {
 					Log.i(TAG, "Downloading missed converted project...");
 					convertCallback.onConversionFinished(job, jobHandler, job.getDownloadURL(), null);
 				}

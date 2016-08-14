@@ -94,7 +94,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 	@Override
 	public boolean isJobInProgress(long jobID) {
-		return client.getMessageListener().isJobInProgress(jobID);
+		return client.isJobInProgress(jobID);
 	}
 
 	public void removeDownloadFinishedCallback(final Client.DownloadFinishedCallback callback) {
@@ -324,7 +324,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 
 						@Override
 						public void onUserCanceledConversion() {
-							client.getMessageListener().onUserCanceledConversion(job.getJobID());
+							client.onUserCanceledConversion(job.getJobID());
 							for (final JobViewListener viewListener : getJobConsoleViewListeners(job.getJobID())) {
 								viewListener.onUserCanceledJob(job);
 							}

@@ -63,24 +63,6 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 	}
 
 	@Override
-	public boolean isJobInProgress(long jobID) {
-		final JobHandler jobHandler = jobHandlers.get(jobID);
-		if (jobHandler == null) {
-			return false;
-		}
-		return jobHandler.getJob().getState().isInProgress();
-	}
-
-	@Override
-	public void onUserCanceledConversion(long jobID) {
-		final JobHandler jobHandler = jobHandlers.get(jobID);
-		if (jobHandler == null) {
-			return;
-		}
-		jobHandler.onUserCanceledConversion();
-	}
-
-	@Override
 	public void onStringAvailable(String s) {
 		try {
 			if (s == null) {
@@ -120,4 +102,23 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 			e.printStackTrace();
 		}
 	}
+
+	@Override
+	public boolean isJobInProgress(long jobID) {
+		final JobHandler jobHandler = jobHandlers.get(jobID);
+		if (jobHandler == null) {
+			return false;
+		}
+		return jobHandler.isInProgress();
+	}
+
+	@Override
+	public void onUserCanceledConversion(long jobID) {
+		final JobHandler jobHandler = jobHandlers.get(jobID);
+		if (jobHandler == null) {
+			return;
+		}
+		jobHandler.onUserCanceledConversion();
+	}
+
 }

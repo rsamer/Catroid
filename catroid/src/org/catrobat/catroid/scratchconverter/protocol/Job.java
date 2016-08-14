@@ -111,6 +111,10 @@ public class Job {
 		return state;
 	}
 
+	public boolean isInProgress() {
+		return state.isInProgress();
+	}
+
 	public void setState(State state) {
 		this.state = state;
 	}

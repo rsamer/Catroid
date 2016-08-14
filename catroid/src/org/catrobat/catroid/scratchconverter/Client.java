@@ -36,14 +36,15 @@ public interface Client {
 	enum State { NOT_CONNECTED, CONNECTED, CONNECTED_AUTHENTICATED }
 	long INVALID_CLIENT_ID = -1;
 
-	MessageListener getMessageListener();
 	void setConvertCallback(ConvertCallback convertCallback);
 	boolean isClosed();
 	boolean isAuthenticated();
 	void connectAndAuthenticate(ConnectAuthCallback connectAuthCallback);
 	void retrieveInfo();
+	boolean isJobInProgress(long jobID);
 	void convertProgram(long jobID, String title, WebImage image, boolean verbose, boolean force);
 	void cancelDownload(long jobID);
+	void onUserCanceledConversion(long jobID);
 	void close();
 
 	// callbacks
