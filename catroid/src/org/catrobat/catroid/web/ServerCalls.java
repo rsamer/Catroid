@@ -212,21 +212,36 @@ public final class ServerCalls implements ScratchDataFetcher {
 			final JSONObject jsonData = jsonObject.getJSONObject("projectData");
 			final String title = jsonData.getString("title");
 			final String owner = jsonData.getString("owner");
-			final String imageURL = jsonData.getString("image_url");
+			final String imageURL = jsonData.isNull("image_url") ? null : jsonData.getString("image_url");
 			final String instructions = jsonData.isNull("instructions") ? null : jsonData.getString("instructions");
 			final String notesAndCredits = jsonData.isNull("notes_and_credits") ? null : jsonData.getString("notes_and_credits");
 			final String sharedDateString = jsonData.getString("shared_date");
-			final Date sharedDate = formatter.parse(sharedDateString);
 			final String modifiedDateString = jsonData.getString("modified_date");
-			final Date modifiedDate = formatter.parse(modifiedDateString);
 			final int views = jsonData.getInt("views");
 			final int favorites = jsonData.getInt("favorites");
 			final int loves = jsonData.getInt("loves");
 			final ScratchVisibilityState visibilityState = ScratchVisibilityState.valueOf(jsonObject.getInt("visibility"));
 			final JSONArray jsonTags = jsonData.getJSONArray("tags");
 
-			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
-			final WebImage image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[0]);
+			Date sharedDate;
+			try {
+				sharedDate = formatter.parse(sharedDateString);
+			} catch (ParseException ex) {
+				sharedDate = null;
+			}
+
+			Date modifiedDate;
+			try {
+				modifiedDate = formatter.parse(modifiedDateString);
+			} catch (ParseException ex) {
+				modifiedDate = null;
+			}
+
+			WebImage image = null;
+			if (imageURL != null) {
+				int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
+				image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[1]);
+			}
 
 			final ScratchProgramData programData = new ScratchProgramData(programID, title, owner, image);
 			programData.setInstructions(instructions);
@@ -248,10 +263,13 @@ public final class ServerCalls implements ScratchDataFetcher {
 				long remixId = remixJson.getLong("id");
 				String remixTitle = remixJson.getString("title");
 				String remixOwner = remixJson.getString("owner");
+				String remixImageURL = remixJson.isNull("image") ? null : remixJson.getString("image");
 
-				final String remixImageURL = remixJson.getString("image");
-				final int[] remixImageSize = Utils.extractImageSizeFromScratchImageURL(remixImageURL);
-				final WebImage remixImage = new WebImage(Uri.parse(remixImageURL), remixImageSize[0], remixImageSize[0]);
+				WebImage remixImage = null;
+				if (remixImageURL != null) {
+					int[] remixImageSize = Utils.extractImageSizeFromScratchImageURL(remixImageURL);
+					remixImage = new WebImage(Uri.parse(remixImageURL), remixImageSize[0], remixImageSize[1]);
+				}
 
 				programData.addRemixProject(new ScratchProgramData(remixId, remixTitle, remixOwner, remixImage));
 			}
@@ -335,18 +353,18 @@ public final class ServerCalls implements ScratchDataFetcher {
 		ArrayList<ScratchProgramData> programDataList = new ArrayList<>();
 
 		for (int i = 0; i < jsonArray.length(); ++i) {
-			JSONObject scratchProgramJsonData = jsonArray.getJSONObject(i);
-			final long id = scratchProgramJsonData.getLong("id");
-			final String title = scratchProgramJsonData.getString("title");
-			final String notesAndCredits = scratchProgramJsonData.getString("description");
-			final String instructions = scratchProgramJsonData.getString("instructions");
-			final String imageURL = scratchProgramJsonData.getString("image");
+			JSONObject programJsonData = jsonArray.getJSONObject(i);
+			final long id = programJsonData.getLong("id");
+			final String title = programJsonData.getString("title");
+			final String notesAndCredits = programJsonData.getString("description");
+			final String instructions = programJsonData.getString("instructions");
+			final String imageURL = programJsonData.isNull("image") ? null : programJsonData.getString("image");
 
-			final JSONObject authorJsonData = scratchProgramJsonData.getJSONObject("author");
+			final JSONObject authorJsonData = programJsonData.getJSONObject("author");
 			// final String ownerUserID = authorJsonData.getString("id"); // reserved for later use!
 			final String ownerUserName = authorJsonData.getString("username");
 
-			final JSONObject historyJsonData = scratchProgramJsonData.getJSONObject("history");
+			final JSONObject historyJsonData = programJsonData.getJSONObject("history");
 			final String createdDateString = historyJsonData.getString("created");
 			final String modifiedDateString = historyJsonData.getString("modified");
 			final String sharedDateString = historyJsonData.getString("shared");
@@ -354,14 +372,17 @@ public final class ServerCalls implements ScratchDataFetcher {
 			final Date modifiedDate = ISO8601LocalDateFormat.parse(modifiedDateString);
 			final Date sharedDate = ISO8601LocalDateFormat.parse(sharedDateString);
 
-			final JSONObject statisticsJsonData = scratchProgramJsonData.getJSONObject("stats");
+			final JSONObject statisticsJsonData = programJsonData.getJSONObject("stats");
 			final int views = statisticsJsonData.getInt("views");
 			final int loves = statisticsJsonData.getInt("loves");
 			final int favorites = statisticsJsonData.getInt("favorites");
 			// final long comments = statisticsJsonData.getLong("comments"); // reserved for later use!
 
-			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
-			final WebImage image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[0]);
+			WebImage image = null;
+			if (imageURL != null) {
+				int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
+				image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[1]);
+			}
 
 			final ScratchProgramData programData = new ScratchProgramData(id, title, ownerUserName, image);
 			programData.setInstructions(instructions);
