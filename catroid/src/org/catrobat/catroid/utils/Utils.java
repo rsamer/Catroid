@@ -63,6 +63,7 @@ import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.DefaultProjectHandler;
 import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.common.NfcTagData;
+import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.common.SoundInfo;
 import org.catrobat.catroid.content.Project;
@@ -86,6 +87,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -180,6 +182,27 @@ public final class Utils {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+
+	public static Date getScratchSecondReleasePublishedDate() {
+		final Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, Constants.SCRATCH_SECOND_RELEASE_PUBLISHED_DATE_YEAR);
+		calendar.set(Calendar.MONTH, Constants.SCRATCH_SECOND_RELEASE_PUBLISHED_DATE_MONTH);
+		calendar.set(Calendar.DAY_OF_MONTH, Constants.SCRATCH_SECOND_RELEASE_PUBLISHED_DATE_DAY);
+		return calendar.getTime();
+	}
+
+	public static boolean isDeprecatedScratchProgram(final ScratchProgramData programData) {
+		// NOTE: ignoring old Scratch 1.x programs -> converter only supports version 2.x and later
+		//       Scratch 1.x programs are created before May 9, 2013 (see: https://wiki.scratch.mit.edu/wiki/Scratch_2.0)
+		final Date releasePublishedDate = getScratchSecondReleasePublishedDate();
+		if (programData.getModifiedDate() != null && programData.getModifiedDate().before(releasePublishedDate)) {
+			return true;
+		} else if (programData.getCreatedDate() != null && programData.getCreatedDate().before(releasePublishedDate)) {
+			return true;
+		}
+		Log.d(TAG, programData.getModifiedDate().toString());
+		return false;
 	}
 
 	public static String extractParameterFromURL(final String url, final String parameterKey) {

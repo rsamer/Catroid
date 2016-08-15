@@ -50,10 +50,13 @@ import org.catrobat.catroid.ui.fragment.ScratchConverterSlidingUpPanelFragment;
 import org.catrobat.catroid.ui.fragment.SearchScratchSearchProjectsListFragment;
 import org.catrobat.catroid.scratchconverter.ScratchConversionManager;
 import org.catrobat.catroid.utils.ToastUtil;
+import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.web.ScratchDataFetcher;
 import org.catrobat.catroid.web.ServerCalls;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -153,12 +156,23 @@ public class ScratchConverterActivity extends BaseActivity {
 		getActionBar().setTitle(spanTitle);
 	}
 
-	public void convertProjects(List<ScratchProgramData> projectList) {
+	public void convertProjects(List<ScratchProgramData> programList) {
 		int counter = 0;
-		for (ScratchProgramData programData : projectList) {
+
+		for (ScratchProgramData programData : programList) {
+			if (Utils.isDeprecatedScratchProgram(programData)) {
+				final Date releasePublishedDate = Utils.getScratchSecondReleasePublishedDate();
+				java.text.DateFormat dateFormat = android.text.format.DateFormat.getMediumDateFormat(this);
+
+				ToastUtil.showError(this, getString(R.string.error_cannot_convert_deprecated_scratch_program_x_x,
+						programData.getTitle(), dateFormat.format(releasePublishedDate)));
+				continue;
+			}
+
 			if (conversionManager.isJobInProgress(programData.getId())) {
 				continue;
 			}
+
 			Log.i(TAG, "Converting program: " + programData.getTitle());
 			conversionManager.convertProgram(programData.getId(), programData.getTitle(), programData.getImage(), false);
 			counter++;

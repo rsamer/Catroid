@@ -143,6 +143,8 @@
     <string name="connection_closed">Connection to server closed!</string>
     <string name="connection_failed">Connection to server failed, please retry later!</string>
     <string name="authentication_failed">Authentication failed, please contact the Pocket Code team!</string>
+    <string name="error_cannot_convert_deprecated_scratch_program_x_x">Cannot convert "%1$s"! Older Scratch before %2$s
+        programs are not supported!</string>
     <string name="scratch_conversion_scheduled_x">Scheduled %1$d Scratch programs...</string>
     <string name="scratch_conversion_started">Started to convert Scratch program...</string>
     <string name="convert">Convert</string>

@@ -190,15 +190,19 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	@Override
 	public void convertProgram(final long jobID, final String title, final WebImage image,
 			final boolean verbose, final boolean force) {
-		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
-		Preconditions.checkState(webSocket != null);
+
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
+		final Job job = new Job(jobID, title, image);
+
+		if (state != State.CONNECTED_AUTHENTICATED || webSocket == null) {
+			convertCallback.onConversionFailure(job, new ClientException("Not connected!"));
+			return;
+		}
 
 		Log.i(TAG, "Scheduling new job with ID: " + jobID);
 
 		// TODO: consider Law of Demeter... implement wrappers!
 		JobHandler jobHandler = messageListener.getJobHandler(jobID);
-		final Job job = new Job(jobID, title, image);
 		if (jobHandler != null) {
 			Log.d(TAG, "JobHandler for jobID " + jobID + " already exists!");
 			if (!force && jobHandler.isInProgress()) {

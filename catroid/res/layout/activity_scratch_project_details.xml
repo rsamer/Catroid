@@ -220,6 +220,7 @@
                 android:layout_below="@+id/scratch_project_tags_text"
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="20dp"
+                android:layout_marginBottom="30dp"
                 android:text="@string/shared_at_x" />
 
             <TextView
@@ -231,6 +232,7 @@
                 android:layout_below="@+id/scratch_project_tags_text"
                 android:layout_alignParentLeft="true"
                 android:layout_marginTop="20dp"
+                android:layout_marginBottom="30dp"
                 android:text="@string/modified_at_x" />
 
             <TextView
@@ -240,7 +242,6 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:layout_below="@+id/scratch_project_modified_text"
                 android:layout_alignParentLeft="true"
-                android:layout_marginTop="30dp"
                 android:text="@string/remixes" />
 
             <ListView
