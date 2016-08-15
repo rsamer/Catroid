@@ -217,6 +217,8 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		audioButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				searchView.setQuery("", false);
+				searchView.clearFocus();
 				activity.displaySpeechRecognizer();
 			}
 		});
@@ -374,6 +376,8 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 	public void onProgramEdit(int position) {
 		Preconditions.checkState(conversionManager != null);
 		Preconditions.checkState(executorService != null);
+
+		searchView.clearFocus();
 		ScratchProgramDetailsActivity.setDataFetcher(dataFetcher);
 		ScratchProgramDetailsActivity.setConversionManager(conversionManager);
 		ScratchProgramDetailsActivity.setExecutorService(executorService);
