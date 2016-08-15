@@ -200,9 +200,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		searchResultsListView.setVisibility(View.INVISIBLE);
 		audioButton = (ImageButton) rootView.findViewById(R.id.mic_button_image_scratch);
 
-		int id = searchView.getContext()
-				.getResources()
-				.getIdentifier("android:id/search_src_text", null, null);
+		int id = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
 		final TextView searchTextView = (TextView) searchView.findViewById(id);
 		searchTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			@Override

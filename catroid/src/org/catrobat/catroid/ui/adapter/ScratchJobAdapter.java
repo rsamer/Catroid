@@ -24,6 +24,7 @@
 package org.catrobat.catroid.ui.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -107,7 +108,36 @@ public class ScratchJobAdapter extends ArrayAdapter<Job> {
 		holder.title.setSingleLine(true);
 
 		// set status of project:
-		holder.status.setText(job.getState().toString());
+		holder.status.setTextColor(Color.WHITE);
+		switch (job.getState()) {
+			case UNSCHEDULED:
+				holder.status.setText("-");
+				break;
+			case SCHEDULED:
+				holder.status.setText(getContext().getString(R.string.status_scheduled));
+				break;
+			case READY:
+				holder.status.setText(getContext().getString(R.string.status_waiting_for_worker));
+				break;
+			case RUNNING:
+				holder.status.setText(getContext().getString(R.string.status_started));
+				break;
+			case FINISHED:
+				int messageID;
+				if (job.isDownloading()) {
+					messageID = R.string.status_downloading;
+				} else if (job.isAlreadyDownloaded()) {
+					messageID = R.string.status_download_finished;
+				} else {
+					messageID = R.string.status_conversion_finished;
+				}
+				holder.status.setText(getContext().getString(messageID));
+				break;
+			case FAILED:
+				holder.status.setText(R.string.status_conversion_failed);
+				holder.status.setTextColor(Color.RED);
+				break;
+		}
 
 		if (job.getState() == Job.State.FINISHED || job.getState() == Job.State.FAILED) {
 			holder.progressLayout.setVisibility(View.GONE);

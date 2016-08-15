@@ -23,11 +23,11 @@
 
 package org.catrobat.catroid.scratchconverter;
 
+import android.support.annotation.Nullable;
+
 import com.google.android.gms.common.images.WebImage;
 
 import org.catrobat.catroid.scratchconverter.protocol.Job;
-import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
 
