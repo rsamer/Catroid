@@ -136,11 +136,12 @@
   <string name="connection_closed">Verbindung zum Server getrennt!</string>
   <string name="connection_failed">Verbindung zum Server fehlgeschlagen. Bitte probiere es etwas später noch einmal!</string>
   <string name="authentication_failed">Authentifizierung fehlgeschlagen. Bitte kontaktiere das Pocket Code Team!</string>
+  <string name="scratch_conversion_scheduled_x">%1$d Programme zur Warteschlange hinzugefügt...</string>
   <string name="scratch_conversion_started">Konvertierung gestarted...</string>
   <string name="convert">Konvertieren</string>
   <string name="converting">Konvertierung in Bearbeitung...</string>
   <string name="status_scheduled">Konvertierung in Bearbeitung</string>
-  <string name="status_prepare">Bereite vor...</string>
+  <string name="status_waiting_for_worker">Suche nach freien Arbeiter... Bitte warten...</string>
   <string name="status_started">Konvertierung läuft...</string>
   <string name="status_conversion_finished">Konvertierung beendet...</string>
   <string name="status_in_progress_x_jobs">In Bearbeitung: %1$d Programme</string>

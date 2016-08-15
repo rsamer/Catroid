@@ -154,11 +154,19 @@ public class ScratchConverterActivity extends BaseActivity {
 	}
 
 	public void convertProjects(List<ScratchProgramData> projectList) {
+		int counter = 0;
 		for (ScratchProgramData programData : projectList) {
+			if (conversionManager.isJobInProgress(programData.getId())) {
+				continue;
+			}
 			Log.i(TAG, "Converting program: " + programData.getTitle());
 			conversionManager.convertProgram(programData.getId(), programData.getTitle(), programData.getImage(), false);
+			counter++;
 		}
-		ToastUtil.showSuccess(this, R.string.scratch_conversion_started);
+
+		if (counter > 0) {
+			ToastUtil.showSuccess(this, getString(R.string.scratch_conversion_scheduled_x, counter));
+		}
 	}
 
 	public boolean isSlideUpPanelEmpty() {

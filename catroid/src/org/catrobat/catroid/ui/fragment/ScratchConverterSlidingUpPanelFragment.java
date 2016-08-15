@@ -284,7 +284,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	@Override
 	public void onJobReady(final Job job) {
 		convertPanelHeadlineView.setText(job.getTitle());
-		convertPanelStatusView.setText(R.string.status_prepare);
+		convertPanelStatusView.setText(R.string.status_waiting_for_worker);
 		convertPanelStatusView.setVisibility(View.VISIBLE);
 		convertProgressLayout.setVisibility(View.GONE);
 		setIconImageView(job.getImage());

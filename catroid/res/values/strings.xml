@@ -143,11 +143,12 @@
     <string name="connection_closed">Connection to server closed!</string>
     <string name="connection_failed">Connection to server failed, please retry later!</string>
     <string name="authentication_failed">Authentication failed, please contact the Pocket Code team!</string>
+    <string name="scratch_conversion_scheduled_x">Scheduled %1$d Scratch programs...</string>
     <string name="scratch_conversion_started">Started to convert Scratch program...</string>
     <string name="convert">Convert</string>
     <string name="converting">Converting...</string>
     <string name="status_scheduled">Scheduled</string>
-    <string name="status_prepare">Prepare...</string>
+    <string name="status_waiting_for_worker">Looking for a free worker... Please wait...</string>
     <string name="status_started">Started...</string>
     <string name="status_conversion_finished">Conversion finished...</string>
     <string name="status_in_progress_x_jobs">In progress: %1$d jobs</string>
