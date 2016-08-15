@@ -187,7 +187,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
 		if (requestCode == Constants.INTENT_REQUEST_CODE_CONVERT && resultCode == RESULT_OK) {
 			setResult(RESULT_OK, intent);
 			finish();
@@ -377,43 +377,43 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	// JobViewListener Events
 	//----------------------------------------------------------------------------------------------
 	@Override
-	public void onJobScheduled(Job job) {
+	public void onJobScheduled(final Job job) {
 		if (job.getJobID() == programData.getId()) {
 			onJobInProgress();
 		}
 	}
 
 	@Override
-	public void onJobReady(Job job) {}
+	public void onJobReady(final Job job) {}
 
 	@Override
-	public void onJobStarted(Job job) {}
+	public void onJobStarted(final Job job) {}
 
 	@Override
-	public void onJobProgress(Job job, double progress) {}
+	public void onJobProgress(final Job job, final short progress) {}
 
 	@Override
-	public void onJobOutput(Job job, @NonNull String[] lines) {}
+	public void onJobOutput(final Job job, @NonNull final String[] lines) {}
 
 	@Override
-	public void onJobFinished(Job job) {}
+	public void onJobFinished(final Job job) {}
 
 	@Override
-	public void onJobFailed(Job job) {
+	public void onJobFailed(final Job job) {
 		if (job.getJobID() == programData.getId()) {
 			onJobNotInProgress();
 		}
 	}
 
 	@Override
-	public void onUserCanceledJob(Job job) {
+	public void onUserCanceledJob(final Job job) {
 		if (job.getJobID() == programData.getId()) {
 			onJobNotInProgress();
 		}
 	}
 
 	@Override
-	public void onDownloadStarted(String url) {
+	public void onDownloadStarted(final String url) {
 		final long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == programData.getId()) {
 			convertButton.setText(R.string.status_downloading);
@@ -421,7 +421,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
-	public void onDownloadFinished(String catrobatProgramName, String url) {
+	public void onDownloadFinished(final String catrobatProgramName, final String url) {
 		final long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == programData.getId()) {
 			onJobNotInProgress();
@@ -429,7 +429,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	}
 
 	@Override
-	public void onUserCanceledDownload(String url) {
+	public void onUserCanceledDownload(final String url) {
 		final long jobID = Utils.extractScratchJobIDFromURL(url);
 		if (jobID == programData.getId()) {
 			onJobNotInProgress();

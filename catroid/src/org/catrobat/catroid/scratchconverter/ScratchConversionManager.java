@@ -384,7 +384,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	}
 
 	@Override
-	public void onJobProgress(final Job job, final double progress) {
+	public void onJobProgress(final Job job, final short progress) {
 		currentActivity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {

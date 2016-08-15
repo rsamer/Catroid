@@ -73,7 +73,7 @@ public class Job {
 	private long jobID;
 	private String title;
 	private WebImage image;
-	private double progress;
+	private short progress;
 	private boolean alreadyDownloaded;
 	private boolean downloading;
 	private String downloadURL;
@@ -83,7 +83,7 @@ public class Job {
 		this.jobID = jobID;
 		this.title = title;
 		this.image = image;
-		this.progress = 0.0;
+		this.progress = 0;
 		this.downloading = false;
 		this.alreadyDownloaded = false;
 		this.downloadURL = null;
@@ -99,7 +99,7 @@ public class Job {
 			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
 			image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[1]);
 		}
-		final double progress = data.getDouble(JSONJobDataKeys.PROGRESS.toString());
+		final short progress = (short) data.getInt(JSONJobDataKeys.PROGRESS.toString());
 		final boolean alreadyDownloaded = data.getBoolean(JSONJobDataKeys.ALREADY_DOWNLOADED.toString());
 		final String downloadURL = data.getString(JSONJobDataKeys.DOWNLOAD_URL.toString());
 		final Job job = new Job(jobID, title, image);
@@ -134,11 +134,11 @@ public class Job {
 		this.title = title;
 	}
 
-	public double getProgress() {
+	public short getProgress() {
 		return progress;
 	}
 
-	public void setProgress(double progress) {
+	public void setProgress(short progress) {
 		this.progress = progress;
 	}
 

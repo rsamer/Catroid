@@ -243,10 +243,8 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertPanelHeadlineView.setText(job.getTitle());
 
 		if (showProgress) {
-			final int progressInteger = Double.valueOf(job.getProgress()).intValue();
-			convertProgressBar.setProgress(progressInteger);
-			//convertStatusProgressTextView.setText(String.format("%.1f", progress) + "%");
-			convertStatusProgressTextView.setText(progressInteger + "%");
+			convertProgressBar.setProgress(job.getProgress());
+			convertStatusProgressTextView.setText(job.getProgress() + "%");
 
 			convertPanelStatusView.setVisibility(View.GONE);
 			convertProgressLayout.setVisibility(View.VISIBLE);
@@ -349,18 +347,18 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 
 	@Override
 	public void onJobReady(final Job job) {
-		job.setProgress(0.0);
+		job.setProgress((short) 0);
 		updateConvertPanel(job, R.string.status_waiting_for_worker, false);
 	}
 
 	@Override
 	public void onJobStarted(final Job job) {
-		job.setProgress(0.0);
+		job.setProgress((short) 0);
 		updateConvertPanel(job, R.string.status_started, false);
 	}
 
 	@Override
-	public void onJobProgress(final Job job, final double progress) {
+	public void onJobProgress(final Job job, final short progress) {
 		updateConvertPanel(job, R.string.status_started, true);
 	}
 

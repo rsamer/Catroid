@@ -118,7 +118,7 @@ abstract public class JobMessage extends Message {
 				return (T)new JobOutputMessage(jobID, lines);
 
 			case JOB_PROGRESS:
-				final double progress = jsonData.getDouble(JSONDataKeys.PROGRESS.toString());
+				final short progress = (short) jsonData.getInt(JSONDataKeys.PROGRESS.toString());
 				return (T)new JobProgressMessage(jobID, progress);
 
 			case JOB_FINISHED:

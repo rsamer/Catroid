@@ -60,7 +60,7 @@ public interface Client {
 		void onJobScheduled(Job job);
 		void onConversionReady(Job job);
 		void onConversionStart(Job job);
-		void onJobProgress(Job job, double progress);
+		void onJobProgress(Job job, short progress);
 		void onJobOutput(Job job, String[] lines);
 		void onConversionFinished(Job job, DownloadFinishedCallback downloadFinishedCallback, String downloadURL,
 				Date cachedDate);

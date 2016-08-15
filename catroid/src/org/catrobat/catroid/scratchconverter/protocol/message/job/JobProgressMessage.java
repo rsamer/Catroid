@@ -25,14 +25,14 @@ package org.catrobat.catroid.scratchconverter.protocol.message.job;
 
 public class JobProgressMessage extends JobMessage {
 
-	private final double progress;
+	private final short progress;
 
-	public JobProgressMessage(final long jobID, final double progress) {
+	public JobProgressMessage(final long jobID, final short progress) {
 		super(jobID);
 		this.progress = progress;
 	}
 
-	public double getProgress() {
+	public short getProgress() {
 		return progress;
 	}
 
