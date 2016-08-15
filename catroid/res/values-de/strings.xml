@@ -143,11 +143,11 @@
   <string name="status_scheduled">Konvertierung in Bearbeitung</string>
   <string name="status_waiting_for_worker">Suche nach freien Arbeiter... Bitte warten...</string>
   <string name="status_started">Konvertierung läuft...</string>
-  <string name="status_conversion_finished">Konvertierung beendet...</string>
+  <string name="status_conversion_finished">Konvertierung beendet</string>
   <string name="status_in_progress_x_jobs">In Bearbeitung: %1$d Programme</string>
   <string name="status_completed_x_jobs">Abgeschlossen: %1$d Programme</string>
-  <string name="status_job_failed">Konvertierung fehlgeschlagen!</string>
-  <string name="status_job_canceled">Konvertierung abgebrochen!</string>
+  <string name="status_conversion_failed">Konvertierung fehlgeschlagen!</string>
+  <string name="status_conversion_canceled">Konvertierung abgebrochen!</string>
   <string name="status_downloading">Download läuft...</string>
   <string name="status_download_finished">Download abgeschlossen!</string>
   <string name="status_download_canceled">Download abgebrochen!</string>

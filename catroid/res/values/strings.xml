@@ -131,6 +131,7 @@
     <string name="error_scratch_program_conversion_failed">Whoops! Failed to convert Scratch program, please try again
         later</string>
     <string name="error_specific_scratch_program_conversion_failed_x">Whoops! Failed to convert "%1$s", please try
+        again later</string>
     <string name="error_scratch_converter_outdated_pocketcode_version">Your Pocket Code app is outdated. Our Scratch
         converter only supports the latest Pocket Code version. Please update it on the Google Play Store!</string>
     <string name="error_cannot_open_not_existing_scratch_program">Cannot open this Scratch program. It seems that you
@@ -138,7 +139,6 @@
         meanwhile!</string>
     <string name="error_cannot_open_failed_scratch_program">Cannot open Scratch program because the conversion failed!</string>
     <string name="connection_established">Connection to server established!</string>
-        again later</string>
     <string name="search_failed">Search failed, please retry later!</string>
     <string name="connection_closed">Connection to server closed!</string>
     <string name="connection_failed">Connection to server failed, please retry later!</string>
@@ -150,11 +150,11 @@
     <string name="status_scheduled">Scheduled</string>
     <string name="status_waiting_for_worker">Looking for a free worker... Please wait...</string>
     <string name="status_started">Started...</string>
-    <string name="status_conversion_finished">Conversion finished...</string>
+    <string name="status_conversion_finished">Conversion finished</string>
     <string name="status_in_progress_x_jobs">In progress: %1$d jobs</string>
     <string name="status_completed_x_jobs">Completed: %1$d jobs</string>
-    <string name="status_job_failed">Job failed!</string>
-    <string name="status_job_canceled">Job canceled!</string>
+    <string name="status_conversion_failed">Conversion failed!</string>
+    <string name="status_conversion_canceled">Conversion canceled!</string>
     <string name="status_downloading">Downloading...</string>
     <string name="status_download_finished">Download finished!</string>
     <string name="status_download_canceled">Download canceled!</string>
