@@ -113,6 +113,9 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 	}
 
 	public void convertProgram(final long jobID, final String title, final WebImage image, final boolean force) {
+		if (!force && client.isJobInProgress(jobID)) {
+			return;
+		}
 		client.convertProgram(jobID, title, image, verbose, force);
 	}
 
