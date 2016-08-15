@@ -94,10 +94,16 @@ abstract public class JobMessage extends Message {
 				return (T)new JobFailedMessage(jobID, jsonData.getString(JSONDataKeys.MSG.toString()));
 
 			case JOB_RUNNING:
-				return (T)new JobRunningMessage(jobID, jsonData.getString(JSONDataKeys.JOB_TITLE.toString()));
+				final String jobTitle = jsonData.getString(JSONDataKeys.JOB_TITLE.toString());
+				final String jobImageURLKey = JSONDataKeys.JOB_IMAGE_URL.toString();
+				final String jobImageURL = jsonData.isNull(jobImageURLKey) ? null : jsonData.getString(jobImageURLKey);
+				return (T)new JobRunningMessage(jobID, jobTitle, jobImageURL);
 
 			case JOB_ALREADY_RUNNING:
-				return (T)new JobAlreadyRunningMessage(jobID, jsonData.getString(JSONDataKeys.JOB_TITLE.toString()));
+				final String jTitle = jsonData.getString(JSONDataKeys.JOB_TITLE.toString());
+				final String jImageURLKey = JSONDataKeys.JOB_IMAGE_URL.toString();
+				final String jImageURL = jsonData.isNull(jImageURLKey) ? null : jsonData.getString(jImageURLKey);
+				return (T)new JobAlreadyRunningMessage(jobID, jTitle, jImageURL);
 
 			case JOB_READY:
 				return (T)new JobReadyMessage(jobID);

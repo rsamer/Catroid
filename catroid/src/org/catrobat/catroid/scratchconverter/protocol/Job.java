@@ -28,6 +28,7 @@ import android.net.Uri;
 import org.catrobat.catroid.scratchconverter.protocol.JSONKeys.JSONJobDataKeys;
 import com.google.android.gms.common.images.WebImage;
 
+import org.catrobat.catroid.utils.Utils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -93,12 +94,14 @@ public class Job {
 		final long jobID = data.getLong(JSONJobDataKeys.JOB_ID.toString());
 		final String title = data.getString(JSONJobDataKeys.TITLE.toString());
 		final String imageURL = data.isNull(JSONJobDataKeys.IMAGE_URL.toString()) ? null : data.getString(JSONJobDataKeys.IMAGE_URL.toString());
-		final int imageWidth = data.getInt(JSONJobDataKeys.IMAGE_WIDTH.toString());
-		final int imageHeight = data.getInt(JSONJobDataKeys.IMAGE_HEIGHT.toString());
+		WebImage image = null;
+		if (imageURL != null) {
+			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(imageURL);
+			image = new WebImage(Uri.parse(imageURL), imageSize[0], imageSize[1]);
+		}
 		final double progress = data.getDouble(JSONJobDataKeys.PROGRESS.toString());
 		final boolean alreadyDownloaded = data.getBoolean(JSONJobDataKeys.ALREADY_DOWNLOADED.toString());
 		final String downloadURL = data.getString(JSONJobDataKeys.DOWNLOAD_URL.toString());
-		final WebImage image = imageURL != null ? new WebImage(Uri.parse(imageURL), imageWidth, imageHeight) : null;
 		final Job job = new Job(jobID, title, image);
 		job.state = state;
 		job.progress = progress;

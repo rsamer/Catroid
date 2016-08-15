@@ -63,7 +63,7 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 	}
 
 	@Override
-	public void onStringAvailable(String s) {
+	public synchronized void onStringAvailable(String s) {
 		try {
 			if (s == null) {
 				return;

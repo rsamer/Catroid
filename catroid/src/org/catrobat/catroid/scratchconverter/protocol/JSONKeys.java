@@ -46,6 +46,7 @@ public enum JSONKeys {
 		MSG("msg"),
 		JOB_ID("jobID"),
 		JOB_TITLE("jobTitle"),
+		JOB_IMAGE_URL("jobImageURL"),
 		LINES("lines"),
 		PROGRESS("progress"),
 		URL("url"),
@@ -72,11 +73,9 @@ public enum JSONKeys {
 		JOB_ID("jobID"),
 		TITLE("title"),
 		IMAGE_URL("imageURL"),
-		IMAGE_WIDTH("imageWidth"),
-		IMAGE_HEIGHT("imageHeight"),
 		PROGRESS("progress"),
 		ALREADY_DOWNLOADED("alreadyDownloaded"),
-		DOWNLOAD_URL("downloadUrl");
+		DOWNLOAD_URL("downloadURL");
 		private final String rawValue;
 
 		JSONJobDataKeys(final String rawValue) {

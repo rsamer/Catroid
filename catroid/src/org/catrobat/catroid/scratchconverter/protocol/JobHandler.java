@@ -23,9 +23,11 @@
 
 package org.catrobat.catroid.scratchconverter.protocol;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.common.images.WebImage;
 import com.google.common.base.Preconditions;
 
 import org.catrobat.catroid.scratchconverter.Client;
@@ -39,6 +41,7 @@ import org.catrobat.catroid.scratchconverter.protocol.message.job.JobProgressMes
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobReadyMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobRunningMessage;
 import org.catrobat.catroid.scratchconverter.protocol.Job.State;
+import org.catrobat.catroid.utils.Utils;
 
 public class JobHandler implements Client.DownloadFinishedCallback {
 
@@ -47,7 +50,7 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 	private final Job job;
 	private Client.ConvertCallback callback;
 
-	public JobHandler(final Job job, Client.ConvertCallback callback) {
+	public JobHandler(@NonNull final Job job, @NonNull final Client.ConvertCallback callback) {
 		Preconditions.checkArgument(job != null);
 		this.job = job;
 		this.callback = callback;
@@ -97,7 +100,7 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		return job.getJobID();
 	}
 
-	public void setCallback(Client.ConvertCallback callback) {
+	public void setCallback(@NonNull Client.ConvertCallback callback) {
 		this.callback = callback;
 	}
 
@@ -163,8 +166,10 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		Preconditions.checkState(job.getState() == State.SCHEDULED);
 
 		job.setState(Job.State.READY);
-		handleJobRunningMessage(new JobRunningMessage(jobAlreadyRunningMessage.getJobID(),
-				jobAlreadyRunningMessage.getJobTitle()));
+		final long jobID = jobAlreadyRunningMessage.getJobID();
+		final String jobTitle = jobAlreadyRunningMessage.getJobTitle();
+		final String jobImageURL = jobAlreadyRunningMessage.getJobImageURL();
+		handleJobRunningMessage(new JobRunningMessage(jobID, jobTitle, jobImageURL));
 	}
 
 	private void handleJobRunningMessage(@NonNull final JobRunningMessage jobRunningMessage) {
@@ -172,6 +177,11 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		Preconditions.checkState(job.getState() == State.READY);
 
 		job.setTitle(jobRunningMessage.getJobTitle());
+		final String jobImageURL = jobRunningMessage.getJobImageURL();
+		if (jobImageURL != null) {
+			final int[] imageSize = Utils.extractImageSizeFromScratchImageURL(jobImageURL);
+			job.setImage(new WebImage(Uri.parse(jobImageURL), imageSize[0], imageSize[1]));
+		}
 		job.setState(Job.State.RUNNING);
 		callback.onConversionStart(job);
 	}
