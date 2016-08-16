@@ -293,6 +293,8 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 
 		convertPanelHeadlineView.setText(getResources().getString(R.string.status_in_progress_x_jobs, runningJobs.size()));
 		convertPanelStatusView.setText(getResources().getString(R.string.status_completed_x_jobs, numberFinishedJobs));
+		convertPanelStatusView.setVisibility(View.VISIBLE);
+		convertProgressLayout.setVisibility(View.GONE);
 		setIconImageView(webImage);
 	}
 
@@ -335,6 +337,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		}
 
 		showPanelBarSummary();
+		scrollUpPanelScrollView();
 	}
 
 	@Override

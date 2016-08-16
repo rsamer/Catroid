@@ -36,9 +36,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ScrollView;
 
-import com.google.common.base.Preconditions;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
@@ -57,7 +55,6 @@ import org.catrobat.catroid.web.ScratchDataFetcher;
 import org.catrobat.catroid.web.ServerCalls;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -127,7 +124,7 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		Log.d(TAG, "Destroyed " + TAG);
+		Log.d(TAG, "Destroyed: " + TAG);
 		conversionManager.shutdown();
 	}
 
@@ -268,13 +265,6 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	@Override
 	public void onPanelSlide(View panel, float slideOffset) {
 		converterSlidingUpPanelFragment.rotateImageButton(slideOffset * 180.0f);
-
-		// slide-up scroll view workaround:
-		// only slide-up when most of the slide-panel (95%) is not visible such that the user
-		// can't notice this hidden effect
-		if (slideOffset < 0.05) {
-			converterSlidingUpPanelFragment.scrollUpPanelScrollView();
-		}
 	}
 
 	@Override
@@ -283,12 +273,12 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 		Log.d(TAG, "SlidingUpPanel state changed: " + newState.toString());
 		switch (newState) {
 			case EXPANDED:
-				Log.d(TAG, "EXPANDED");
 				converterSlidingUpPanelFragment.rotateImageButton(180);
+				converterSlidingUpPanelFragment.scrollUpPanelScrollView();
 				break;
 			case COLLAPSED:
-				Log.d(TAG, "COLLAPSED");
 				converterSlidingUpPanelFragment.rotateImageButton(0);
+				converterSlidingUpPanelFragment.scrollUpPanelScrollView();
 				break;
 		}
 	}
