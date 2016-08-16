@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ScrollView;
 
+import com.google.common.base.Preconditions;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import org.catrobat.catroid.common.Constants;
@@ -141,6 +142,13 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	}
 
 	public void convertProjects(List<ScratchProgramData> programList) {
+		final int numberOfJobsInProgress = conversionManager.getNumberOfJobsInProgress();
+		if (numberOfJobsInProgress + programList.size()  > Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT) {
+			ToastUtil.showError(this, getString(R.string.error_cannot_convert_more_than_x_programs,
+					Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT));
+			return;
+		}
+
 		int counter = 0;
 
 		for (ScratchProgramData programData : programList) {
