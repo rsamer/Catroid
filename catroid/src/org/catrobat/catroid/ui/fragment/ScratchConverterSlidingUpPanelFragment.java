@@ -43,6 +43,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.images.WebImage;
@@ -79,6 +80,8 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	private static final String TAG = ScratchConverterSlidingUpPanelFragment.class.getSimpleName();
 
 	private ExecutorService executorService;
+	private WebImageLoader webImageLoader;
+
 	private ImageView convertIconImageView;
 	private TextView convertPanelHeadlineView;
 	private TextView convertPanelStatusView;
@@ -86,11 +89,14 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 	private ProgressBar convertProgressBar;
 	private TextView convertStatusProgressTextView;
 	private ImageView upDownArrowImageView;
-	private WebImageLoader webImageLoader;
+	private ScrollView scrollView;
+
 	private ListView runningJobsListView;
 	private ListView finishedFailedJobsListView;
+
 	private Map<Long, Job> downloadJobsMap = Collections.synchronizedMap(new HashMap<Long, Job>());
 	private Map<Long, String> downloadedProgramsMap = Collections.synchronizedMap(new HashMap<Long, String>());
+
 	private RelativeLayout finishedFailedJobsList;
 	private RelativeLayout runningJobsList;
 	private ScratchJobAdapter runningJobsAdapter;
@@ -118,6 +124,9 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		convertProgressBar = (ProgressBar) rootView.findViewById(R.id.scratch_convert_progress_bar);
 		convertStatusProgressTextView = (TextView) rootView.findViewById(R.id.scratch_convert_status_progress_text);
 		upDownArrowImageView = (ImageView) rootView.findViewById(R.id.scratch_up_down_image_button);
+
+		scrollView = (ScrollView) rootView.findViewById(R.id.scratch_conversion_scroll_view);
+
 		runningJobsList = (RelativeLayout) rootView.findViewById(R.id.scratch_conversion_list);
 		runningJobsListView = (ListView) rootView.findViewById(R.id.scratch_conversion_list_view);
 		finishedFailedJobsList = (RelativeLayout) rootView.findViewById(R.id.scratch_converted_programs_list);
@@ -140,6 +149,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 				executorService
 		);
 		initAdapters();
+	}
+
+	public void scrollUpPanelScrollView() {
+		scrollView.fullScroll(ScrollView.FOCUS_UP);
 	}
 
 	private void initAdapters() {

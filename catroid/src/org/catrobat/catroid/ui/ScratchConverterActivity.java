@@ -36,6 +36,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ScrollView;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -61,7 +62,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ScratchConverterActivity extends BaseActivity {
+public class ScratchConverterActivity extends BaseActivity implements SlidingUpPanelLayout.PanelSlideListener {
 
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
@@ -107,24 +108,7 @@ public class ScratchConverterActivity extends BaseActivity {
 		searchProjectsListFragment.setConversionManager(conversionManager);
 
 		slidingLayout = (SlidingUpPanelLayout)findViewById(R.id.sliding_layout);
-		slidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
-			@Override
-			public void onPanelSlide(View panel, float slideOffset) {
-				converterSlidingUpPanelFragment.rotateImageButton(slideOffset * 180.0f);
-			}
-
-			public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
-				Log.d(TAG, "SlidingUpPanel state changed: " + newState.toString());
-				switch (newState) {
-					case EXPANDED:
-						converterSlidingUpPanelFragment.rotateImageButton(180);
-						break;
-					case COLLAPSED:
-						converterSlidingUpPanelFragment.rotateImageButton(0);
-						break;
-				}
-			}
-		});
+		slidingLayout.addPanelSlideListener(this);
 
 		appendColoredBetaLabelToTitle(Color.RED);
 		hideSlideUpPanelBar();
@@ -273,4 +257,31 @@ public class ScratchConverterActivity extends BaseActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
+	@Override
+	public void onPanelSlide(View panel, float slideOffset) {
+		converterSlidingUpPanelFragment.rotateImageButton(slideOffset * 180.0f);
+
+		// slide-up scroll view workaround:
+		// only slide-up when most of the slide-panel (95%) is not visible such that the user
+		// can't notice this hidden effect
+		if (slideOffset < 0.05) {
+			converterSlidingUpPanelFragment.scrollUpPanelScrollView();
+		}
+	}
+
+	@Override
+	public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState,
+			SlidingUpPanelLayout.PanelState newState) {
+		Log.d(TAG, "SlidingUpPanel state changed: " + newState.toString());
+		switch (newState) {
+			case EXPANDED:
+				Log.d(TAG, "EXPANDED");
+				converterSlidingUpPanelFragment.rotateImageButton(180);
+				break;
+			case COLLAPSED:
+				Log.d(TAG, "COLLAPSED");
+				converterSlidingUpPanelFragment.rotateImageButton(0);
+				break;
+		}
+	}
 }
