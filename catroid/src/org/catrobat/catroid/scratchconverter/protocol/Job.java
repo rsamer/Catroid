@@ -90,7 +90,7 @@ public class Job {
 	}
 
 	public static Job fromJson(JSONObject data) throws JSONException {
-		final State state = State.valueOf(data.getInt(JSONJobDataKeys.STATUS.toString()));
+		final State state = State.valueOf(data.getInt(JSONJobDataKeys.STATE.toString()));
 		final long jobID = data.getLong(JSONJobDataKeys.JOB_ID.toString());
 		final String title = data.getString(JSONJobDataKeys.TITLE.toString());
 		final String imageURL = data.isNull(JSONJobDataKeys.IMAGE_URL.toString()) ? null : data.getString(JSONJobDataKeys.IMAGE_URL.toString());
