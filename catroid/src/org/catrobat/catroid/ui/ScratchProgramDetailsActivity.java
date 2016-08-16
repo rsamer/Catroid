@@ -23,6 +23,7 @@
 
 package org.catrobat.catroid.ui;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -156,9 +157,17 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		conversionManager.addJobConsoleViewListener(programData.getId(), this);
 		conversionManager.addDownloadFinishedCallback(this);
 
+		final Activity activity = this;
 		convertButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				final int numberOfJobsInProgress = conversionManager.getNumberOfJobsInProgress();
+				if (numberOfJobsInProgress >= Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT) {
+					ToastUtil.showError(activity, getString(R.string.error_cannot_convert_more_than_x_programs,
+							Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT));
+					return;
+				}
+
 				onJobInProgress();
 
 				Intent intent = new Intent();

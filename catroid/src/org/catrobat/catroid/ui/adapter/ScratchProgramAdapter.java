@@ -179,7 +179,10 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramData> {
 				notifyDataSetChanged();
 
 				if (onScratchProgramEditListener != null) {
-					onScratchProgramEditListener.onProgramChecked();
+					if (!onScratchProgramEditListener.onProgramChecked()) {
+						holder.checkbox.setChecked(false);
+						checkedPrograms.remove(position);
+					}
 				}
 			}
 		});
@@ -207,6 +210,7 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramData> {
 		} else {
 			holder.checkbox.setChecked(false);
 		}
+
 		if (selectMode != ListView.CHOICE_MODE_NONE) {
 			holder.checkbox.setVisibility(View.VISIBLE);
 			holder.background.setBackgroundResource(R.drawable.button_background_shadowed);
@@ -220,7 +224,7 @@ public class ScratchProgramAdapter extends ArrayAdapter<ScratchProgramData> {
 	}
 
 	public interface OnScratchProgramEditListener {
-		void onProgramChecked();
+		boolean onProgramChecked();
 
 		void onProgramEdit(int position);
 	}

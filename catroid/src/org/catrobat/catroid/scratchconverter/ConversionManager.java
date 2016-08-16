@@ -31,6 +31,7 @@ import org.catrobat.catroid.ui.scratchconverter.BaseInfoViewListener;
 import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 
 public interface ConversionManager {
+	void setCurrentActivity(Activity activity);
 	void connectAndAuthenticate();
 	void shutdown();
 	void convertProgram(final long jobID, final String title, final WebImage image, final boolean force);
@@ -40,6 +41,6 @@ public interface ConversionManager {
 	boolean removeJobConsoleViewListener(long jobID, JobViewListener jobViewListener);
 	void addDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
 	boolean isJobInProgress(long jobID);
-	void setCurrentActivity(Activity activity);
+	int getNumberOfJobsInProgress();
 	void removeDownloadFinishedCallback(Client.DownloadFinishedCallback callback);
 }

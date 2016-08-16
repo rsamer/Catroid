@@ -54,13 +54,11 @@ import org.catrobat.catroid.common.ScratchProgramData;
 import org.catrobat.catroid.common.ScratchSearchResult;
 import org.catrobat.catroid.scratchconverter.ConversionManager;
 import org.catrobat.catroid.transfers.SearchScratchProgramsTask;
-import org.catrobat.catroid.ui.CapitalizedTextView;
 import org.catrobat.catroid.ui.ScratchConverterActivity;
 import org.catrobat.catroid.ui.ScratchProgramDetailsActivity;
 import org.catrobat.catroid.ui.adapter.ScratchProgramAdapter;
 import org.catrobat.catroid.utils.ExpiringLruMemoryObjectCache;
 import org.catrobat.catroid.utils.ToastUtil;
-import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.web.ScratchDataFetcher;
 
 import java.util.ArrayList;
@@ -93,9 +91,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 	private ExpiringLruMemoryObjectCache<ScratchSearchResult> scratchSearchResultCache;
 	private ScratchProgramAdapter scratchProgramAdapter;
 	private ActionMode actionMode;
-	private View selectAllActionModeButton;
 	private SearchScratchProgramsTask currentSearchTask = null;
-	private boolean selectAll = true;
 
 	// dependency-injection for testing with mock object
 	public void setDataFetcher(final ScratchDataFetcher fetcher) {
@@ -131,7 +127,6 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 			multipleItemAppendixConvertActionMode = getString(R.string.programs);
 
 			mode.setTitle(convertActionModeTitle);
-			addSelectAllActionModeButton(mode, menu);
 			searchView.setVisibility(View.GONE);
 			audioButton.setVisibility(View.GONE);
 			setSearchResultsListViewMargin(0, 0, 0, 0);
@@ -339,12 +334,20 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 	}
 
 	@Override
-	public void onProgramChecked() {
+	public boolean onProgramChecked() {
 		if (scratchProgramAdapter.getSelectMode() == ListView.CHOICE_MODE_SINGLE || actionMode == null) {
-			return;
+			return true;
 		}
 
+		int numberOfPrograms = scratchProgramAdapter.getAmountOfCheckedPrograms()
+				+ conversionManager.getNumberOfJobsInProgress();
+		if (numberOfPrograms > Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT) {
+			ToastUtil.showError(activity, getString(R.string.error_cannot_convert_more_than_x_programs,
+					Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT));
+			return false;
+		}
 		updateActionModeTitle();
+		return true;
 	}
 
 	private void updateActionModeTitle() {
@@ -414,34 +417,6 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		setSearchResultsListViewMargin(0, marginTop, 0, marginBottom);
 	}
 
-	private void addSelectAllActionModeButton(ActionMode mode, Menu menu) {
-		selectAll = true;
-		selectAllActionModeButton = Utils.addSelectAllActionModeButton(activity.getLayoutInflater(), mode, menu);
-		selectAllActionModeButton.setOnClickListener(new View.OnClickListener() {
-
-			CapitalizedTextView selectAllView = (CapitalizedTextView) selectAllActionModeButton.findViewById(R.id.select_all);
-
-			@Override
-			public void onClick(View view) {
-				if (selectAll) {
-					for (int position = 0; position < scratchProgramDataList.size(); position++) {
-						scratchProgramAdapter.addCheckedProgram(position);
-					}
-					scratchProgramAdapter.notifyDataSetChanged();
-					onProgramChecked();
-					selectAll = false;
-					selectAllView.setText(R.string.deselect_all);
-				} else {
-					scratchProgramAdapter.clearCheckedPrograms();
-					scratchProgramAdapter.notifyDataSetChanged();
-					onProgramChecked();
-					selectAll = true;
-					selectAllView.setText(R.string.select_all);
-				}
-			}
-		});
-	}
-
 	//----------------------------------------------------------------------------------------------
 	// Scratch Search Task Delegate Methods
 	//----------------------------------------------------------------------------------------------
@@ -459,14 +434,17 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 			ToastUtil.showError(activity, R.string.search_failed);
 			return;
 		}
+
 		if (result.getQuery() != null) {
 			scratchSearchResultCache.put(result.getQuery(), result);
 		}
+
 		scratchProgramAdapter.clear();
 		for (ScratchProgramData projectData : result.getProgramDataList()) {
 			scratchProgramAdapter.add(projectData);
 			Log.d(TAG, projectData.getTitle());
 		}
+
 		scratchProgramAdapter.notifyDataSetChanged();
 		searchResultsListView.setVisibility(View.VISIBLE);
 	}

@@ -69,7 +69,7 @@ public enum JSONKeys {
 
 	// JSON-keys of job-arguments in InfoMessage
 	public enum JSONJobDataKeys {
-		STATUS("status"),
+		STATE("state"),
 		JOB_ID("jobID"),
 		TITLE("title"),
 		IMAGE_URL("imageURL"),

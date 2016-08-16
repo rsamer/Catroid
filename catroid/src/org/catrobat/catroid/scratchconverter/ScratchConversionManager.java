@@ -97,6 +97,11 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 		return client.isJobInProgress(jobID);
 	}
 
+	@Override
+	public int getNumberOfJobsInProgress() {
+		return client.getNumberOfJobsInProgress();
+	}
+
 	public void removeDownloadFinishedCallback(final Client.DownloadFinishedCallback callback) {
 		delegateCallbackSet.remove(callback);
 	}

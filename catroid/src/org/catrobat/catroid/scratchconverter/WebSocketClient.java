@@ -134,6 +134,7 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 		Preconditions.checkState(state != State.NOT_CONNECTED);
 		Preconditions.checkState(webSocket != null);
 		Preconditions.checkState(connectAuthCallback != null);
+		state = State.NOT_CONNECTED;
 		webSocket.close();
 	}
 
@@ -185,6 +186,11 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	@Override
 	public boolean isJobInProgress(long jobID) {
 		return messageListener.isJobInProgress(jobID);
+	}
+
+	@Override
+	public int getNumberOfJobsInProgress() {
+		return messageListener.getNumberOfJobsInProgress();
 	}
 
 	@Override

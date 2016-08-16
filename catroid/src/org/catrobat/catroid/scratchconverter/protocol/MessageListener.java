@@ -26,4 +26,5 @@ package org.catrobat.catroid.scratchconverter.protocol;
 public interface MessageListener {
 	boolean isJobInProgress(long jobID);
 	void onUserCanceledConversion(long jobID);
+	int getNumberOfJobsInProgress();
 }

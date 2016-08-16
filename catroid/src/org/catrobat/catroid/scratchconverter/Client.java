@@ -42,6 +42,7 @@ public interface Client {
 	void connectAndAuthenticate(ConnectAuthCallback connectAuthCallback);
 	void retrieveInfo();
 	boolean isJobInProgress(long jobID);
+	int getNumberOfJobsInProgress();
 	void convertProgram(long jobID, String title, WebImage image, boolean verbose, boolean force);
 	void cancelDownload(long jobID);
 	void onUserCanceledConversion(long jobID);

@@ -121,4 +121,15 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		jobHandler.onUserCanceledConversion();
 	}
 
+	@Override
+	public int getNumberOfJobsInProgress() {
+		int numberOfJobsInProgress = 0;
+		for (final JobHandler jobHandler : jobHandlers.values()) {
+			if (jobHandler.isInProgress()) {
+				++numberOfJobsInProgress;
+			}
+		}
+		return numberOfJobsInProgress;
+	}
+
 }
