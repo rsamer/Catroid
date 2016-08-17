@@ -225,10 +225,11 @@ public final class Utils {
 	}
 
 	public static int[] extractImageSizeFromScratchImageURL(final String url) {
-		// example: https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png -> [480, 360]
+		// example: https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png?v=1368470695.0 -> [480, 360]
 		int[] defaultSize = new int[] { Constants.SCRATCH_IMAGE_DEFAULT_WIDTH, Constants.SCRATCH_IMAGE_DEFAULT_HEIGHT };
 
-		String[] urlStringParts = url.split("_");
+		String urlWithoutQuery = url.split("\\?")[0];
+		String[] urlStringParts = urlWithoutQuery.split("_");
 		if (urlStringParts.length == 0) {
 			return defaultSize;
 		}
