@@ -25,8 +25,12 @@ package org.catrobat.catroid.scratchconverter.protocol;
 
 import android.util.Log;
 
+import com.google.common.base.Preconditions;
 import com.koushikdutta.async.http.WebSocket;
 
+import org.catrobat.catroid.scratchconverter.Client;
+import org.catrobat.catroid.scratchconverter.Client.ConvertCallback;
+import org.catrobat.catroid.scratchconverter.Client.DownloadFinishedCallback;
 import org.catrobat.catroid.scratchconverter.protocol.message.Message.CategoryType;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.BaseMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.job.JobMessage;
@@ -50,16 +54,8 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		this.jobHandlers = Collections.synchronizedMap(new HashMap<Long, JobHandler>());
 	}
 
-	public JobHandler getJobHandler(final long jobID) {
-		return jobHandlers.get(jobID);
-	}
-
 	public void setBaseMessageHandler(final BaseMessageHandler baseMessageHandler) {
 		this.baseMessageHandler = baseMessageHandler;
-	}
-
-	public void setJobHandlerForJobID(JobHandler handler) {
-		jobHandlers.put(handler.getJobID(), handler);
 	}
 
 	@Override
@@ -132,4 +128,44 @@ final public class WebSocketMessageListener implements MessageListener, WebSocke
 		return numberOfJobsInProgress;
 	}
 
+	private JobHandler createOrUseExistingJobHandlerForJobIfPossible(final Job job, final boolean force,
+			final Client.ConvertCallback convertCallback) {
+		JobHandler jobHandler = jobHandlers.get(job.getJobID());
+		if (jobHandler != null) {
+			Log.d(TAG, "JobHandler for jobID " + job.getJobID() + " already exists!");
+
+			if (!force && jobHandler.isInProgress()) {
+				return null;
+			}
+
+			jobHandler.setCallback(convertCallback);
+		} else {
+			Log.d(TAG, "Creating new JobHandler for jobID " + job.getJobID());
+			jobHandler = new JobHandler(job, convertCallback);
+			jobHandlers.put(jobHandler.getJobID(), jobHandler);
+		}
+		return jobHandler;
+	}
+
+	@Override
+	public boolean scheduleJob(final Job job, final boolean force, final ConvertCallback convertCallback) {
+		final JobHandler jobHandler = createOrUseExistingJobHandlerForJobIfPossible(job, force, convertCallback);
+		if (jobHandler == null) {
+			return false;
+		}
+
+		jobHandler.onJobScheduled();
+		return true;
+	}
+
+	@Override
+	public DownloadFinishedCallback restoreJobIfRunning(Job job, ConvertCallback convertCallback) {
+		final JobHandler jobHandler = createOrUseExistingJobHandlerForJobIfPossible(job, true, convertCallback);
+		Preconditions.checkState(jobHandler != null);
+
+		if (job.getState() == Job.State.FINISHED && !job.isAlreadyDownloaded() && job.getDownloadURL() != null) {
+			return jobHandler;
+		}
+		return null;
+	}
 }

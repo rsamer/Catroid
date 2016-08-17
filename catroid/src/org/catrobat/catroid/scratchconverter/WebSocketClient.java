@@ -30,13 +30,12 @@ import com.google.common.base.Preconditions;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.WebSocket;
+import com.koushikdutta.async.http.WebSocket.StringCallback;
 
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.scratchconverter.protocol.BaseMessageHandler;
 import org.catrobat.catroid.scratchconverter.protocol.Job;
-import org.catrobat.catroid.scratchconverter.protocol.JobHandler;
 import org.catrobat.catroid.scratchconverter.protocol.MessageListener;
-import org.catrobat.catroid.scratchconverter.protocol.WebSocketMessageListener;
 import org.catrobat.catroid.scratchconverter.protocol.command.CancelDownloadCommand;
 import org.catrobat.catroid.scratchconverter.protocol.command.Command;
 import org.catrobat.catroid.scratchconverter.protocol.command.RetrieveInfoCommand;
@@ -47,7 +46,7 @@ import org.catrobat.catroid.scratchconverter.protocol.message.base.ClientIDMessa
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ErrorMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.InfoMessage;
 
-final public class WebSocketClient implements Client, BaseMessageHandler {
+final public class WebSocketClient<T extends MessageListener & StringCallback> implements Client, BaseMessageHandler {
 
 	private interface ConnectCallback {
 		void onSuccess();
@@ -58,14 +57,13 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 	private Client.State state;
 	private long clientID;
-	// TODO: use only MessageListener interface and extend MessageListener interface...
-	private final WebSocketMessageListener messageListener;
+	private final T messageListener;
 	private AsyncHttpClient asyncHttpClient = AsyncHttpClient.getDefaultInstance();
 	private WebSocket webSocket;
-	private ConnectAuthCallback connectAuthCallback;
+	private Client.ConnectAuthCallback connectAuthCallback;
 	private ConvertCallback convertCallback;
 
-	public WebSocketClient(final long clientID, final WebSocketMessageListener messageListener) {
+	public WebSocketClient(final long clientID, final T messageListener) {
 		this.clientID = clientID;
 		this.state = State.NOT_CONNECTED;
 		messageListener.setBaseMessageHandler(this);
@@ -194,8 +192,8 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 	}
 
 	@Override
-	public void convertProgram(final long jobID, final String title, final WebImage image,
-			final boolean verbose, final boolean force) {
+	public void convertProgram(final long jobID, final String title, final WebImage image, final boolean verbose,
+			final boolean force) {
 
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 		final Job job = new Job(jobID, title, image);
@@ -205,24 +203,16 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 			return;
 		}
 
-		Log.i(TAG, "Scheduling new job with ID: " + jobID);
-
-		// TODO: consider Law of Demeter... implement wrappers!
-		JobHandler jobHandler = messageListener.getJobHandler(jobID);
-		if (jobHandler != null) {
-			Log.d(TAG, "JobHandler for jobID " + jobID + " already exists!");
-			if (!force && jobHandler.isInProgress()) {
-				convertCallback.onConversionFailure(job, new ClientException("Job in progress!"));
-				return;
-			}
-			jobHandler.setCallback(convertCallback);
-		} else {
-			Log.d(TAG, "Creating new JobHandler for jobID " + jobID);
-			jobHandler = new JobHandler(job, convertCallback);
-			messageListener.setJobHandlerForJobID(jobHandler);
+		if (!messageListener.scheduleJob(job, force, convertCallback)) {
+			Log.e(TAG, "Cannot schedule job since another job of the same Scratch program is already running (job ID "
+					+ "is: " + jobID + ")");
+			convertCallback.onConversionFailure(job, new ClientException("Cannot start this job since the job "
+					+ "already exists and is in progress! Set force-flag to true to restart the conversion while it "
+					+ "is running!"));
+			return;
 		}
 
-		jobHandler.onJobScheduled();
+		Log.i(TAG, "Scheduling new job with ID: " + jobID);
 		sendCommand(new ScheduleJobCommand(jobID, force, verbose));
 	}
 
@@ -245,15 +235,10 @@ final public class WebSocketClient implements Client, BaseMessageHandler {
 
 			final Job[] jobs = infoMessage.getJobList();
 			for (Job job : jobs) {
-				JobHandler jobHandler = messageListener.getJobHandler(job.getJobID());
-				if (jobHandler == null) {
-					jobHandler = new JobHandler(job, convertCallback);
-				}
-				messageListener.setJobHandlerForJobID(jobHandler);
-
-				if (job.getState() == Job.State.FINISHED && !job.isAlreadyDownloaded() && job.getDownloadURL() != null) {
+				DownloadFinishedCallback downloadCallback = messageListener.restoreJobIfRunning(job, convertCallback);
+				if (downloadCallback != null) {
 					Log.i(TAG, "Downloading missed converted project...");
-					convertCallback.onConversionFinished(job, jobHandler, job.getDownloadURL(), null);
+					convertCallback.onConversionFinished(job, downloadCallback, job.getDownloadURL(), null);
 				}
 			}
 			return;
