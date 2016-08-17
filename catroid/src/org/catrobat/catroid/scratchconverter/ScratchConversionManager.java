@@ -245,7 +245,7 @@ public class ScratchConversionManager implements ConversionManager, Client.Conne
 					viewListener.onJobsInfo(jobs);
 				}
 
-				if (Constants.CURRENT_CATROBAT_LANGUAGE_VERSION <= supportedCatrobatLanguageVersion) {
+				if (Constants.CURRENT_CATROBAT_LANGUAGE_VERSION < supportedCatrobatLanguageVersion) {
 					AlertDialog.Builder builder = new CustomAlertDialogBuilder(currentActivity);
 					builder.setTitle(R.string.warning);
 					builder.setMessage(R.string.error_scratch_converter_outdated_pocketcode_version);
