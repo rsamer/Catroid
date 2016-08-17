@@ -182,7 +182,6 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		}
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
 		setShowDetails(settings.getBoolean(SHARED_PREFERENCE_NAME, false));
-		initAdapter();
 	}
 
 	@Override
@@ -201,7 +200,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (!hasFocus && !activity.isSlideUpPanelEmpty()) {
-					activity.showSlideUpPanelBar(150);
+					activity.showSlideUpPanelBar(500);
 				} else {
 					activity.hideSlideUpPanelBar();
 				}
@@ -237,7 +236,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 				return false;
 			}
 		});
-		rootView.clearFocus();
+		initAdapter();
 		return rootView;
 	}
 
@@ -380,7 +379,6 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		Preconditions.checkState(conversionManager != null);
 		Preconditions.checkState(executorService != null);
 
-		searchView.clearFocus();
 		ScratchProgramDetailsActivity.setDataFetcher(dataFetcher);
 		ScratchProgramDetailsActivity.setConversionManager(conversionManager);
 		ScratchProgramDetailsActivity.setExecutorService(executorService);
