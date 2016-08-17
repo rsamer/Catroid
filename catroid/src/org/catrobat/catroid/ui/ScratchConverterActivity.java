@@ -250,11 +250,11 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 			String spokenText = results.get(0);
 			searchProjectsListFragment.searchAndUpdateText(spokenText);
 		} else if (requestCode == Constants.INTENT_REQUEST_CODE_CONVERT && resultCode == RESULT_OK) {
-			if (! data.hasExtra(Constants.INTENT_SCRATCH_PROJECT_DATA)) {
+			if (! data.hasExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA)) {
 				super.onActivityResult(requestCode, resultCode, data);
 				return;
 			}
-			final ScratchProgramData projectData = data.getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
+			final ScratchProgramData projectData = data.getParcelableExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA);
 			final List<ScratchProgramData> projectList = new ArrayList<>();
 			projectList.add(projectData);
 			convertProjects(projectList);

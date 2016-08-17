@@ -123,7 +123,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_scratch_project_details);
 
-		programData = getIntent().getParcelableExtra(Constants.INTENT_SCRATCH_PROJECT_DATA);
+		programData = getIntent().getParcelableExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA);
 		assert(programData != null);
 
 		webImageLoader = new WebImageLoader(ExpiringLruMemoryImageCache.getInstance(),
@@ -171,7 +171,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 				onJobInProgress();
 
 				Intent intent = new Intent();
-				intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) programData);
+				intent.putExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA, (Parcelable) programData);
 				setResult(RESULT_OK, intent);
 				finish();
 			}
@@ -260,7 +260,7 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 		Log.i(TAG, "Project ID of clicked item is: " + remixData.getId());
 
 		Intent intent = new Intent(this, ScratchProgramDetailsActivity.class);
-		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) remixData);
+		intent.putExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA, (Parcelable) remixData);
 		startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);
 	}
 

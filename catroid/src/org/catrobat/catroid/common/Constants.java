@@ -172,7 +172,7 @@ public final class Constants {
 	public static final int MEMORY_IMAGE_CACHE_ALLOCATED_FRACTION_OF_TOTAL_AVAILABLE_MEMORY = 8; // 1/8th of available memory
 	public static final long MEMORY_OBJECT_CACHE_EXPIRE_TIME = 120_000;                          // 2 minutes (in ms)
 	public static final int MEMORY_OBJECT_CACHE_MAX_SIZE = 10_000;
-	public static final String INTENT_SCRATCH_PROJECT_DATA = "scratchProjectData";
+	public static final String INTENT_SCRATCH_PROGRAM_DATA = "scratchProgramData";
 	public static final int INTENT_REQUEST_CODE_SPEECH = 0;
 	public static final int INTENT_REQUEST_CODE_CONVERT = 1;
 

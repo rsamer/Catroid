@@ -383,7 +383,7 @@ public class SearchScratchSearchProjectsListFragment extends Fragment
 		ScratchProgramDetailsActivity.setConversionManager(conversionManager);
 		ScratchProgramDetailsActivity.setExecutorService(executorService);
 		Intent intent = new Intent(activity, ScratchProgramDetailsActivity.class);
-		intent.putExtra(Constants.INTENT_SCRATCH_PROJECT_DATA, (Parcelable) scratchProgramAdapter.getItem(position));
+		intent.putExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA, (Parcelable) scratchProgramAdapter.getItem(position));
 		activity.startActivityForResult(intent, Constants.INTENT_REQUEST_CODE_CONVERT);
 	}
 
