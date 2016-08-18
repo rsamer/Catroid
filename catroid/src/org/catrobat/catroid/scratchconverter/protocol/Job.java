@@ -166,4 +166,8 @@ public class Job {
 		return downloadURL;
 	}
 
+	public void setDownloadURL(String downloadURL) {
+		this.downloadURL = downloadURL;
+	}
+
 }

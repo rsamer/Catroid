@@ -42,7 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-final public class WebSocketMessageListener implements MessageListener, WebSocket.StringCallback {
+public class WebSocketMessageListener implements MessageListener, WebSocket.StringCallback {
 
 	private static final String TAG = WebSocketMessageListener.class.getSimpleName();
 

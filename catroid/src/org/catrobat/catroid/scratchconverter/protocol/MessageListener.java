@@ -27,7 +27,7 @@ import org.catrobat.catroid.scratchconverter.Client;
 import org.catrobat.catroid.scratchconverter.Client.ConvertCallback;
 
 public interface MessageListener {
-	void setBaseMessageHandler(final BaseMessageHandler baseMessageHandler);
+	void setBaseMessageHandler(BaseMessageHandler baseMessageHandler);
 	boolean isJobInProgress(long jobID);
 	void onUserCanceledConversion(long jobID);
 	int getNumberOfJobsInProgress();
