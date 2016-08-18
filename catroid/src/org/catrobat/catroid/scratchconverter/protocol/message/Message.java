@@ -48,6 +48,11 @@ abstract public class Message {
 		public static CategoryType valueOf(int categoryID) {
 			return map.get(categoryID);
 		}
+
+		public int getCategoryID() {
+			return categoryID;
+		}
+
 	}
 
 }

@@ -75,6 +75,10 @@ abstract public class JobMessage extends Message {
 		public static Type valueOf(int typeID) {
 			return map.get(typeID);
 		}
+
+		public int getTypeID() {
+			return typeID;
+		}
 	}
 
 	public JobMessage(final long jobID) {

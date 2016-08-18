@@ -42,7 +42,7 @@ abstract public class BaseMessage extends Message {
 
 	public enum Type {
 		ERROR(0),
-		JOBS_INFO(1),
+		INFO(1),
 		CLIENT_ID(2);
 
 		private int typeID;
@@ -62,6 +62,10 @@ abstract public class BaseMessage extends Message {
 		public static Type valueOf(int typeID) {
 			return map.get(typeID);
 		}
+
+		public int getTypeID() {
+			return typeID;
+		}
 	}
 
 	@Nullable
@@ -75,7 +79,7 @@ abstract public class BaseMessage extends Message {
 			case CLIENT_ID:
 				return (T) new ClientIDMessage(jsonData.getLong(JSONDataKeys.CLIENT_ID.toString()));
 
-			case JOBS_INFO:
+			case INFO:
 				final double catrobatLangVersion = jsonData.getDouble(JSONDataKeys.CATROBAT_LANGUAGE_VERSION.toString());
 				final JSONArray jobsInfo = jsonData.getJSONArray(JSONDataKeys.JOBS_INFO.toString());
 				final List<Job> jobList = new ArrayList<>();

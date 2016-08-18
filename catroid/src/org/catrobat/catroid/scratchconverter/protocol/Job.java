@@ -67,6 +67,9 @@ public class Job {
 			return this == SCHEDULED || this == READY || this == RUNNING;
 		}
 
+		public int getStateID() {
+			return state;
+		}
 	}
 
 	private State state;
@@ -160,6 +163,10 @@ public class Job {
 
 	public boolean isAlreadyDownloaded() {
 		return alreadyDownloaded;
+	}
+
+	public void setAlreadyDownloaded(boolean alreadyDownloaded) {
+		this.alreadyDownloaded = alreadyDownloaded;
 	}
 
 	public String getDownloadURL() {

@@ -58,6 +58,11 @@ public class WebSocketMessageListener implements MessageListener, WebSocket.Stri
 		this.baseMessageHandler = baseMessageHandler;
 	}
 
+	// this method is intended to be used by unit tests only!
+	public void addJobHandler(JobHandler handler) {
+		jobHandlers.put(handler.getJobID(), handler);
+	}
+
 	@Override
 	public synchronized void onStringAvailable(String s) {
 		try {
