@@ -27,6 +27,7 @@ import android.util.Log;
 
 import com.google.android.gms.common.images.WebImage;
 import com.google.common.base.Preconditions;
+
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.WebSocket;
@@ -46,7 +47,8 @@ import org.catrobat.catroid.scratchconverter.protocol.message.base.ClientIDMessa
 import org.catrobat.catroid.scratchconverter.protocol.message.base.ErrorMessage;
 import org.catrobat.catroid.scratchconverter.protocol.message.base.InfoMessage;
 
-final public class WebSocketClient<T extends MessageListener & StringCallback> implements Client, BaseMessageHandler {
+final public class WebSocketClient<T extends MessageListener & StringCallback>
+		implements Client, BaseMessageHandler, CompletedCallback {
 
 	private interface ConnectCallback {
 		void onSuccess();
@@ -71,6 +73,28 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 		this.webSocket = null;
 		this.connectAuthCallback = null;
 		this.convertCallback = null;
+	}
+
+	// these setters are intended to be used by unit tests only! -> therefore not part of the Client-interface! {
+	public void setClientID(final long clientID) {
+		this.clientID = clientID;
+	}
+
+	public void setState(final State state) {
+		this.state = state;
+	}
+
+	public void setWebSocket(final WebSocket webSocket) {
+		this.webSocket = webSocket;
+	}
+
+	public void setConnectAuthCallback(final ConnectAuthCallback connectAuthCallback) {
+		this.connectAuthCallback = connectAuthCallback;
+	}
+	// } END
+
+	public boolean isConnected() {
+		return state == State.CONNECTED || state == State.CONNECTED_AUTHENTICATED;
 	}
 
 	@Override
@@ -99,6 +123,7 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 		Preconditions.checkState(webSocket == null);
 		Preconditions.checkState(asyncHttpClient != null);
 
+		final WebSocketClient client = this;
 		asyncHttpClient.websocket(Constants.SCRATCH_CONVERTER_WEB_SOCKET, null, new
 				AsyncHttpClient.WebSocketConnectCallback() {
 					@Override
@@ -116,16 +141,18 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 						webSocket.setStringCallback(messageListener);
 
 						// onClose callback
-						webSocket.setClosedCallback(new CompletedCallback() {
-							@Override
-							public void onCompleted(Exception ex) {
-								state = State.NOT_CONNECTED;
-								connectAuthCallback.onConnectionClosed(new ClientException(ex));
-							}
-						});
+						webSocket.setClosedCallback(client);
 						connectCallback.onSuccess();
 					}
 				});
+	}
+
+	@Override
+	public void onCompleted(Exception ex) {
+		// Note: this is the central connection-closed callback-method
+		// (called when the server or client closes the connection):
+		state = State.NOT_CONNECTED;
+		connectAuthCallback.onConnectionClosed(new ClientException(ex));
 	}
 
 	public void close() {
@@ -177,7 +204,7 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 	@Override
 	public void retrieveInfo() {
 		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
-		Preconditions.checkState(webSocket != null);
+		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 		sendCommand(new RetrieveInfoCommand());
 	}
 
@@ -194,7 +221,7 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 	@Override
 	public void convertProgram(final long jobID, final String title, final WebImage image, final boolean verbose,
 			final boolean force) {
-
+		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
 		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 		final Job job = new Job(jobID, title, image);
 
@@ -218,11 +245,15 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 
 	@Override
 	public void cancelDownload(final long jobID) {
+		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
+		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 		sendCommand(new CancelDownloadCommand(jobID));
 	}
 
 	@Override
 	public void onUserCanceledConversion(long jobID) {
+		Preconditions.checkState(state == State.CONNECTED_AUTHENTICATED);
+		Preconditions.checkState(clientID != INVALID_CLIENT_ID);
 		messageListener.onUserCanceledConversion(jobID);
 	}
 
@@ -252,7 +283,6 @@ final public class WebSocketClient<T extends MessageListener & StringCallback> i
 			if (state == State.CONNECTED) {
 				Preconditions.checkState(connectAuthCallback != null);
 				connectAuthCallback.onAuthenticationFailure(new ClientException(errorMessage.getMessage()));
-				convertCallback.onError(errorMessage.getMessage());
 			} else if (state == State.CONNECTED_AUTHENTICATED) {
 				convertCallback.onConversionFailure(null, new ClientException(errorMessage.getMessage()));
 			} else {
