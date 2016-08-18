@@ -54,7 +54,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -72,6 +71,7 @@ public class WebSocketMessageListenerTest extends AndroidTestCase {
 
 	private final long VALID_CLIENT_ID = 1;
 	private final long JOB_ID_OF_JOB_HANDLER = 1;
+	private final long JOB_ID_OF_UNSCHEDULED_JOB_THAT_HAS_NO_JOB_HANDLER = 2;
 	private WebSocketMessageListener webSocketMessageListener;
 	private BaseMessageHandler baseMessageHandlerMock;
 	private JobHandler jobHandlerMock;
@@ -548,10 +548,41 @@ public class WebSocketMessageListenerTest extends AndroidTestCase {
 		verify(jobHandlerMock, times(1)).setCallback(any(Client.ConvertCallback.class));
 	}
 
-	/*
-	TODO: test wrappers...
-	boolean isJobInProgress(long jobID);
-	void onUserCanceledConversion(long jobID);
-	int getNumberOfJobsInProgress();
-	 */
+	public void testIsJobInProgressOfRunningJobShouldReturnTrue() {
+		when(jobHandlerMock.isInProgress()).thenReturn(true);
+		assertTrue("isJobInProgress() call must return true",
+				webSocketMessageListener.isJobInProgress(JOB_ID_OF_JOB_HANDLER));
+		verify(jobHandlerMock, times(1)).isInProgress();
+	}
+
+	public void testIsJobInProgressOfUnscheduledJobShouldReturnFalse() {
+		assertFalse("isJobInProgress() call must return false",
+				webSocketMessageListener.isJobInProgress(JOB_ID_OF_UNSCHEDULED_JOB_THAT_HAS_NO_JOB_HANDLER));
+		verify(jobHandlerMock, times(0)).isInProgress();
+	}
+
+	public void testOnUserCanceledConversionEventOfRunningJobShouldForwardCallToCorrespondingJobHandler() {
+		webSocketMessageListener.onUserCanceledConversion(JOB_ID_OF_JOB_HANDLER);
+		verify(jobHandlerMock, times(1)).onUserCanceledConversion();
+	}
+
+	public void testOnUserCanceledConversionEventOfUnscheduledJobShouldNotForwardCallToCorrespondingJobHandler() {
+		webSocketMessageListener.onUserCanceledConversion(JOB_ID_OF_UNSCHEDULED_JOB_THAT_HAS_NO_JOB_HANDLER);
+		verify(jobHandlerMock, times(0)).onUserCanceledConversion();
+	}
+
+	public void testGetNumberOfJobsInProgressWhenThereExistsOnlyOneRunningJobShouldReturnOne() {
+		when(jobHandlerMock.isInProgress()).thenReturn(true);
+		assertEquals("isJobInProgress() call must return true",
+				webSocketMessageListener.getNumberOfJobsInProgress(), 1);
+		verify(jobHandlerMock, times(1)).isInProgress();
+	}
+
+	public void testGetNumberOfJobsInProgressWhenThereExistsOnlyOneButNotRunningJobShouldReturnZero() {
+		when(jobHandlerMock.isInProgress()).thenReturn(false);
+		assertEquals("isJobInProgress() call must return true",
+				webSocketMessageListener.getNumberOfJobsInProgress(), 0);
+		verify(jobHandlerMock, times(0)).isInProgress();
+	}
+
 }
