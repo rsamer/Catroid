@@ -582,7 +582,7 @@ public class WebSocketMessageListenerTest extends AndroidTestCase {
 		when(jobHandlerMock.isInProgress()).thenReturn(false);
 		assertEquals("isJobInProgress() call must return true",
 				webSocketMessageListener.getNumberOfJobsInProgress(), 0);
-		verify(jobHandlerMock, times(0)).isInProgress();
+		verify(jobHandlerMock, times(1)).isInProgress();
 	}
 
 }
