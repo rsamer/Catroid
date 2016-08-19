@@ -28,7 +28,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.test.UiThreadTest;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListAdapter;
@@ -65,20 +64,32 @@ import uk.co.deanwild.flowtextview.FlowTextView;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentationTestCase<ScratchProgramDetailsActivity> {
 	private static final String TAG = ScratchProgramDetailsActivityTest.class.getSimpleName();
 
-	private final ScratchProgramData programData;
-	private final ScratchProgramData remixedProgramData;
+	private ScratchProgramData programData;
+	private ScratchProgramData remixedProgramData;
 	private ScratchDataFetcher fetcherMock;
 	private ConversionManager conversionManagerMock;
 
-	public ScratchProgramDetailsActivityTest() throws InterruptedIOException, WebconnectionException,
-			WebScratchProgramException {
+	public ScratchProgramDetailsActivityTest() {
 		super(ScratchProgramDetailsActivity.class);
+	}
 
+	@Override
+	public ScratchProgramDetailsActivity getActivity() {
+		Intent intent = new Intent();
+		intent.putExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA, (Parcelable) programData);
+		setActivityIntent(intent);
+		return super.getActivity();
+	}
+
+	@Override
+	public void setUp() throws Exception {
 		final long programID = 10205819;
 		final Uri programImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png");
 		programData = new ScratchProgramData(programID, "Dancin' in the Castle", "jschombs",
@@ -139,8 +150,6 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 			}
 		}).when(conversionManagerMock).setCurrentActivity(any(Activity.class));
 
-		when(conversionManagerMock.getNumberOfJobsInProgress()).thenReturn(0);
-
 		doAnswer(new Answer<Void>() {
 			public Void answer(InvocationOnMock invocation) {
 				assertNotNull("No arguments for removeJobConsoleViewListener call given", invocation.getArguments());
@@ -163,22 +172,9 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 			}
 		}).when(conversionManagerMock).removeDownloadFinishedCallback(any(Client.DownloadFinishedCallback.class));
 
-		// dependency injection
 		ScratchProgramDetailsActivity.setDataFetcher(fetcherMock);
 		ScratchProgramDetailsActivity.setConversionManager(conversionManagerMock);
 		ScratchProgramDetailsActivity.setExecutorService(Executors.newFixedThreadPool(Constants.WEBIMAGE_DOWNLOADER_POOL_SIZE));
-	}
-
-	@Override
-	public ScratchProgramDetailsActivity getActivity() {
-		Intent intent = new Intent();
-		intent.putExtra(Constants.INTENT_SCRATCH_PROGRAM_DATA, (Parcelable) programData);
-		setActivityIntent(intent);
-		return super.getActivity();
-	}
-
-	@Override
-	public void setUp() throws Exception {
 		super.setUp();
 	}
 
@@ -321,8 +317,10 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 		final ScratchProgramDetailsActivity activity = getActivity();
 		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
 
+		conversionManagerMock = Mockito.mock(ConversionManager.class);
 		when(conversionManagerMock.getNumberOfJobsInProgress()).thenReturn(
 				Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT - 1);
+		ScratchProgramDetailsActivity.setConversionManager(conversionManagerMock);
 
 		// before
 		assertTrue("Convert button not clickable!", solo.getButton(solo.getString(R.string.convert)).isClickable());
@@ -347,8 +345,8 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 		// after
 		assertTrue("Activity not going to be closed", solo.getCurrentActivity().isFinishing());
 		assertFalse("Convert button not disabled!", convertButton.isEnabled());
-		assertEquals("Convert button text did not change!",
-				convertButton.getText(), activity.getString(R.string.converting));
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.converting));
+		verify(conversionManagerMock, times(1)).getNumberOfJobsInProgress();
 	}
 
 	public void testClickOnConvertButtonWhenNumberOfRunningJobsLimitExceededShouldDisplayToastErrorNotification()
@@ -356,14 +354,15 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 		final ScratchProgramDetailsActivity activity = getActivity();
 		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
 
+		conversionManagerMock = Mockito.mock(ConversionManager.class);
 		when(conversionManagerMock.getNumberOfJobsInProgress()).thenReturn(
 				Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT);
+		ScratchProgramDetailsActivity.setConversionManager(conversionManagerMock);
 
 		// before
 		assertTrue("Convert button not clickable!", solo.getButton(solo.getString(R.string.convert)).isClickable());
 		assertTrue("Convert button not enabled!", convertButton.isEnabled());
-		assertEquals("Convert button text not as expected!", convertButton.getText(),
-				activity.getString(R.string.convert));
+		assertEquals("Convert button text not as expected!", convertButton.getText(), activity.getString(R.string.convert));
 
 		final Runnable runnable = new Runnable() {
 			@Override
@@ -382,11 +381,11 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 		// after
 		assertFalse("Activity going to be closed unexpectedly", solo.getCurrentActivity().isFinishing());
 		assertTrue("Convert button not enabled any more!", convertButton.isEnabled());
-		assertEquals("Convert button text changed unexpectedly!",
-				convertButton.getText(), activity.getString(R.string.convert));
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(), activity.getString(R.string.convert));
 		assertTrue("No or unexpected toast error message shown!", solo.searchText(activity.getString(
 				R.string.error_cannot_convert_more_than_x_programs,
 				Constants.SCRATCH_CONVERTER_MAX_NUMBER_OF_JOBS_PER_CLIENT), true));
+		verify(conversionManagerMock, times(1)).getNumberOfJobsInProgress();
 	}
 
 	// tests for JobViewListener interface methods
@@ -398,15 +397,13 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 
 		// before
 		assertTrue("Convert button not enabled!", convertButton.isEnabled());
-		assertEquals("Convert button text not as expected!", convertButton.getText(),
-				activity.getString(R.string.convert));
+		assertEquals("Convert button text not as expected!", convertButton.getText(), activity.getString(R.string.convert));
 
 		activity.onJobScheduled(job);
 
 		// after
 		assertFalse("Convert button not disabled!", convertButton.isEnabled());
-		assertEquals("Convert button text did not change!", convertButton.getText(),
-				activity.getString(R.string.converting));
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.converting));
 	}
 
 	@UiThreadTest
@@ -428,64 +425,191 @@ public class ScratchProgramDetailsActivityTest extends BaseActivityInstrumentati
 				activity.getString(R.string.convert));
 	}
 
-	/*
-	TODO: finish remaining tests here...
-	@Override
-	public void onJobFailed(final Job job) {
-		if (job.getJobID() == programData.getId()) {
-			onJobNotInProgress();
-		}
+	@UiThreadTest
+	public void testCallOnJobFailedForCurrentlyViewedProgramShouldEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final Job job = new Job(programData.getId(), programData.getTitle(), programData.getImage());
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onJobFailed(job);
+
+		// after
+		assertTrue("Convert button not enabled!", convertButton.isEnabled());
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.convert));
 	}
 
-	@Override
-	public void onUserCanceledJob(final Job job) {
-		if (job.getJobID() == programData.getId()) {
-			onJobNotInProgress();
-		}
+	@UiThreadTest
+	public void testCallOnJobFailedForDifferentProgramShouldNotEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final Job job = new Job(1234, "Some program bla bla...", null);
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onJobScheduled(job);
+
+		// after
+		assertFalse("Convert button not disabled any more!", convertButton.isEnabled());
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(),
+				activity.getString(R.string.converting));
 	}
 
-	@Override
-	public void onDownloadStarted(final String url) {
-		final long jobID = Utils.extractScratchJobIDFromURL(url);
-		if (jobID == programData.getId()) {
-			convertButton.setText(R.string.status_downloading);
-		}
+	@UiThreadTest
+	public void testCallOnUserCanceledJobForCurrentlyViewedProgramShouldEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final Job job = new Job(programData.getId(), programData.getTitle(), programData.getImage());
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onUserCanceledJob(job);
+
+		// after
+		assertTrue("Convert button not enabled!", convertButton.isEnabled());
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.convert));
 	}
 
-	@Override
-	public void onDownloadFinished(final String catrobatProgramName, final String url) {
-		final long jobID = Utils.extractScratchJobIDFromURL(url);
-		if (jobID == programData.getId()) {
-			onJobNotInProgress();
-		}
+	@UiThreadTest
+	public void testCallOnUserCanceledJobForDifferentProgramShouldNotEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final Job job = new Job(1234, "Some program bla bla...", null);
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onUserCanceledJob(job);
+
+		// after
+		assertFalse("Convert button not disabled any more!", convertButton.isEnabled());
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(),
+				activity.getString(R.string.converting));
 	}
 
-	@Override
-	public void onUserCanceledDownload(final String url) {
-		final long jobID = Utils.extractScratchJobIDFromURL(url);
-		if (jobID == programData.getId()) {
-			onJobNotInProgress();
-		}
-	}
-	 */
+	@UiThreadTest
+	public void testCallOnDownloadStartedForCurrentlyViewedProgramShouldSetConvertButtonTitleToDownloading() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + programData.getId() + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
 
-		/*
-		// TODO: use this for ScratchConverterActivityTest
-		final Object[] convertMethodParams = { null, null };
-		WebSocketClient clientMock = Mockito.mock(WebSocketClient.class);
-		doAnswer(new Answer<Void>() {
-			public Void answer(InvocationOnMock invocation) {
-				assertEquals(invocation.getArguments().length, 2);
-				convertMethodParams[0] = invocation.getArguments()[0];
-				convertMethodParams[1] = invocation.getArguments()[1];
-				return null;
-			}
-		}).when(clientMock).convertProject(any(Long.class), any(String.class));
-		ScratchProgramDetailsActivity.setConverterClient(clientMock);
-				assertTrue(convertMethodParams[0] instanceof Long);
-				assertTrue(convertMethodParams[1] instanceof String);
-				assertEquals(convertMethodParams[0], programData.getId());
-				assertEquals(convertMethodParams[1], programData.getTitle());
-		*/
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onDownloadStarted(downloadURL);
+
+		// after
+		assertFalse("Convert button not disabled!", convertButton.isEnabled());
+		assertEquals("Convert button text did not change!", convertButton.getText(),
+				activity.getString(R.string.status_downloading));
+	}
+
+	@UiThreadTest
+	public void testCallOnDownloadStartedForDifferentProgramShouldNotSetConvertButtonTitleToDownloading() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final long otherJobID = 1234;
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + otherJobID + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.converting);
+
+		activity.onDownloadStarted(downloadURL);
+
+		// after
+		assertFalse("Convert button not disabled any more!", convertButton.isEnabled());
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(),
+				activity.getString(R.string.converting));
+	}
+
+	@UiThreadTest
+	public void testCallOnDownloadFinishedForCurrentlyViewedProgramShouldEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final String programTitle = programData.getTitle();
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + programData.getId() + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.status_downloading);
+
+		activity.onDownloadFinished(programTitle, downloadURL);
+
+		// after
+		assertTrue("Convert button not enabled!", convertButton.isEnabled());
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.convert));
+	}
+
+	@UiThreadTest
+	public void testCallOnDownloadFinishedForDifferentProgramShouldNotEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final long otherJobID = 1234;
+		final String programTitle = "Some program bla bla...";
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + otherJobID + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.status_downloading);
+
+		activity.onDownloadFinished(programTitle, downloadURL);
+
+		// after
+		assertFalse("Convert button not disabled any more!", convertButton.isEnabled());
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(),
+				activity.getString(R.string.status_downloading));
+	}
+
+	@UiThreadTest
+	public void testCallOnUserCanceledDownloadForCurrentlyViewedProgramShouldEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + programData.getId() + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.status_downloading);
+
+		activity.onUserCanceledDownload(downloadURL);
+
+		// after
+		assertTrue("Convert button not enabled!", convertButton.isEnabled());
+		assertEquals("Convert button text did not change!", convertButton.getText(), activity.getString(R.string.convert));
+	}
+
+	@UiThreadTest
+	public void testCallOnUserCanceledDownloadForDifferentProgramShouldNotEnableConvertButton() {
+		final ScratchProgramDetailsActivity activity = getActivity();
+		final long otherJobID = 1234;
+		final String downloadURL = Constants.SCRATCH_CONVERTER_BASE_URL
+				+ "/download?job_id=" + otherJobID + "&client_id=1&fname=My%20program";
+		final Button convertButton = (Button) activity.findViewById(R.id.scratch_project_convert_button);
+
+		// before
+		convertButton.setEnabled(false);
+		convertButton.setText(R.string.status_downloading);
+
+		activity.onUserCanceledDownload(downloadURL);
+
+		// after
+		assertFalse("Convert button not disabled any more!", convertButton.isEnabled());
+		assertEquals("Convert button text changed unexpectedly!", convertButton.getText(),
+				activity.getString(R.string.status_downloading));
+	}
 
 }
