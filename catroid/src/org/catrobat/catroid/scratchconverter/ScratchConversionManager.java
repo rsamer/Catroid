@@ -57,8 +57,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class ScratchConversionManager implements ConversionManager, Client.ConnectAuthCallback, Client.ConvertCallback,
-		Client.DownloadFinishedCallback {
+public class ScratchConversionManager implements ConversionManager {
 
 	private static final String TAG = ScratchConversionManager.class.getSimpleName();
 

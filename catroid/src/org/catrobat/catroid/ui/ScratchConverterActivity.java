@@ -65,6 +65,7 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	private static final String TAG = ScratchConverterActivity.class.getSimpleName();
 
 	// to avoid using singleton in fragment
+	private static Client client = null;
 	private static ScratchDataFetcher dataFetcher = ServerCalls.getInstance();
 
 	private SearchScratchSearchProjectsListFragment searchProjectsListFragment;
@@ -75,6 +76,18 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	// dependency-injection for testing with mock object
 	public static void setDataFetcher(final ScratchDataFetcher fetcher) {
 		dataFetcher = fetcher;
+	}
+
+	public static void setClient(final Client converterClient) {
+		client = converterClient;
+	}
+
+	public ScratchConverterSlidingUpPanelFragment getConverterSlidingUpPanelFragment() {
+		return converterSlidingUpPanelFragment;
+	}
+
+	public SearchScratchSearchProjectsListFragment getSearchProjectsListFragment() {
+		return searchProjectsListFragment;
 	}
 
 	@Override
@@ -96,8 +109,10 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 		final long clientID = settings.getLong(Constants.SCRATCH_CONVERTER_CLIENT_ID_SHARED_PREFERENCE_NAME,
 				Client.INVALID_CLIENT_ID);
 
-		final WebSocketMessageListener messageListener = new WebSocketMessageListener();
-		final Client client = new WebSocketClient(clientID, messageListener);
+		if (client == null) {
+			client = new WebSocketClient(clientID, new WebSocketMessageListener());
+		}
+
 		conversionManager = new ScratchConversionManager(this, client, false);
 		conversionManager.addDownloadFinishedCallback(converterSlidingUpPanelFragment);
 		conversionManager.setCurrentActivity(this);
