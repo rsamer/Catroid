@@ -42,7 +42,8 @@
         android:layout_width="match_parent"
         android:layout_height="46dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:id="@+id/scratch_convert_sliding_up_panel_bar">
 
         <ImageView
             android:id="@+id/scratch_convert_icon"

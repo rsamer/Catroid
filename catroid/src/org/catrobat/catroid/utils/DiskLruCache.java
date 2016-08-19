@@ -120,7 +120,9 @@ import java.util.concurrent.TimeUnit;
  * Callers should handle other problems by catching {@code IOException} and
  * responding appropriately.
  */
+
 public final class DiskLruCache implements Closeable, DiskCacheBackendInterface {
+
 	static final String JOURNAL_FILE = "journal";
 	static final String JOURNAL_FILE_TMP = "journal.tmp";
 	static final String MAGIC = "libcore.io.DiskLruCache";
@@ -349,8 +351,6 @@ public final class DiskLruCache implements Closeable, DiskCacheBackendInterface 
 						IO_BUFFER_SIZE);
 				return cache;
 			} catch (IOException journalIsCorrupt) {
-//                System.logW("DiskLruCache " + directory + " is corrupt: "
-//                        + journalIsCorrupt.getMessage() + ", removing");
 				cache.delete();
 			}
 		}
@@ -479,13 +479,6 @@ public final class DiskLruCache implements Closeable, DiskCacheBackendInterface 
 	}
 
 	private static void deleteIfExists(File file) throws IOException {
-//        try {
-//            Libcore.os.remove(file.getPath());
-//        } catch (ErrnoException errnoException) {
-//            if (errnoException.errno != OsConstants.ENOENT) {
-//                throw errnoException.rethrowAsIOException();
-//            }
-//        }
 		if (file.exists() && !file.delete()) {
 			throw new IOException();
 		}

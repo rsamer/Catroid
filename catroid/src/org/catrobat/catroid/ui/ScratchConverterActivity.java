@@ -188,7 +188,7 @@ public class ScratchConverterActivity extends BaseActivity implements SlidingUpP
 	}
 
 	public boolean isSlideUpPanelEmpty() {
-		return !converterSlidingUpPanelFragment.hasJobs();
+		return !converterSlidingUpPanelFragment.hasVisibleJobs();
 	}
 
 	public void showSlideUpPanelBar(final long delayMillis) {

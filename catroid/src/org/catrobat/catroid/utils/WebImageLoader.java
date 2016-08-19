@@ -46,7 +46,6 @@ import org.catrobat.catroid.web.ServerCalls;
 public class WebImageLoader {
 
 	private static final String TAG = WebImageLoader.class.getSimpleName();
-	//private static final int PLACEHOLDER_IMAGE_RESOURCE = R.drawable.ic_launcher;
 	private static final int MAX_NUM_OF_RETRIES = 2;
 	private static final int MIN_DELAY = 1_000; // in ms
 

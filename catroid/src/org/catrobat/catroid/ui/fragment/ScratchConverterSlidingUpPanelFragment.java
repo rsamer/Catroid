@@ -180,7 +180,7 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 		upDownArrowImageView.setRotation(degrees);
 	}
 
-	public boolean hasJobs() {
+	public boolean hasVisibleJobs() {
 		return runningJobs.size() > 0 || finishedFailedJobs.size() > 0;
 	}
 
@@ -308,7 +308,6 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			return;
 		}
 
-		((ScratchConverterActivity) getActivity()).showSlideUpPanelBar(0);
 		runningJobs.clear();
 		finishedFailedJobs.clear();
 
@@ -334,6 +333,10 @@ public class ScratchConverterSlidingUpPanelFragment extends Fragment
 			finishedFailedJobsAdapter.notifyDataSetChanged();
 		} else {
 			finishedFailedJobsList.setVisibility(View.GONE);
+		}
+
+		if (hasVisibleJobs()) {
+			((ScratchConverterActivity) getActivity()).showSlideUpPanelBar(0);
 		}
 
 		showPanelBarSummary();

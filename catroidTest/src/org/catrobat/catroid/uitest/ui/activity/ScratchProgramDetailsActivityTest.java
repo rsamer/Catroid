@@ -49,13 +49,10 @@ import org.catrobat.catroid.ui.scratchconverter.JobViewListener;
 import org.catrobat.catroid.uitest.util.BaseActivityInstrumentationTestCase;
 import org.catrobat.catroid.utils.Utils;
 import org.catrobat.catroid.web.ScratchDataFetcher;
-import org.catrobat.catroid.web.WebScratchProgramException;
-import org.catrobat.catroid.web.WebconnectionException;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.InterruptedIOException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executors;

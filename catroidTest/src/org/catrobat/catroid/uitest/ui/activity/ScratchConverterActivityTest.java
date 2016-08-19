@@ -26,7 +26,9 @@ package org.catrobat.catroid.uitest.ui.activity;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.view.View;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SearchView;
 
 import com.google.android.gms.common.images.WebImage;
@@ -117,7 +119,7 @@ public class ScratchConverterActivityTest extends BaseActivityInstrumentationTes
 	public void testSlidingUpPanelLayoutShouldBeHiddenAtTheBeginning() {
 		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
 		assertEquals(SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
-		assertFalse("Fragment should not contain jobs at the beginning", getSlidingUpPanelFragment().hasJobs());
+		assertFalse("Fragment should not contain jobs at the beginning", getSlidingUpPanelFragment().hasVisibleJobs());
 	}
 
 	public void testShouldSaveClientIDToSharedPreferencesAfterSuccessfullyConnectedAndAuthenticated() {
@@ -161,26 +163,61 @@ public class ScratchConverterActivityTest extends BaseActivityInstrumentationTes
 				solo.searchText(getActivity().getString(R.string.error_scratch_converter_outdated_pocketcode_version)));
 	}
 
+	//------------------------------------------------------------------------------------------------------------------
+	// SlidePanel tests (SlidingUpPanelFragment)
+	//------------------------------------------------------------------------------------------------------------------
 	public void testShouldShowSlidePanelBarAfterJobsInfoEventReceivedWithJobs() {
 		final Uri firstImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png");
 		final Uri secondImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205821_480x360.png");
-		final Job[] expectedJobs = new Job[] {
-				new Job(10205819, "Program 1", new WebImage(firstImageURL, 480, 360)),
-				new Job(10205821, "Program 2", new WebImage(secondImageURL, 480, 360))
-		};
+
+		final Job firstJob = new Job(10205819, "Program 1", new WebImage(firstImageURL, 480, 360));
+		firstJob.setState(Job.State.FINISHED);
+
+		final Job secondJob = new Job(10205821, "Program 2", new WebImage(secondImageURL, 480, 360));
+		secondJob.setState(Job.State.RUNNING);
+
+		final Job[] expectedJobs = new Job[] { firstJob, secondJob };
+
+		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
+		assertEquals("SlidingUpPanelBar should be hidden by default!",
+				SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
 
 		when(clientMock.isAuthenticated()).thenReturn(true);
 		conversionManager.onInfo(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION, expectedJobs);
 
 		solo.sleep(1_000);
 
-		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
 		assertEquals("Must show SlidingUpPanelBar when there are jobs!",
 				SlidingUpPanelLayout.PanelState.COLLAPSED, slidingLayout.getPanelState());
 	}
 
+	public void testSlidingUpPanelLayoutShouldBeShownAfterReceivedInfo() {
+		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
+		assertEquals(SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
+		assertFalse("Fragment should not contain jobs at the beginning", getSlidingUpPanelFragment().hasVisibleJobs());
+	}
+
 	public void testShouldNotShowSlidePanelBarAfterJobsInfoEventReceivedWithNoJobs() {
 		final Job[] expectedJobs = new Job[] {};
+
+		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
+		assertEquals("SlidingUpPanelBar should be hidden by default!",
+				SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
+
+		when(clientMock.isAuthenticated()).thenReturn(true);
+		conversionManager.onInfo(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION, expectedJobs);
+
+		solo.sleep(400);
+
+		assertEquals("SlidingUpPanelBar should remain hidden when there are no jobs!",
+				SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
+	}
+
+	public void testShouldNotShowSlidePanelBarAfterJobsInfoEventReceivedWithOnlyInvisibleUnscheduledJobs() {
+		final Job job = new Job(10205819, "Program 1", null);
+		job.setState(Job.State.UNSCHEDULED);
+
+		final Job[] expectedJobs = new Job[] {job};
 
 		when(clientMock.isAuthenticated()).thenReturn(true);
 		conversionManager.onInfo(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION, expectedJobs);
@@ -195,10 +232,13 @@ public class ScratchConverterActivityTest extends BaseActivityInstrumentationTes
 	public void testShouldDisplayAllJobsAfterJobsInfoEventReceived() {
 		final Uri firstImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png");
 		final Uri secondImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205821_480x360.png");
+
 		final Job firstJob = new Job(10205819, "Program 1", new WebImage(firstImageURL, 480, 360));
 		firstJob.setState(Job.State.FINISHED);
+
 		final Job secondJob = new Job(10205821, "Program 2", new WebImage(secondImageURL, 480, 360));
-		firstJob.setState(Job.State.RUNNING);
+		secondJob.setState(Job.State.RUNNING);
+
 		final Job[] expectedJobs = new Job[] { firstJob, secondJob };
 
 		when(clientMock.isAuthenticated()).thenReturn(true);
@@ -206,23 +246,60 @@ public class ScratchConverterActivityTest extends BaseActivityInstrumentationTes
 
 		solo.sleep(400);
 
-		assertTrue("Fragment does not contain any jobs", getSlidingUpPanelFragment().hasJobs());
+		final ScratchConverterActivity activity = (ScratchConverterActivity) solo.getCurrentActivity();
 
-		final ListView inProgressJobsListView = (ListView) solo.getCurrentActivity().findViewById(
-				R.id.scratch_conversion_list_view);
-		final ListView finishedFailedJobsListView = (ListView) solo.getCurrentActivity().findViewById(
+		final RelativeLayout runningJobsList = (RelativeLayout) activity.findViewById(R.id.scratch_conversion_list);
+		final ListView runningJobsListView = (ListView) activity.findViewById(R.id.scratch_conversion_list_view);
+
+		final RelativeLayout finishedFailedJobsList = (RelativeLayout) activity.findViewById(
+				R.id.scratch_converted_programs_list);
+		final ListView finishedFailedJobsListView = (ListView) activity.findViewById(
 				R.id.scratch_converted_programs_list_view);
 
-		assertEquals(1, inProgressJobsListView.getAdapter().getCount());
-		//assertEquals(1, finishedFailedJobsListView.getAdapter().getCount());
+		assertTrue("Fragment does not contain any jobs", getSlidingUpPanelFragment().hasVisibleJobs());
+		assertEquals("RunningJobsList must be visible", View.VISIBLE, runningJobsList.getVisibility());
+		assertEquals("FinishedFailedJobsList must be visible", View.VISIBLE, finishedFailedJobsList.getVisibility());
+		assertEquals("Number of list items of running jobs not as expected",
+				1, runningJobsListView.getAdapter().getCount());
+		assertEquals("Number of list items of finished or failed jobs not as expected",
+				1, finishedFailedJobsListView.getAdapter().getCount());
 	}
 
-	public void testSlidingUpPanelLayoutShouldBeShownAfterReceivedInfo() {
-		SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
-		assertEquals(SlidingUpPanelLayout.PanelState.HIDDEN, slidingLayout.getPanelState());
-		assertFalse("Fragment should not contain jobs at the beginning", getSlidingUpPanelFragment().hasJobs());
+	public void testSlidePanelBarShouldBeExpandableAfterJobsInfoEventReceivedWithJobs() {
+		final Uri firstImageURL = Uri.parse("https://cdn2.scratch.mit.edu/get_image/project/10205819_480x360.png");
+		final Job job = new Job(10205819, "Program 1", new WebImage(firstImageURL, 480, 360));
+		job.setState(Job.State.FINISHED);
+
+		final Job[] expectedJobs = new Job[] { job };
+
+		when(clientMock.isAuthenticated()).thenReturn(true);
+		conversionManager.onInfo(Constants.CURRENT_CATROBAT_LANGUAGE_VERSION, expectedJobs);
+
+		solo.sleep(1_000);
+
+		final SlidingUpPanelLayout slidingLayout = (SlidingUpPanelLayout)getActivity().findViewById(R.id.sliding_layout);
+		final RelativeLayout dragView = (RelativeLayout) getActivity().findViewById(R.id.scratch_convert_sliding_up_panel_bar);
+
+		assertEquals("Must show SlidingUpPanelBar when there are jobs!",
+				SlidingUpPanelLayout.PanelState.COLLAPSED, slidingLayout.getPanelState());
+
+		// now expand the panel bar by simply tapping on it
+		getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				slidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+			}
+		});
+
+		solo.sleep(2_000);
+
+		assertEquals("Must show SlidingUpPanelBar when there are jobs!",
+				SlidingUpPanelLayout.PanelState.EXPANDED, slidingLayout.getPanelState());
 	}
 
+	//------------------------------------------------------------------------------------------------------------------
+	// Search tests (SearchScratchSearchProjectsListFragment)
+	//------------------------------------------------------------------------------------------------------------------
 	public void testCheckIfAllDefaultProgramsArePresentAtTheBeginning() {
 		SearchView searchView = (SearchView) solo.getCurrentActivity().findViewById(R.id.search_view_scratch);
 		ListView searchListView = (ListView) solo.getCurrentActivity().findViewById(R.id.list_view_search_scratch);
