@@ -105,7 +105,6 @@ public class ScratchProgramDetailsActivity extends BaseActivity implements
 	private TextView remixesLabelView;
 	private FetchScratchProgramDetailsTask fetchRemixesTask = new FetchScratchProgramDetailsTask();
 
-	// dependency-injection for testing with mock object
 	public static void setDataFetcher(final ScratchDataFetcher fetcher) {
 		dataFetcher = fetcher;
 	}

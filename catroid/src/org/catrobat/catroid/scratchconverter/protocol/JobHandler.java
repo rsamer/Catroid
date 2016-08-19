@@ -210,6 +210,7 @@ public class JobHandler implements Client.DownloadFinishedCallback {
 		Preconditions.checkState(job.getState() == State.SCHEDULED || job.getState() == State.RUNNING);
 
 		job.setState(State.FINISHED);
+		job.setDownloadURL(jobFinishedMessage.getDownloadURL());
 		callback.onConversionFinished(job, this, jobFinishedMessage.getDownloadURL(),
 				jobFinishedMessage.getCachedUTCDate());
 	}

@@ -776,6 +776,9 @@ public class WebSocketClientTest extends AndroidTestCase {
 		verify(messageListenerMock, times(1)).onUserCanceledConversion(any(Long.class));
 	}
 
+	//------------------------------------------------------------------------------------------------------------------
+	// Wrapper method tests
+	//------------------------------------------------------------------------------------------------------------------
 	public void testIsJobInProgressWrapperCalled() {
 		final long expectedJobID1 = 1;
 		final long expectedJobID2 = 2;
